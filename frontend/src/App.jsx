@@ -3,7 +3,7 @@ import CotizacionNueva from './pages/NewQuote.jsx';
 import Catalogos from './pages/Catalogos.jsx';
 import HistoricoCotizaciones from './pages/HistoricQuote.jsx';
 import '../index.css';
-import RAFLogo from './assets/RafLogo.png';
+import RAFLogoBlanco from './assets/RafLogoBlanco.png';
 
 export default function App() {
     const [currentPage, setCurrentPage] = useState('historico');
@@ -24,17 +24,17 @@ export default function App() {
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Navegación */}
-            <nav className="bg-white shadow-sm border-b">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <nav className="bg-sky-950 shadow-sm border-b">
+                <div className="mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between h-12 items-center">
                         <div className="flex">
                             <div className="flex-shrink-0 flex items-center space-x-10">
                                 <img
                                     alt="RAF International Ground Support Logo"
-                                    src={RAFLogo}
+                                    src={RAFLogoBlanco}
                                     className="h-10 w-auto object-contain"
                                 />
-                                <h1 className="text-xl font-bold text-gray-900">Quote Generator RAF International Ground Support</h1>
+                                <h1 className="text-xl font-bold text-white">Quote Generator RAF International Ground Support</h1>
                             </div>
                         </div>
                         <div className="flex space-x-8">
@@ -70,7 +70,7 @@ export default function App() {
                 </div>
             </nav>
             {/* Contenido de la página */}
-            <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+            <main className="mx-auto py-6 sm:px-6 lg:px-8">
                 {renderPage()}
             </main>
         </div>

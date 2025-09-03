@@ -1,7 +1,4 @@
 import React, { useEffect, useState } from 'react';
-
-
-
 function QuoteForm() {
     
         const [date, setDate] = useState('');
@@ -26,7 +23,6 @@ function QuoteForm() {
             }
         };
 
-
         const convertToLB = () => {
             const currentValue = parseFloat(value);
             if (isNaN(currentValue) || currentValue <=0) {
@@ -43,7 +39,6 @@ function QuoteForm() {
                 }
             };
           
-      
           const convertToKG = () => {
             const currentValue = parseFloat(value);
             if (isNaN(currentValue) || currentValue <= 0) {
@@ -60,7 +55,6 @@ function QuoteForm() {
                 }
             };
       
-
     useEffect(() => {
         const today = new Date();
         const formattedDate = today.toISOString().split('T')[0];
@@ -76,7 +70,7 @@ function QuoteForm() {
                             </label>
                             <div className="relative mt-1">
                                 <select className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="customer">
-                                    <option>Select a customer</option>
+                                    <option></option>
                                     <option>Customer A</option>
                                     <option>Customer B</option>
                                 </select>
@@ -92,7 +86,7 @@ function QuoteForm() {
                             </label>
                             <div className="relative mt-1">
                                 <select className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="aircraft-type">
-                                    <option>Select aircraft type</option>
+                                    <option></option>
                                     <option>Private</option>
                                     <option>Commercial</option>
                                 </select>
@@ -148,6 +142,7 @@ function QuoteForm() {
                                     className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
                                     id="aircraft-model"
                                 >
+                                    <option></option>
                                     <option>A319</option>
                                     <option>B737</option>
                                     <option>G650</option>
@@ -191,25 +186,22 @@ function QuoteForm() {
                             </div>
                         </div>
                     </div>
-
                         <div>
                             {/*Espacio en blanco*/}
                         </div>
-                        
                         <div>
                             <label className="block text-sm font-medium text-dark-gray" htmlFor="quoted-by">
                                 Quoted by
                             </label>
                             <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="quoted-by" type="text" defaultValue="Max" />
                         </div>
-                       
                         <div>
                             <label className="block text-sm font-medium text-dark-gray" htmlFor="station">
                                 Select Station
                             </label>
                             <div className="relative mt-1">
                                 <select className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="station">
-                                    <option>Select a station</option>
+                                    <option></option>
                                     <option>Cancun International Airport (CUN)</option>
                                     <option>Mexico City International Airport (MEX)</option>
                                     <option>Guadalajara International Airport (GDL)</option>
@@ -219,14 +211,44 @@ function QuoteForm() {
                                 </span>
                             </div>
                         </div>
+                        <div>
+                                    <label className="block text-sm font-medium text-dark-gray" htmlFor="ata">
+                                        Select ATA
+                                    </label>
+                                    <div className="relative mt-1">
+                                        <input className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="ata" type="date" defaultValue="2025-07-29" />
+                                        <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                            <span className="material-icons text-gray-400"></span>
+                                        </span>
+                                    </div>
+                            </div>
 
+                    
+                            <div className="md:col-span-2 grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-dark-gray" htmlFor="station">
+                                        From
+                                    </label>
+                                    <div className="relative mt-1">
+                                        <select className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="station">
+                                            <option>Select a station</option>
+                                            <option>Cancun International Airport (CUN)</option>
+                                            <option>Mexico City International Airport (MEX)</option>
+                                            <option>Guadalajara International Airport (GDL)</option>
+                                        </select>
+                                        <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                            <span className="material-icons text-gray-400"></span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
                         <div>
                             <label className="block text-sm font-medium text-dark-gray" htmlFor="fob">
                                 Select FBO
                             </label>
                             <div className="relative mt-1">
                                 <select className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="fob">
-                                    <option>Select FBO</option>
+                                    <option></option>
                                     <option>FBO 1</option>
                                     <option>FBO 2</option>
                                 </select>
@@ -235,21 +257,7 @@ function QuoteForm() {
                                 </span>
                             </div>
                         </div>
-
-                   
-                        <div className="md:col-span-2 grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-dark-gray" htmlFor="ata">
-                                    Select ATA
-                                </label>
-                                <div className="relative mt-1">
-                                    <input className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="ata" type="date" defaultValue="2025-07-28" />
-                                    <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                                        <span className="material-icons text-gray-400"></span>
-                                    </span>
-                                </div>
-                            </div>
-                            <div>
+                        <div>
                                 <label className="block text-sm font-medium text-dark-gray" htmlFor="atd">
                                     Select ATD
                                 </label>
@@ -259,10 +267,23 @@ function QuoteForm() {
                                         <span className="material-icons text-gray-400"></span>
                                     </span>
                                 </div>
-                                
+                        </div>
 
-
-                            </div>
+                        <div>
+                                    <label className="block text-sm font-medium text-dark-gray" htmlFor="station">
+                                        To
+                                    </label>
+                                    <div className="relative mt-1">
+                                        <select className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="station">
+                                            <option>Select a station</option>
+                                            <option>Cancun International Airport (CUN)</option>
+                                            <option>Mexico City International Airport (MEX)</option>
+                                            <option>Guadalajara International Airport (GDL)</option>
+                                        </select>
+                                        <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                            <span className="material-icons text-gray-400"></span>
+                                        </span>
+                                    </div>
                         </div>
                     </div>
             <div className="mt-8">
