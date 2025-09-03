@@ -7,28 +7,58 @@ function QuoteForm() {
         const [date, setDate] = useState('');
         const [value, setValue] = useState("");
         const [unit, setUnit] = useState("KG");
-      
+
         const handleInputChange = (e) => {
-            setValue(e.target.value);
+            let inputValue = e.target.value;
+
+            let cleanedValue = inputValue.replace(/[^0-9.]/g, '');
+
+            // Validar que no haya más de un punto
+            const decimalParts = cleanedValue.split('.');
+            if (decimalParts.length > 2) {
+                cleanedValue = decimalParts[0] + '.' + decimalParts.slice(1).join('');
+            }
+        
+            if (cleanedValue === '' || parseFloat(cleanedValue) < 0) {
+                setValue('');
+            } else {
+                setValue(cleanedValue);
+            }
         };
+
 
         const convertToLB = () => {
             const currentValue = parseFloat(value);
-            if (!isNaN(currentValue)) {
-              const lbValue = (currentValue * 2.20462).toFixed(2);
-              setValue(lbValue);
-              setUnit("LB");
+            if (isNaN(currentValue) || currentValue <=0) {
+                setValue('');
+                return;
             }
-          };
+            
+            if(unit=== "KG") {
+                const lbValue = (currentValue * 2.20462).toFixed(2);
+                setValue(lbValue);
+                setUnit("LB");
+                    } else {
+                    setUnit("LB")
+                }
+            };
+          
       
           const convertToKG = () => {
             const currentValue = parseFloat(value);
-            if (!isNaN(currentValue)) {
+            if (isNaN(currentValue) || currentValue <= 0) {
+                setValue('');
+                return;
+            }
+
+            if (unit === "LB") {
               const kgValue = (currentValue / 2.20462).toFixed(2);
               setValue(kgValue);
               setUnit("KG");
-            }
-          };
+                } else {
+                    setUnit("KG")
+                }
+            };
       
 
     useEffect(() => {
