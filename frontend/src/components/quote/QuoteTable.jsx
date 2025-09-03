@@ -8,7 +8,7 @@ function QuoteTable() {
             </div>
             <div className="overflow-x-auto">
                 <table className="w-full text-sm text-left text-gray-500">
-                    <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+                    <thead className="text-xs text-black font-semibold uppercase bg-gray-100">
                         <tr>
                             <th className="px-6 py-3" scope="col">Description</th>
                             <th className="px-6 py-3" scope="col">#</th>
@@ -23,7 +23,7 @@ function QuoteTable() {
                             <th className="px-6 py-3" scope="col"></th>
                         </tr>
                     </thead>
-                    <tbody>
+                   <tbody>
                         <tr className="bg-white border-b hover:bg-gray-50">
                             <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">RAF Coordination Fee</td>
                             <td className="px-6 py-4">1</td>
