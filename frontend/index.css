@@ -1,0 +1,17 @@
+@import "tailwindcss";
+/* Estilos personalizados */
+body {
+    font-family: 'Roboto', sans-serif;
+}
+
+.bg-sky-blue {
+    background-color: #e0f2fe;
+}
+
+.text-dark-gray {
+    color: #374151;
+}
+
+.border-dark-gray {
+    border-color: #374151;
+}
