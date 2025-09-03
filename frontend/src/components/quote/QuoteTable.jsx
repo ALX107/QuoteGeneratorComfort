@@ -20,7 +20,7 @@ function QuoteTable() {
                             <th className="px-6 py-3" scope="col">VAT%</th>
                             <th className="px-6 py-3" scope="col">VAT</th>
                             <th className="px-6 py-3" scope="col">Total</th>
-                            <th className="px-6 py-3" scope="col"></th>
+                            <th className="px-6 py-3" scope="col">Delete</th>
                         </tr>
                     </thead>
                    <tbody>

@@ -88,7 +88,7 @@ function QuoteForm() {
 
                         <div>
                             <label className="block text-sm font-medium text-dark-gray" htmlFor="aircraft-type">
-                                Aircraft Type
+                                Select Flight Type
                             </label>
                             <div className="relative mt-1">
                                 <select className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="aircraft-type">
