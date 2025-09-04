@@ -4,8 +4,16 @@ body {
     font-family: 'Roboto', sans-serif;
 }
 
-.bg-sky-blue {
+.bg-cafe{
     background-color: #A5862B;
+}
+
+.bg-cafe-light{
+    background-color: #c09d45;
+}
+
+.bg-blue {
+    background-color: #2976f3;
 }
 
 .text-dark-gray {
@@ -14,4 +22,39 @@ body {
 
 .border-dark-gray {
     border-color: #374151;
+}
+
+/* Liquid Glass Button Effect */
+.btn-glass {
+  padding: 6px 12px;
+  border: 1px solid rgba(7, 57, 111, 0.3);
+  background: rgba(10, 66, 156, 0.7);
+  backdrop-filter: blur(80px);
+  -webkit-backdrop-filter: blur(10px);
+  color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 100px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease-in-out;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-glass:hover {
+  background: rgba(10, 72, 171, 0.9);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
+}
+
+.btn-glass::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent, rgba(173, 216, 230, 0.4), transparent);
+  transition: all 650ms;
+}
+
+.btn-glass:hover::before {
+  left: 100%;
 }

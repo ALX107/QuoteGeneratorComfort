@@ -3,26 +3,26 @@ import RAFLogo from '../../assets/RafLogo.png';
 
 function HistoricHeader() {
     return (
-        <header className="flex items-center justify-between bg-white shadow-md rounded-lg px-8 py-4 mb-6">
+        <header className="flex items-center justify-between bg-cafe-light shadow-md rounded-lg px-8 py-4 mb-6 border border-black">
 
             {/* Izquierda */}
             <div className="flex items-center space-x-3">
-                <button className="bg-sky-500 text-white px-3 py-1 rounded hover:bg-sky-700 transition">
+                <button className="btn-glass flex items-center space-x-2">
                     New
                 </button>
-                <button className="bg-sky-500 text-white px-3 py-1 rounded hover:bg-sky-700 transition">
+                <button className="btn-glass flex items-center space-x-2">
                     Find
                 </button>
-                <button className="bg-sky-500 text-white px-3 py-1 rounded hover:bg-sky-700 transition">
+                <button className="btn-glass flex items-center space-x-2">
                     Join
                 </button>
-                <button className="bg-sky-500 text-white px-3 py-1 rounded hover:bg-sky-700 transition">
+                <button className="btn-glass flex items-center space-x-2">
                     Separate
                 </button>
-                <button className="bg-sky-500 text-white px-3 py-1 rounded hover:bg-sky-700 transition">
+                <button className="btn-glass flex items-center space-x-2">
                     Export to Excel
                 </button>
-                <button className="bg-sky-500 text-white px-3 py-1 rounded hover:bg-sky-700 transition">
+                <button className="btn-glass flex items-center space-x-2">
                     Filter:2025
                 </button>
             </div>

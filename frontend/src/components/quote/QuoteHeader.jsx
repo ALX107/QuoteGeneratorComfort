@@ -3,14 +3,13 @@ import RAFLogo from '../../assets/RafLogo.png';
 
 function QuoteHeader() {
     return (
-        <header className="flex items-center justify-between bg-white shadow-md rounded-lg px-8 py-4 mb-6">
-
+        <header className="flex items-center justify-between bg-cafe-light shadow-md rounded-lg px-8 py-4 mb-6 border border-black">
             {/* Izquierda */}
             <div className="flex items-center space-x-4">
-                <button className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition">
+                <button className="btn-glass">
                     Save Quote
                 </button>
-                <button className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition">
+                <button className="btn-glass">
                     Export to PDF
                 </button>
             </div>
@@ -26,7 +25,7 @@ function QuoteHeader() {
 
             {/* Derecha */}
             <div>
-                <button className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition">
+                <button className="btn-glass">
                     Clear Quote
                 </button>
             </div>

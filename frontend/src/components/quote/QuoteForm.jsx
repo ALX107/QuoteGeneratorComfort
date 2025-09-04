@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-function QuoteForm() {
+function QuoteForm({ onAddItem, onOpenServiceModal }) {
     
         const [date, setDate] = useState('');
         const [value, setValue] = useState("");
@@ -286,9 +286,13 @@ function QuoteForm() {
                                     </div>
                         </div>
                     </div>
-            <div className="mt-8">
-                <button className="bg-sky-600 text-white px-6 py-2 rounded-md hover:bg-sky-700 flex items-center gap-2">
-                    <span className="material-icons">add</span>
+            <div className="mt-8 flex items-center space-x-4">
+                <button
+                    type="button"
+                    onClick={onOpenServiceModal}
+                    className="btn-glass"
+                >
+                    + Add Service
                 </button>
             </div>
         </main>
@@ -297,4 +301,4 @@ function QuoteForm() {
     
 }
 
-export default QuoteForm;
+export default React.memo(QuoteForm);

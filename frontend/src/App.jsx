@@ -70,7 +70,7 @@ export default function App() {
                 </div>
             </nav>
             {/* Contenido de la página */}
-            <main className="mx-auto py-6 sm:px-6 lg:px-8">
+            <main className="w-full">
                 {renderPage()}
             </main>
         </div>
