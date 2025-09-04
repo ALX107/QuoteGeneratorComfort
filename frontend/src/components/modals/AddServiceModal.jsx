@@ -41,12 +41,12 @@ function AddServiceModal({ isOpen, onClose, onSave, onRemoveService, initialSele
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
             <div className="bg-white rounded-lg shadow-2xl p-8 w-full max-w-4xl">
-                <h2 className="text-2xl font-bold mb-6 text-dark-gray">Añadir Servicios</h2>
+                <h2 className="text-2xl font-bold mb-6 text-dark-gray">Add Services</h2>
 
                 <div className="grid grid-cols-2 gap-8">
                     {/* Columna Izquierda: Servicios Disponibles */}
                     <div>
-                        <h3 className="text-lg font-semibold mb-4 border-b pb-2">Servicios Disponibles</h3>
+                        <h3 className="text-lg font-semibold mb-4 border-b pb-2">Available Services</h3>
                         <ul className="space-y-3 h-80 overflow-y-auto pr-2">
                             {availableServices.map(service => (
                                 <li key={service.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg shadow-sm">
@@ -58,13 +58,13 @@ function AddServiceModal({ isOpen, onClose, onSave, onRemoveService, initialSele
                                         onClick={() => handleAddService(service)}
                                         className="bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 transition text-sm"
                                     >
-                                        Agregar
+                                        Add
                                     </button>
                                 </li>
                             ))}
                              {availableServices.length === 0 && (
                                 <div className="text-center text-gray-400 pt-16">
-                                    <p>No hay más servicios disponibles.</p>
+                                    <p>There are no more services available.</p>
                                 </div>
                             )}
                         </ul>
@@ -72,7 +72,7 @@ function AddServiceModal({ isOpen, onClose, onSave, onRemoveService, initialSele
 
                     {/* Columna Derecha: Servicios Agregados */}
                     <div>
-                        <h3 className="text-lg font-semibold mb-4 border-b pb-2">Servicios Agregados</h3>
+                        <h3 className="text-lg font-semibold mb-4 border-b pb-2">Added Services</h3>
                         <ul className="space-y-3 h-80 overflow-y-auto pr-2">
                             {selectedServices.map(service => (
                                 <li key={service.id} className="flex items-center justify-between p-3 bg-green-50 rounded-lg shadow-sm">
@@ -83,13 +83,13 @@ function AddServiceModal({ isOpen, onClose, onSave, onRemoveService, initialSele
                                         onClick={() => handleRemoveService(service)}
                                         className="bg-red-600 text-white px-3 py-1 rounded-md hover:red-700 transition text-sm"
                                     >
-                                        Quitar
+                                        Remove
                                     </button>
                                 </li>
                             ))}
                              {selectedServices.length === 0 && (
                                 <div className="text-center text-gray-400 pt-16">
-                                    <p>Los servicios agregados aparecerán aquí.</p>
+                                    <p>The added services will appear here.</p>
                                 </div>
                             )}
                         </ul>
@@ -102,13 +102,13 @@ function AddServiceModal({ isOpen, onClose, onSave, onRemoveService, initialSele
                         onClick={onClose}
                         className="px-6 py-2 rounded-lg text-gray-700 bg-gray-200 hover:bg-gray-300 transition"
                     >
-                        Cancelar
+                        Cancel
                     </button>
                     <button
                         onClick={handleSave}
                         className="px-6 py-2 rounded-lg text-white bg-green-600 hover:bg-green-700 transition"
                     >
-                        Guardar Servicios
+                        Save Services
                     </button>
                 </div>
             </div>
