@@ -63,7 +63,7 @@ function QuoteForm({ onAddItem, onOpenServiceModal }) {
 
     return (
         <main className="pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-start">
                         <div className="md:col-span-1">
                             <label className="block text-sm font-medium text-dark-gray" htmlFor="customer">
                                 Select Customer
@@ -189,60 +189,102 @@ function QuoteForm({ onAddItem, onOpenServiceModal }) {
                         <div>
                             {/*Espacio en blanco*/}
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium text-dark-gray" htmlFor="quoted-by">
-                                Quoted by
-                            </label>
-                            <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="quoted-by" type="text" defaultValue="Max" />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-dark-gray" htmlFor="station">
-                                Select Station
-                            </label>
-                            <div className="relative mt-1">
-                                <select className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="station">
-                                    <option></option>
-                                    <option>Cancun International Airport (CUN)</option>
-                                    <option>Mexico City International Airport (MEX)</option>
-                                    <option>Guadalajara International Airport (GDL)</option>
-                                </select>
-                                <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                                    <span className="material-icons text-gray-400"></span>
-                                </span>
+                        <div className="self-start">
+                            <div>
+                                <label className="block text-sm font-medium text-dark-gray" htmlFor="quoted-by">
+                                    Quoted by
+                                </label>
+                                <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="quoted-by" type="text" defaultValue="Max" />
+                            </div>
+                            <div className="mt-4">
+                                <label className="block text-sm font-medium text-dark-gray" htmlFor="attn">
+                                    Attn.
+                                </label>
+                                <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="attn" type="text"  />
                             </div>
                         </div>
-                        <div>
-                                    <label className="block text-sm font-medium text-dark-gray" htmlFor="ata">
-                                        Select ATA
-                                    </label>
-                                    <div className="relative mt-1">
-                                        <input className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="ata" type="date" defaultValue="2025-07-29" />
-                                        <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                                            <span className="material-icons text-gray-400"></span>
-                                        </span>
-                                    </div>
-                            </div>
-
-                    
-                            <div className="md:col-span-2 grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-dark-gray" htmlFor="station">
-                                        From
-                                    </label>
-                                    <div className="relative mt-1">
-                                        <select className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="station">
-                                            <option>Select a station</option>
-                                            <option>Cancun International Airport (CUN)</option>
-                                            <option>Mexico City International Airport (MEX)</option>
-                                            <option>Guadalajara International Airport (GDL)</option>
-                                        </select>
-                                        <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                                            <span className="material-icons text-gray-400"></span>
-                                        </span>
-                                    </div>
+                        
+                       
+                       {/* Tercera Fila */}
+                        <div className="md:col-span-4 grid grid-cols-1 md:grid-cols-7 gap-4 items-end">
+                            {/* Select Station */}
+                            <div className="md:col-span-2">
+                                <label className="block text-sm font-medium text-dark-gray" htmlFor="station">
+                                    Select Station
+                                </label>
+                                <div className="relative mt-1">
+                                    <select className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="station">
+                                        <option></option>
+                                        <option>Cancun International Airport (CUN)</option>
+                                        <option>Mexico City International Airport (MEX)</option>
+                                        <option>Guadalajara International Airport (GDL)</option>
+                                    </select>
+                                    <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                        <span className="material-icons text-gray-400"></span>
+                                    </span>
                                 </div>
                             </div>
-                        <div>
+
+                            {/* ATA */}
+                            <div>
+                                <label className="block text-sm font-medium text-dark-gray" htmlFor="ata">
+                                    Select ATA
+                                </label>
+                                <div className="relative mt-1">
+                                    <input className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="ata" type="date" defaultValue="2025-07-29" />
+                                </div>
+                            </div>
+
+                            {/* ========= INICIO DEL CAMBIO: Grupo flexible para Checkbox y From ========= */}
+    {/* Este es el contenedor clave: ocupa 2 columnas y usa flexbox */}
+    <div className="md:col-span-2 flex items-end gap-6">
+        
+        {/* ATA Checkbox - Con tamaño fijo, no se encogerá */}
+        <div className="flex-shrink-0 flex items-end pb-2">
+            <div className="flex items-center h-5">
+                <input id="ata-checkbox" name="ata-checkbox" type="checkbox" className="focus:ring-sky-500 h-4 w-4 text-sky-600 border-gray-300 rounded" />
+            </div>
+            <div className="ml-2 text-sm">
+                <label htmlFor="ata-checkbox" className="font-medium text-dark-gray whitespace-nowrap">No ATA</label>
+            </div>
+        </div>
+
+        {/* From - Crecerá para ocupar todo el espacio sobrante */}
+        <div className="flex-1">
+            <label className="block text-sm font-medium text-dark-gray" htmlFor="from-station">
+                From
+            </label>
+            <div className="relative mt-1">
+                <select className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="from-station">
+                    <option>Select a station</option>
+                    <option>Cancun International Airport (CUN)</option>
+                    <option>Mexico City International Airport (MEX)</option>
+                    <option>Guadalajara International Airport (GDL)</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+                            {/* Crew */}
+                            <div>
+                                <label className="block text-sm font-medium text-dark-gray" htmlFor="crew-from">
+                                    Crew
+                                </label>
+                                <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="crew-from" type="number" />
+                            </div>
+
+                            {/* PAX */}
+                            <div>
+                                <label className="block text-sm font-medium text-dark-gray" htmlFor="pax-from">
+                                    Pax
+                                </label>
+                                <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="pax-from" type="number" />
+                            </div>
+                        </div>
+
+                        {/* Cuarta Fila */}
+                        <div className="md:col-span-4 grid grid-cols-1 md:grid-cols-7 gap-4 items-end">
+                        <div className="md:col-span-2">
                             <label className="block text-sm font-medium text-dark-gray" htmlFor="fob">
                                 Select FBO
                             </label>
@@ -263,18 +305,28 @@ function QuoteForm({ onAddItem, onOpenServiceModal }) {
                                 </label>
                                 <div className="relative mt-1">
                                     <input className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="atd" type="date" defaultValue="2025-07-29" />
-                                    <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                                        <span className="material-icons text-gray-400"></span>
-                                    </span>
+                                  
                                 </div>
                         </div>
 
-                        <div>
-                                    <label className="block text-sm font-medium text-dark-gray" htmlFor="station">
+                        <div className="md:col-span-2 flex items-end gap-6">
+
+                         {/* ATD Checkbox */}
+                            <div className="flex-shrink-0 flex items-end pb-2">
+                                <div className="flex items-center h-5">
+                                    <input id="atd-checkbox" name="atd-checkbox" type="checkbox" className="focus:ring-sky-500 h-4 w-4 text-sky-600 border-gray-300 rounded" />
+                                </div>
+
+                                <div className="ml-2 text-sm">
+                                    <label htmlFor="atd-checkbox" className="font-medium text-dark-gray">No ATD</label>
+                                </div>
+                            </div>
+                        <div className="flex-1" >
+                                    <label className="block text-sm font-medium text-dark-gray" htmlFor="to-station">
                                         To
                                     </label>
                                     <div className="relative mt-1">
-                                        <select className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="station">
+                                        <select className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="to-station">
                                             <option>Select a station</option>
                                             <option>Cancun International Airport (CUN)</option>
                                             <option>Mexico City International Airport (MEX)</option>
@@ -284,7 +336,37 @@ function QuoteForm({ onAddItem, onOpenServiceModal }) {
                                             <span className="material-icons text-gray-400"></span>
                                         </span>
                                     </div>
+                            </div>
                         </div>
+
+
+                        {/* Crew */}
+                            <div>
+                                <label className="block text-sm font-medium text-dark-gray" htmlFor="crew-to">
+                                    Crew
+                                </label>
+                                <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="crew-to" type="number" />
+                            </div>
+
+                            {/* PAX */}
+                            <div>
+                                <label className="block text-sm font-medium text-dark-gray" htmlFor="pax-to">
+                                    Pax
+                                </label>
+                                <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="pax-to" type="number" />
+                            </div>   
+
+                    </div>
+                      {/* Exchange Rate */}
+                            <div className="md:col-span-4 flex justify-center">
+                                <div className="w-50">
+                                    <label className="block text-sm font-medium text-dark-gray" htmlFor="exchange-rate">
+                                        Exchange Rate
+                                    </label>
+                                    <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="exchange-rate" type="number" />
+                                </div>
+                            </div>
+
                     </div>
             <div className="mt-8 flex items-center space-x-4">
                 <button
