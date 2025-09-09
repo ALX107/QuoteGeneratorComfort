@@ -69,11 +69,16 @@ function QuoteForm({ onAddItem, onOpenServiceModal }) {
                                 Select Customer
                             </label>
                             <div className="relative mt-1">
-                                <select className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="customer">
-                                    <option></option>
-                                    <option>Customer A</option>
-                                    <option>Customer B</option>
-                                </select>
+                                <input
+                                    list="customer-list"
+                                    id="customer"
+                                    name="customer"
+                                    className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
+                                />
+                                <datalist id="customer-list">
+                                    <option value="Customer A" />
+                                    <option value="Customer B" />
+                                </datalist>
                                 <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
                                     <span className="material-icons text-gray-400"></span>
                                 </span>
@@ -85,11 +90,17 @@ function QuoteForm({ onAddItem, onOpenServiceModal }) {
                                 Select Flight Type
                             </label>
                             <div className="relative mt-1">
-                                <select className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="aircraft-type">
-                                    <option></option>
-                                    <option>Private</option>
-                                    <option>Commercial</option>
-                                </select>
+                                <input
+                                    list="flight-type-list"
+                                    id="flight-type"
+                                    name="flight-type"
+                                    className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
+                                />
+                                <datalist id="flight-type-list">
+                                    <option value="Catering" />
+                                    <option value="Militar" />
+                                </datalist>
+
                                 <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
                                     <span className="material-icons text-gray-400"></span>
                                 </span>
@@ -138,15 +149,17 @@ function QuoteForm({ onAddItem, onOpenServiceModal }) {
                                 Aircraft Model
                             </label>
                             <div className="relative mt-1">
-                                <select
-                                    className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
+                                <input
+                                    list="aircraft-model-list"
                                     id="aircraft-model"
-                                >
-                                    <option></option>
-                                    <option>A319</option>
-                                    <option>B737</option>
-                                    <option>G650</option>
-                                </select>
+                                    name="aircraft-model"
+                                    className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
+                                />
+                                <datalist id="aircraft-model-list">
+                                    <option value="Boeing 737" />
+                                    <option value="Airbus A320 " />
+                                </datalist>
+                                
                                 <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
                                     <span className="material-icons text-gray-400"></span>
                                 </span>
@@ -213,12 +226,18 @@ function QuoteForm({ onAddItem, onOpenServiceModal }) {
                                     Select Station
                                 </label>
                                 <div className="relative mt-1">
-                                    <select className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="station">
-                                        <option></option>
+                                    <input
+                                        list="select-station-list"
+                                        id="select-station"
+                                        name="select-station"
+                                        className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
+                                   />
+                                   <datalist id="select-station-list">
                                         <option>Cancun International Airport (CUN)</option>
                                         <option>Mexico City International Airport (MEX)</option>
                                         <option>Guadalajara International Airport (GDL)</option>
-                                    </select>
+                                    </datalist>
+
                                     <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
                                         <span className="material-icons text-gray-400"></span>
                                     </span>
@@ -231,7 +250,7 @@ function QuoteForm({ onAddItem, onOpenServiceModal }) {
                                     Select ATA
                                 </label>
                                 <div className="relative mt-1">
-                                    <input className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="ata" type="date" defaultValue="2025-07-29" />
+                                    <input className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="ata" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
                                 </div>
                             </div>
 
@@ -255,12 +274,17 @@ function QuoteForm({ onAddItem, onOpenServiceModal }) {
                 From
             </label>
             <div className="relative mt-1">
-                <select className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="from-station">
-                    <option>Select a station</option>
-                    <option>Cancun International Airport (CUN)</option>
-                    <option>Mexico City International Airport (MEX)</option>
-                    <option>Guadalajara International Airport (GDL)</option>
-                </select>
+                 <input
+                    list="from-station-list"
+                    id="from-statation"
+                    name="statation"
+                    className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
+                 />
+                   <datalist id="from-station-list">
+                        <option>Cancun International Airport (CUN)</option>
+                        <option>Mexico City International Airport (MEX)</option>
+                        <option>Guadalajara International Airport (GDL)</option>
+                    </datalist>
             </div>
         </div>
     </div>
@@ -270,15 +294,15 @@ function QuoteForm({ onAddItem, onOpenServiceModal }) {
                                 <label className="block text-sm font-medium text-dark-gray" htmlFor="crew-from">
                                     Crew
                                 </label>
-                                <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="crew-from" type="number" />
+                                <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="crew-from" type="number" min="0" onKeyDown={(e) => { if (e.key === '-') { e.preventDefault(); } }} />
                             </div>
 
-                            {/* PAX */}
+                            {/* Pax */}
                             <div>
                                 <label className="block text-sm font-medium text-dark-gray" htmlFor="pax-from">
                                     Pax
                                 </label>
-                                <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="pax-from" type="number" />
+                                <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="pax-from" type="number" min="0" onKeyDown={(e) => { if (e.key === '-') { e.preventDefault(); } }}/>
                             </div>
                         </div>
 
@@ -288,12 +312,20 @@ function QuoteForm({ onAddItem, onOpenServiceModal }) {
                             <label className="block text-sm font-medium text-dark-gray" htmlFor="fob">
                                 Select FBO
                             </label>
+
                             <div className="relative mt-1">
-                                <select className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="fob">
-                                    <option></option>
-                                    <option>FBO 1</option>
-                                    <option>FBO 2</option>
-                                </select>
+                                <input
+                                    list="fbo-list"
+                                    id="fbo"
+                                    name="fbo"
+                                    className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
+                                />
+                                 
+                                <datalist id="fbo-list">
+                                     <option>FBO 1</option>
+                                     <option>FBO 2</option>
+                                </datalist>
+
                                 <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
                                     <span className="material-icons text-gray-400"></span>
                                 </span>
@@ -304,7 +336,7 @@ function QuoteForm({ onAddItem, onOpenServiceModal }) {
                                     Select ATD
                                 </label>
                                 <div className="relative mt-1">
-                                    <input className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="atd" type="date" defaultValue="2025-07-29" />
+                                    <input className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="atd" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
                                   
                                 </div>
                         </div>
@@ -325,13 +357,23 @@ function QuoteForm({ onAddItem, onOpenServiceModal }) {
                                     <label className="block text-sm font-medium text-dark-gray" htmlFor="to-station">
                                         To
                                     </label>
+
                                     <div className="relative mt-1">
-                                        <select className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="to-station">
-                                            <option>Select a station</option>
-                                            <option>Cancun International Airport (CUN)</option>
-                                            <option>Mexico City International Airport (MEX)</option>
-                                            <option>Guadalajara International Airport (GDL)</option>
-                                        </select>
+                                        <input
+                                            list="to-station-list"
+                                            id="to-station"
+                                            name="to-station"
+                                            className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
+                                        />
+
+                                          <datalist id="to-station-list">
+                                              <option>Select a station</option>
+                                                <option>Cancun International Airport (CUN)</option>
+                                                <option>Mexico City International Airport (MEX)</option>
+                                                <option>Guadalajara International Airport (GDL)</option>
+                                            
+                                        </datalist>
+
                                         <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
                                             <span className="material-icons text-gray-400"></span>
                                         </span>
@@ -345,7 +387,7 @@ function QuoteForm({ onAddItem, onOpenServiceModal }) {
                                 <label className="block text-sm font-medium text-dark-gray" htmlFor="crew-to">
                                     Crew
                                 </label>
-                                <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="crew-to" type="number" />
+                                <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="crew-to" type="number" min="0" onKeyDown={(e) => { if (e.key === '-') { e.preventDefault(); } }}/>
                             </div>
 
                             {/* PAX */}
@@ -353,7 +395,7 @@ function QuoteForm({ onAddItem, onOpenServiceModal }) {
                                 <label className="block text-sm font-medium text-dark-gray" htmlFor="pax-to">
                                     Pax
                                 </label>
-                                <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="pax-to" type="number" />
+                                <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="pax-to" type="number" min="0" onKeyDown={(e) => { if (e.key === '-') { e.preventDefault(); } }}/>
                             </div>   
 
                     </div>
@@ -363,10 +405,9 @@ function QuoteForm({ onAddItem, onOpenServiceModal }) {
                                     <label className="block text-sm font-medium text-dark-gray" htmlFor="exchange-rate">
                                         Exchange Rate
                                     </label>
-                                    <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="exchange-rate" type="number" />
+                                    <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="exchange-rate" type="number" min="0" onKeyDown={(e) => { if (e.key === '-') { e.preventDefault(); } }} />
                                 </div>
                             </div>
-
                     </div>
             <div className="mt-8 flex items-center space-x-4">
                 <button
