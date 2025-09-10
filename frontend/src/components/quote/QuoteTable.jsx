@@ -3,9 +3,15 @@ import React from 'react';
 function QuoteTable({ items, onRemoveItem, onUpdateItem }) {
 
     const handleUpdate = (index, field, value) => {
-        // For numeric fields, ensure the value is a non-negative number
-        const numericValue = (field === 'quantity' || field === 'price') ? Math.max(0, parseFloat(value)) : value;
-        onUpdateItem(index, field, numericValue);
+        const numericFields = ['quantity', 'priceMXN', 'priceUSD'];
+        if (numericFields.includes(field)) {
+            // For numeric fields, ensure the value is a non-negative number.
+            // parseFloat(value) || 0 handles empty strings, converting them to 0 instead of NaN.
+            const numericValue = Math.max(0, parseFloat(value));
+            onUpdateItem(index, field, numericValue);
+        } else {
+            onUpdateItem(index, field, value);
+        }
     };
 
     return (
@@ -17,17 +23,23 @@ function QuoteTable({ items, onRemoveItem, onUpdateItem }) {
                 <table className="w-full text-sm text-left text-gray-500">
                     <thead className="text-xs text-black font-semibold uppercase bg-gray-100">
                         <tr>
-                            <th className="px-4 py-3 w-1/3" scope="col">Description</th>
+                            <th className="px-4 py-3" scope="col">Description</th>
                             <th className="px-4 py-3" scope="col">Quantity</th>
                             <th className="px-4 py-3" scope="col">Price (MXN)</th>
-                            <th className="px-4 py-3" scope="col">Total (MXN)</th>
-                            <th className="px-4 py-3" scope="col">Actions</th>
+                            <th className="px-4 py-3" scope="col">Price (USD)</th>
+                            <th className="px-4 py-3" scope="col">Cost (USD)</th>
+                            <th className="px-4 py-3" scope="col">Sc%</th>
+                            <th className="px-4 py-3" scope="col">S. Charge</th>
+                            <th className="px-4 py-3" scope="col">VAT%</th>
+                            <th className="px-4 py-3" scope="col">VAT</th>
+                            <th className="px-4 py-3" scope="col">Total</th>
+                            <th className="px-4 py-3" scope="col">Delete</th>
                         </tr>
                     </thead>
                     <tbody>
                         {items.length === 0 ? (
                             <tr>
-                                <td colSpan="5" className="text-center py-10 text-gray-500">
+                                <td colSpan="11" className="text-center py-5 text-gray-500">
                                     There are no items in the quote. Add a service to begin.
                                 </td>
                             </tr>
@@ -53,10 +65,51 @@ function QuoteTable({ items, onRemoveItem, onUpdateItem }) {
                                     <td className="px-4 py-2">
                                         <input
                                             type="number"
-                                            value={item.price}
-                                            onChange={(e) => handleUpdate(index, 'price', e.target.value)}
+                                            value={item.priceMXN}
+                                            onChange={(e) => handleUpdate(index, 'priceMXN', e.target.value)}
+                                            className="w-20 bg-gray-50 border border-gray-300 rounded-md p-1 text-center focus:ring-sky-500 focus:border-sky-500"
+                                        />
+                                    </td>
+                                    <td className="px-4 py-2">
+                                        <input
+                                            type="number"
+                                            value={item.priceUSD}
+                                            onChange={(e) => handleUpdate(index, 'priceUSD', e.target.value)}
                                             className="w-24 bg-gray-50 border border-gray-300 rounded-md p-1 text-right focus:ring-sky-500 focus:border-sky-500"
                                         />
+                                    </td>
+                                    <td className="px-4 py-2 font-medium text-gray-900">
+                                        {((item.quantity || 0) * (item.priceUSD || 0)).toFixed(2)}
+                                    </td>
+                                    <td className="px-4 py-2">
+                                        <select
+                                            value={item.scPercentage}
+                                            onChange={(e) => handleUpdate(index, 'scPercentage', parseFloat(e.target.value))}
+                                            className="w-20 bg-gray-50 border border-gray-300 rounded-md p-1 text-center focus:ring-sky-500 focus:border-sky-500"
+                                        >
+                                            <option value="0.10">10%</option>
+                                            <option value="0.12">12%</option>
+                                            <option value="0.15">15%</option>
+                                            <option value="0.18">18%</option>
+                                        </select>
+                                    </td>
+                                     <td className="px-4 py-2 font-medium text-gray-900">
+                                        {((item.priceUSD || 0) * (item.quantity || 0) * (item.scPercentage || 0)).toFixed(2)}
+                                    </td>
+                                     <td className="px-4 py-2">
+                                        <select
+                                            value={item.vatPercentage}
+                                            onChange={(e) => handleUpdate(index, 'vatPercentage', parseFloat(e.target.value))}
+                                            className="w-20 bg-gray-50 border border-gray-300 rounded-md p-1 text-center focus:ring-sky-500 focus:border-sky-500"
+                                        >
+                                            <option value="0.10">10%</option>
+                                            <option value="0.12">12%</option>
+                                            <option value="0.15">15%</option>
+                                            <option value="0.18">18%</option>
+                                        </select>
+                                    </td>
+                                    <td className="px-4 py-2 font-medium text-gray-900">
+                                        {((item.priceUSD || 0) * (item.quantity || 0) * (item.vatPercentage || 0)).toFixed(2)}
                                     </td>
                                     <td className="px-4 py-2 font-medium text-gray-900">
                                         {item.total.toFixed(2)}
