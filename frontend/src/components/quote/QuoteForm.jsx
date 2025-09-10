@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 function QuoteForm({ onAddItem, onOpenServiceModal }) {
     
         const [date, setDate] = useState('');
+        const [ataDate, setAtaDate] = useState('');
+        const [atdDate, setAtdDate] = useState('');
         const [value, setValue] = useState("");
         const [unit, setUnit] = useState("KG");
 
@@ -59,6 +61,9 @@ function QuoteForm({ onAddItem, onOpenServiceModal }) {
         const today = new Date();
         const formattedDate = today.toISOString().split('T')[0];
         setDate(formattedDate); 
+        setAtaDate(formattedDate);
+        setAtdDate(formattedDate);
+
     }, []);
 
     return (
@@ -250,7 +255,7 @@ function QuoteForm({ onAddItem, onOpenServiceModal }) {
                                     Select ATA
                                 </label>
                                 <div className="relative mt-1">
-                                    <input className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="ata" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+                                    <input className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="ata" type="date" value={ataDate} onChange={(e) => setAtaDate(e.target.value)} />
                                 </div>
                             </div>
 
@@ -336,7 +341,7 @@ function QuoteForm({ onAddItem, onOpenServiceModal }) {
                                     Select ATD
                                 </label>
                                 <div className="relative mt-1">
-                                    <input className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="atd" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+                                    <input className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="atd" type="date" value={atdDate} onChange={(e) => setAtdDate(e.target.value)} />
                                   
                                 </div>
                         </div>
