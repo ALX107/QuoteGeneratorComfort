@@ -9,7 +9,7 @@ CREATE TABLE clientes (
 
 -- ========= INDEPENDENT TABLES (Create These First) =========
 
-CREATE TABLE Clientes (
+CREATE TABLE "Clientes" (
   "id_cliente" BIGINT PRIMARY KEY NOT NULL,
   "nombre_cliente" VARCHAR(500) NOT NULL,
   "direccion_dliente" VARCHAR(500),
