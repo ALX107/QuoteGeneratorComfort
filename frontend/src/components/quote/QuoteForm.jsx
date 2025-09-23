@@ -1,7 +1,15 @@
 import React, { useEffect, useState } from 'react';
 function QuoteForm({ onAddItem, onOpenServiceModal }) {
-    
-        const [date, setDate] = useState('');
+    const [clientes, setClientes] = useState([]);
+
+    useEffect(() => {
+        fetch('http://localhost:3000/api/clientes')
+            .then(response => response.json())
+            .then(data => setClientes(data))
+            .catch(error => console.error('Error fetching clients:', error));
+    }, []);
+
+    const [date, setDate] = useState('');
         const [ataDate, setAtaDate] = useState('');
         const [atdDate, setAtdDate] = useState('');
         const [value, setValue] = useState("");
@@ -81,8 +89,9 @@ function QuoteForm({ onAddItem, onOpenServiceModal }) {
                                     className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
                                 />
                                 <datalist id="customer-list">
-                                    <option value="Customer A" />
-                                    <option value="Customer B" />
+                                    {clientes.map((cliente) => (
+                                        <option key={cliente.id_cliente} value={cliente.nombre} />
+                                    ))}
                                 </datalist>
                                 <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
                                     <span className="material-icons text-gray-400"></span>
