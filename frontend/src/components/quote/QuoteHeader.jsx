@@ -10,6 +10,9 @@ function QuoteHeader() {
                     Save Quote
                 </button>
                 <button className="btn-glass">
+                    Save as New
+                </button>
+                <button className="btn-glass">
                     Export to PDF
                 </button>
             </div>

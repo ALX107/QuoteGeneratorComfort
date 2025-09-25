@@ -7,176 +7,224 @@ CREATE TABLE clientes (
     telefono VARCHAR(20)
 );
 
--- ========= INDEPENDENT TABLES (Create These First) =========
+-- ========= TABLAS INDEPENDIENTES (No dependen de otras) =========
 
-CREATE TABLE "Clientes" (
-  "id_cliente" BIGINT PRIMARY KEY NOT NULL,
-  "nombre_cliente" VARCHAR(500) NOT NULL,
-  "direccion_dliente" VARCHAR(500),
-  "telefono_cliente" VARCHAR(15),
-  "ciudad_cliente" VARCHAR(500),
-  "estado_cliente" VARCHAR(500),
-  "zip_cliente" VARCHAR(500)
+-- Tabla para almacenar la información de los clientes.
+CREATE TABLE clientes (
+    id_cliente BIGSERIAL PRIMARY KEY,
+    nombre_cliente VARCHAR(255) NOT NULL,
+    email_cliente VARCHAR(255) UNIQUE,
+    telefono_cliente VARCHAR(25),
+    direccion_cliente VARCHAR(500),
+    ciudad_cliente VARCHAR(100),
+    estado_cliente VARCHAR(100),
+    pais_cliente VARCHAR(100),
+    zip_cliente VARCHAR(20),
+    contacto_cliente VARCHAR(255),
+    --si está activo o inactivo
+    condicion_cliente BOOLEAN DEFAULT TRUE
 );
 
-CREATE TABLE "Aeropuertos" (
-  "id_aeropuerto" BIGINT PRIMARY KEY NOT NULL,
-  "icao_aeropuerto" VARCHAR(4) UNIQUE NOT NULL,
-  "nombre_aeropuerto" VARCHAR(100) NOT NULL,
-  "ciudad_aeropuerto" VARCHAR(50) NOT NULL,
-  "estado_aeropuerto" VARCHAR(500) NOT NULL,
-  "pais_aeropuerto" VARCHAR(500) NOT NULL,
-  -- Note: general, comercial, carga, base aérea
-  "clasificacion_aeropuerto" VARCHAR(500) NOT NULL DEFAULT '20',
-  "grupo_aeropuerto" VARCHAR(500) NOT NULL
+-- Tabla para aeropuertos.
+CREATE TABLE aeropuertos (
+    id_aeropuerto BIGSERIAL PRIMARY KEY,
+    icao_aeropuerto VARCHAR(4) UNIQUE NOT NULL,
+    nombre_aeropuerto VARCHAR(255) NOT NULL,
+    ciudad_aeropuerto VARCHAR(100) NOT NULL,
+    estado_aeropuerto VARCHAR(100) NOT NULL,
+    pais_aeropuerto VARCHAR(100) NOT NULL,
+    -- Clasificación: general, comercial, carga, base aérea, etc.
+    clasificacion_aeropuerto VARCHAR(50) NOT NULL,
+    grupo_aeropuerto VARCHAR(100) NOT NULL
 );
 
-CREATE TABLE "CategoriasOperaciones" (
-  "id_cat_operacion" BIGINT PRIMARY KEY NOT NULL,
-  "nombre_cat_operacion" VARCHAR(50) NOT NULL
-);
--- TABLE NOTE: qué operación se quiere hacer (catering, handling, far 135, transportation) PENDIENTE, PQ SE PUEDE METER COMO ARREGLO Y NO EN BD
-
-CREATE TABLE "CategoriasConceptos" (
-  "id_categoria_serv" BIGINT PRIMARY KEY NOT NULL,
-  "nombre_categoria" VARCHAR(500) NOT NULL
+-- Categorías para los tipos de operación de una cotización (ej. Catering, Handling, etc.)
+CREATE TABLE categorias_operaciones (
+    id_cat_operacion BIGSERIAL PRIMARY KEY,
+    nombre_cat_operacion VARCHAR(100) UNIQUE NOT NULL
 );
 
-CREATE TABLE "RegistroHistoricoCotizaciones" (
-  "id_coti" BIGINT PRIMARY KEY NOT NULL,
-  "numeroreferencia_coti" VARCHAR(500) NOT NULL,
-  "fecha_coti" DATE NOT NULL,
-  "fecha_operacion_coti" DATERANGE NOT NULL,
-  "total_coti" DECIMAL NOT NULL,
-  "exRate_coti" DECIMAL NOT NULL,
-  "nombre_cat_operacion" VARCHAR(500) NOT NULL,
-  "icao_aeronave" VARCHAR(4) NOT NULL,
-  "nombre_cliente" VARCHAR(500) NOT NULL,
-  "icao_aeropuerto" VARCHAR(4) NOT NULL
+-- Categorías para los conceptos o servicios que se pueden cotizar.
+CREATE TABLE categorias_conceptos (
+    id_cat_concepto BIGSERIAL PRIMARY KEY,
+    nombre_cat_concepto VARCHAR(100) UNIQUE NOT NULL
 );
 
+-- ========= TABLAS DEPENDIENTES (Nivel 1) =========
 
--- ========= DEPENDENT TABLES (Level 1) =========
+-- Aeronaves asociadas a un cliente.
+CREATE TABLE aeronaves (
+    id_aeronave BIGSERIAL PRIMARY KEY,
+    icao_aeronave VARCHAR(4) UNIQUE NOT NULL,
+    nombre_aeronave VARCHAR(100) NOT NULL,
+    -- MTOW (Maximum Takeoff Weight) en toneladas.
+    mtow_aeronave DECIMAL(10, 2) NOT NULL,
+    envergadura_aeronave DECIMAL(10, 2) NOT NULL,
+    -- Campos movidos desde la tabla "AeronaveEspeciales" para simplificar.
+    es_miembro_caa BOOLEAN DEFAULT FALSE,
+    fecha_vigencia_caa DATE,
+    matricula_aeronave VARCHAR(20) UNIQUE,
+    id_cliente BIGINT NOT NULL,
 
-CREATE TABLE "Aeronaves" (
-  "id_aeronave" BIGINT PRIMARY KEY NOT NULL,
-  "icao_aeronave" VARCHAR(4) UNIQUE NOT NULL,
-  "nombre_aeronave" VARCHAR(50),
-  -- Note: en toneladas
-  "mtow_aeronave" DECIMAL NOT NULL,
-  "envergadura_aeronave" DECIMAL NOT NULL,
-  "id_cliente" BIGINT NOT NULL,
-  CONSTRAINT "fk_aeronaves_cliente" FOREIGN KEY ("id_cliente") REFERENCES "Clientes"("id_cliente")
+    CONSTRAINT fk_aeronaves_cliente FOREIGN KEY (id_cliente) REFERENCES clientes(id_cliente)
 );
 
-CREATE TABLE "FBOs" (
-  "id_fbo" BIGINT PRIMARY KEY NOT NULL,
-  "nombre_fbo" VARCHAR(500) NOT NULL,
-  "grupo_fbo" VARCHAR(500) NOT NULL,
-  "id_aeropuerto" BIGINT NOT NULL,
-  CONSTRAINT "fk_fbos_aeropuerto" FOREIGN KEY ("id_aeropuerto") REFERENCES "Aeropuertos"("id_aeropuerto")
+-- FBOs (Fixed-Base Operators) asociados a un aeropuerto.
+CREATE TABLE fbos (
+    id_fbo BIGSERIAL PRIMARY KEY,
+    nombre_fbo VARCHAR(255) NOT NULL,
+    grupo_fbo VARCHAR(255) NOT NULL,
+    id_aeropuerto BIGINT NOT NULL,
+
+    CONSTRAINT fk_fbos_aeropuerto FOREIGN KEY (id_aeropuerto) REFERENCES aeropuertos(id_aeropuerto)
 );
 
-CREATE TABLE "ClientesEspeciales" (
-  "id_cliente_esp" BIGINT PRIMARY KEY NOT NULL,
-  "nombre_servicio" VARCHAR(500) NOT NULL,
-  "costo_servicio_especial" DECIMAL NOT NULL,
-  CONSTRAINT "fk_clientesespeciales_cliente" FOREIGN KEY ("id_cliente_esp") REFERENCES "Clientes"("id_cliente")
+-- Conceptos o servicios estandarizados que se pueden ofrecer.
+CREATE TABLE conceptos_estandarizados (
+    id_concepto_std BIGSERIAL PRIMARY KEY,
+    nombre_concpeto_default VARCHAR(255) NOT NULL,
+    id_categoria_concepto BIGINT NOT NULL,
+
+    CONSTRAINT fk_conceptos_categoria FOREIGN KEY (id_categoria_concepto) REFERENCES categorias_conceptos(id_cat_concepto)
 );
 
-CREATE TABLE "ConceptosEstandarizados" (
-  "id_servicio" BIGINT PRIMARY KEY NOT NULL,
-  "default_nombre_servicio" VARCHAR(500),
-  "id_categoria_serv" BIGINT NOT NULL,
-  CONSTRAINT "fk_conceptos_categoria" FOREIGN KEY ("id_categoria_serv") REFERENCES "CategoriasConceptos"("id_categoria_serv")
+-------- Servicios especiales con costo fijo para un cliente específico.
+CREATE TABLE servicios_cliente_especiales (
+    id_cliente_especial BIGSERIAL PRIMARY KEY,
+    nombre_servicio VARCHAR(255) NOT NULL,
+    costo_servicio DECIMAL(12, 2) NOT NULL,
+
+    CONSTRAINT fk_servicios_cliente_especial_cliente FOREIGN KEY (id_cliente_espcial) REFERENCES clientes(id_cliente)
 );
 
+-- ========= TABLAS DEPENDIENTES (Nivel 2) =========
 
--- ========= DEPENDENT TABLES (Level 2) =========
+-- Precios específicos para un concepto. Puede variar por aeropuerto o FBO.
+CREATE TABLE precios_conceptos(
+    id_precio_concepto BIGSERIAL PRIMARY KEY,
+    nombre_local_concepto VARCHAR(255) NOT NULL,
+    costo_concepto DECIMAL(12, 2) NOT NULL,
+    divisa VARCHAR(3) NOT NULL,
+    -- El precio puede ser general o específico para un aeropuerto o FBO.
+    id_concepto_std BIGINT NOT NULL,
+    id_aeropuerto BIGINT,
+    id_fbo BIGINT,
 
-CREATE TABLE "AeronaveEspeciales" (
-  "matricula_aeronave" VARCHAR(500) PRIMARY KEY NOT NULL,
-  "caa_member" BOOLEAN NOT NULL,
-  "id_aeronave" BIGINT UNIQUE NOT NULL,
-  "fecha_vigencia_caa" DATE NOT NULL,
-  CONSTRAINT "fk_aeronaveespeciales_aeronave" FOREIGN KEY ("id_aeronave") REFERENCES "Aeronaves"("id_aeronave")
+    CONSTRAINT fk_precios_concepto FOREIGN KEY (id_concepto_std) REFERENCES conceptos_estandarizados(id_concepto_std),
+    CONSTRAINT fk_precios_aeropuerto FOREIGN KEY (id_aeropuerto) REFERENCES aeropuertos(id_aeropuerto),
+    CONSTRAINT fk_precios_fbo FOREIGN KEY (id_fbo) REFERENCES fbos(id_fbo)
 );
+-------AQÚI ME QUEDÉ-----
+-- Tabla principal de cotizaciones. Contiene la información MÁS RECIENTE de la cotización.
+CREATE TABLE cotizaciones (
+    id_cotizacion BIGSERIAL PRIMARY KEY,
+    -- Información general
+    numero_referencia VARCHAR(50) UNIQUE NOT NULL,
+    fecha_cotizacion DATE NOT NULL DEFAULT CURRENT_DATE,
+    nombre_solicitante VARCHAR(255),
+    nombre_responsable VARCHAR(255),
+    exchange_rate DECIMAL(10, 4) NOT NULL,
 
-CREATE TABLE "PreciosConceptos" (
-  "id_precio_serv" BIGINT PRIMARY KEY NOT NULL,
-  "local_nombre_servicio" VARCHAR(100) NOT NULL,
-  "costo_servicio" DECIMAL NOT NULL,
-  "divisa" VARCHAR(3) NOT NULL,
-  "id_servicio" BIGINT NOT NULL,
-  "id_aeropuerto" BIGINT,
-  "id_fbo" BIGINT,
-  CONSTRAINT "fk_precios_servicio" FOREIGN KEY ("id_servicio") REFERENCES "ConceptosEstandarizados"("id_servicio"),
-  CONSTRAINT "fk_precios_aeropuerto" FOREIGN KEY ("id_aeropuerto") REFERENCES "Aeropuertos"("id_aeropuerto"),
-  CONSTRAINT "fk_precios_fbo" FOREIGN KEY ("id_fbo") REFERENCES "FBOs"("id_fbo")
-);
+    -- Relaciones con otras tablas (IDs)
+    id_cliente BIGINT NOT NULL,
+    id_cat_operacion BIGINT NOT NULL,
+    id_aeronave BIGINT NOT NULL,
+    id_aeropuerto BIGINT NOT NULL,
+    id_fbo BIGINT,
+    
+    -- Información de la operación
+    fecha_llegada DATE,
+    fecha_salida DATE,
+    aeropuerto_origen_id BIGINT,
+    aeropuerto_destino_id BIGINT,
+    tripulacion_llegada INT,
+    pasajeros_llegada INT,
+    tripulacion_salida INT,
+    pasajeros_salida INT,
 
-CREATE TABLE "InfoCotizaciones" (
-  "id_coti" BIGINT PRIMARY KEY NOT NULL,
-  "nombre_cliente" VARCHAR(500),
-  "nombre_cat_operacion" VARCHAR(500),
-  "matricula_aeronave" VARCHAR(500),
-  "icao_aeronave" VARCHAR(500),
-  "mtow_aeronave" DECIMAL,
-  "icao_aeropuerto" VARCHAR(500),
-  "nombre_fbo" VARCHAR(500),
-  "fecha_llegada" DATE,
-  "fecha_salida" DATE,
-  "icao_aerop_to" VARCHAR(500),
-  "icao_aerop_from" VARCHAR(500),
-  "crew_to" INTEGER,
-  "crew_from" INTEGER,
-  "pax_to" INTEGER,
-  "pax_from" INTEGER,
-  "exchange_rate" DECIMAL,
-  "fecha_coti" DATE,
-  "nombre_responsable" VARCHAR(500),
-  "nombre_solicitante" VARCHAR(500),
-  "total_costo" DECIMAL,
-  "total_s_cargo" DECIMAL,
-  "total_vat" DECIMAL,
-  "total_final" DECIMAL,
-  "total_palabra" VARCHAR(500),
+    -- Totales (calculados a partir de los conceptos)
+    total_costo DECIMAL(15, 2),
+    total_s_cargo DECIMAL(15, 2),
+    total_vat DECIMAL(15, 2),
+    total_final DECIMAL(15, 2),
+    total_en_palabras VARCHAR(500),
 
-  -- Valid Foreign Key Constraints
-  CONSTRAINT "fk_infocoti_registro" FOREIGN KEY ("id_coti") REFERENCES "RegistroHistoricoCotizaciones"("id_coti"),
-  CONSTRAINT "fk_infocoti_matricula" FOREIGN KEY ("matricula_aeronave") REFERENCES "AeronaveEspeciales"("matricula_aeronave"),
-  CONSTRAINT "fk_infocoti_icao_aeronave" FOREIGN KEY ("icao_aeronave") REFERENCES "Aeronaves"("icao_aeronave"),
-  CONSTRAINT "fk_infocoti_icao_aeropuerto" FOREIGN KEY ("icao_aeropuerto") REFERENCES "Aeropuertos"("icao_aeropuerto"),
-  CONSTRAINT "fk_infocoti_icao_aerop_to" FOREIGN KEY ("icao_aerop_to") REFERENCES "Aeropuertos"("icao_aeropuerto")
-
-  -- The following references from your script were invalid because the target columns are not UNIQUE or PRIMARY KEYs.
-  -- ref: < "InfoCotizaciones"."nombre_cliente" to "Clientes"."nombre_cliente"
-  -- ref: < "InfoCotizaciones"."nombre_cat_operacion" to "CategoriasOperaciones"."nombre_cat_operacion"
-  -- ref: < "InfoCotizaciones"."mtow_aeronave" to "Aeronaves"."mtow_aeronave"
-  -- ref: < "InfoCotizaciones"."nombre_fbo" to "FBOs"."nombre_fbo"
-  -- ref: < "InfoCotizaciones"."exchange_rate" to "RegistroHistoricoCotizaciones"."exRate_coti"
-  -- ref: < "InfoCotizaciones"."total_final" to "RegistroHistoricoCotizaciones"."total_coti"
+    -- Constraints
+    CONSTRAINT fk_cotizaciones_cliente FOREIGN KEY (id_cliente) REFERENCES clientes(id_cliente),
+    CONSTRAINT fk_cotizaciones_categoria FOREIGN KEY (id_cat_operacion) REFERENCES categorias_operaciones(id_cat_operacion),
+    CONSTRAINT fk_cotizaciones_aeronave FOREIGN KEY (id_aeronave) REFERENCES aeronaves(id_aeronave),
+    CONSTRAINT fk_cotizaciones_aeropuerto FOREIGN KEY (id_aeropuerto) REFERENCES aeropuertos(id_aeropuerto),
+    CONSTRAINT fk_cotizaciones_fbo FOREIGN KEY (id_fbo) REFERENCES fbos(id_fbo),
+    CONSTRAINT fk_cotizaciones_aeropuerto_origen FOREIGN KEY (aeropuerto_origen_id) REFERENCES aeropuertos(id_aeropuerto),
+    CONSTRAINT fk_cotizaciones_aeropuerto_destino FOREIGN KEY (aeropuerto_destino_id) REFERENCES aeropuertos(id_aeropuerto)
 );
 
 
--- ========= DEPENDENT TABLES (Level 3) =========
+-- ========= TABLAS DEPENDIENTES (Nivel 3) =========
 
-CREATE TABLE "RegistroConceptos" (
-  "id_serv_selec" BIGINT PRIMARY KEY NOT NULL,
-  "nombre_serv_selec" VARCHAR(500) NOT NULL,
-  "cantidad_serv_selec" INTEGER NOT NULL,
-  "costo_mxn" DECIMAL NOT NULL,
-  "costo_usd" DECIMAL NOT NULL,
-  -- Note: costo_usd * cantidad
-  "costo_total_usd" DECIMAL NOT NULL,
-  "sc_porcentaje" INTEGER NOT NULL,
-  "s_cargo" DECIMAL NOT NULL,
-  "vat_porcentaje" INTEGER NOT NULL,
-  "vat" DECIMAL NOT NULL,
-  "total" DECIMAL NOT NULL
-  -- The original script defined invalid foreign keys from this table to non-unique columns in "PreciosConceptos".
-  -- A logical relationship would be a foreign key from this table to "PreciosConceptos"."id_precio_serv",
-  -- which could be added as:
-  -- "id_precio_serv" BIGINT,
-  -- CONSTRAINT "fk_registro_precio" FOREIGN KEY ("id_precio_serv") REFERENCES "PreciosConceptos"("id_precio_serv")
+-- Tabla de enlace para registrar los conceptos (servicios) incluidos en cada cotización.
+CREATE TABLE cotizacion_conceptos (
+    id_cotizacion_concepto BIGSERIAL PRIMARY KEY,
+    id_cotizacion BIGINT NOT NULL,
+    -- Podría ser un concepto de precio fijo o uno ad-hoc.
+    id_precio_concepto BIGINT,
+    
+    nombre_servicio VARCHAR(255) NOT NULL,
+    cantidad INT NOT NULL,
+    costo_mxn DECIMAL(12, 2) NOT NULL,
+    costo_usd DECIMAL(12, 2) NOT NULL,
+    
+    -- Porcentajes aplicados
+    sc_porcentaje DECIMAL(5, 2) NOT NULL, -- Ej: 15.00 para 15%
+    vat_porcentaje DECIMAL(5, 2) NOT NULL,
+
+    -- Campos calculados (pueden ser calculados en la aplicación o aquí)
+    s_cargo DECIMAL(12, 2) NOT NULL,
+    vat DECIMAL(12, 2) NOT NULL,
+    total_usd DECIMAL(15, 2) NOT NULL,
+
+    CONSTRAINT fk_conceptos_cotizacion FOREIGN KEY (id_cotizacion) REFERENCES cotizaciones(id_cotizacion),
+    CONSTRAINT fk_conceptos_precio FOREIGN KEY (id_precio_concepto) REFERENCES precios_conceptos(id_precio_concepto)
+);
+
+-- Tabla para almacenar el historial de cambios y versiones de las cotizaciones.
+CREATE TABLE cotizaciones_historico (
+    id_historico BIGSERIAL PRIMARY KEY,
+    -- Referencia a la cotización original en la tabla 'cotizaciones'
+    id_cotizacion BIGINT NOT NULL,
+    
+    -- Datos de la cotización en el momento del registro
+    numero_referencia VARCHAR(50) NOT NULL,
+    fecha_cotizacion DATE NOT NULL,
+    nombre_solicitante VARCHAR(255),
+    nombre_responsable VARCHAR(255),
+    exchange_rate DECIMAL(10, 4) NOT NULL,
+    id_cliente BIGINT NOT NULL,
+    id_cat_operacion BIGINT NOT NULL,
+    id_aeronave BIGINT NOT NULL,
+    id_aeropuerto BIGINT NOT NULL,
+    id_fbo BIGINT,
+    fecha_llegada DATE,
+    fecha_salida DATE,
+    aeropuerto_origen_id BIGINT,
+    aeropuerto_destino_id BIGINT,
+    tripulacion_llegada INT,
+    pasajeros_llegada INT,
+    tripulacion_salida INT,
+    pasajeros_salida INT,
+    total_costo DECIMAL(15, 2),
+    total_s_cargo DECIMAL(15, 2),
+    total_vat DECIMAL(15, 2),
+    total_final DECIMAL(15, 2),
+    total_en_palabras VARCHAR(500),
+
+    -- Metadatos del historial
+    fecha_modificacion TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    usuario_modificacion VARCHAR(255), -- Quién hizo el cambio
+    tipo_accion VARCHAR(50) NOT NULL, -- 'CREADA', 'ACTUALIZADA', 'REVERTIDA', etc.
+    version INT NOT NULL, -- Un número de versión que se incrementa
+    
+    -- No se necesita una FK directa a cotizaciones para permitir que el historial persista
+    -- incluso si la cotización original se elimina, pero mantenemos el ID para la relación lógica.
+    CONSTRAINT chk_tipo_accion CHECK (tipo_accion IN ('CREADA', 'ACTUALIZADA', 'REVERTIDA', 'CANCELADA'))
 );

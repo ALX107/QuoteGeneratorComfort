@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-function QuoteForm({ onAddItem, onOpenServiceModal }) {
+function QuoteForm({onAddItem, onOpenServiceModal }) {
     const [clientes, setClientes] = useState([]);
 
     useEffect(() => {
@@ -10,8 +10,8 @@ function QuoteForm({ onAddItem, onOpenServiceModal }) {
     }, []);
 
     const [date, setDate] = useState('');
-        const [ataDate, setAtaDate] = useState('');
-        const [atdDate, setAtdDate] = useState('');
+        const [etaDate, setEtaDate] = useState('');
+        const [etdDate, setEtdDate] = useState('');
         const [value, setValue] = useState("");
         const [unit, setUnit] = useState("KG");
 
@@ -69,8 +69,8 @@ function QuoteForm({ onAddItem, onOpenServiceModal }) {
         const today = new Date();
         const formattedDate = today.toISOString().split('T')[0];
         setDate(formattedDate); 
-        setAtaDate(formattedDate);
-        setAtdDate(formattedDate);
+        setEtaDate(formattedDate);
+        setEtdDate(formattedDate);
 
     }, []);
 
@@ -260,11 +260,11 @@ function QuoteForm({ onAddItem, onOpenServiceModal }) {
 
                             {/* ATA */}
                             <div>
-                                <label className="block text-sm font-medium text-dark-gray" htmlFor="ata">
-                                    Select ATA
+                                <label className="block text-sm font-medium text-dark-gray" htmlFor="eta">
+                                    Select ETA
                                 </label>
                                 <div className="relative mt-1">
-                                    <input className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="ata" type="date" value={ataDate} onChange={(e) => setAtaDate(e.target.value)} />
+                                    <input className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="eta" type="date" value={etaDate} onChange={(e) => setEtaDate(e.target.value)} />
                                 </div>
                             </div>
 
@@ -272,13 +272,13 @@ function QuoteForm({ onAddItem, onOpenServiceModal }) {
     {/* Este es el contenedor clave: ocupa 2 columnas y usa flexbox */}
     <div className="md:col-span-2 flex items-end gap-6">
         
-        {/* ATA Checkbox - Con tamaño fijo, no se encogerá */}
+        {/* ETA Checkbox - Con tamaño fijo, no se encogerá */}
         <div className="flex-shrink-0 flex items-end pb-2">
             <div className="flex items-center h-5">
-                <input id="ata-checkbox" name="ata-checkbox" type="checkbox" className="focus:ring-sky-500 h-4 w-4 text-sky-600 border-gray-300 rounded" />
+                <input id="eta-checkbox" name="eta-checkbox" type="checkbox" className="focus:ring-sky-500 h-4 w-4 text-sky-600 border-gray-300 rounded" />
             </div>
             <div className="ml-2 text-sm">
-                <label htmlFor="ata-checkbox" className="font-medium text-dark-gray whitespace-nowrap">No ATA</label>
+                <label htmlFor="eta-checkbox" className="font-medium text-dark-gray whitespace-nowrap">No ETA</label>
             </div>
         </div>
 
@@ -302,7 +302,6 @@ function QuoteForm({ onAddItem, onOpenServiceModal }) {
             </div>
         </div>
     </div>
-
                             {/* Crew */}
                             <div>
                                 <label className="block text-sm font-medium text-dark-gray" htmlFor="crew-from">
@@ -346,25 +345,25 @@ function QuoteForm({ onAddItem, onOpenServiceModal }) {
                             </div>
                         </div>
                         <div>
-                                <label className="block text-sm font-medium text-dark-gray" htmlFor="atd">
-                                    Select ATD
+                                <label className="block text-sm font-medium text-dark-gray" htmlFor="etd">
+                                    Select ETD
                                 </label>
                                 <div className="relative mt-1">
-                                    <input className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="atd" type="date" value={atdDate} onChange={(e) => setAtdDate(e.target.value)} />
+                                    <input className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="etd" type="date" value={etdDate} onChange={(e) => setEtdDate(e.target.value)} />
                                   
                                 </div>
                         </div>
 
                         <div className="md:col-span-2 flex items-end gap-6">
 
-                         {/* ATD Checkbox */}
+                         {/* ETD Checkbox */}
                             <div className="flex-shrink-0 flex items-end pb-2">
                                 <div className="flex items-center h-5">
-                                    <input id="atd-checkbox" name="atd-checkbox" type="checkbox" className="focus:ring-sky-500 h-4 w-4 text-sky-600 border-gray-300 rounded" />
+                                    <input id="etd-checkbox" name="etd-checkbox" type="checkbox" className="focus:ring-sky-500 h-4 w-4 text-sky-600 border-gray-300 rounded" />
                                 </div>
 
                                 <div className="ml-2 text-sm">
-                                    <label htmlFor="atd-checkbox" className="font-medium text-dark-gray">No ATD</label>
+                                    <label htmlFor="etd-checkbox" className="font-medium text-dark-gray">No ETD</label>
                                 </div>
                             </div>
                         <div className="flex-1" >
@@ -430,6 +429,13 @@ function QuoteForm({ onAddItem, onOpenServiceModal }) {
                     className="btn-glass"
                 >
                     + Add Service
+                </button>
+                <button
+                    type="button"
+                    onClick={onAddItem}
+                    className="btn-glass"
+                >
+                    + Add Empty Row
                 </button>
             </div>
         </main>

@@ -23,7 +23,18 @@ function NewQuote() {
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const handleAddItem = () => {
-        setItems([...items, { description: '', quantity: 1, price: 0, total: 0 }]);
+        const newItem = {
+            description: '',
+            quantity: 1,
+            priceMXN: 0,
+            priceUSD: 0,
+            scPercentage: 0.10, // Default 10%
+            vatPercentage: 0.10, // Default 10%
+            // Calculated fields
+            total: 0,
+        };
+        // The update function will correctly calculate the total for the new item
+        setItems([...items, newItem]);
     };
 
     const handleRemoveItem = (index) => {
@@ -35,10 +46,15 @@ function NewQuote() {
     const handleUpdateItem = (index, field, value) => {
         const newItems = [...items];
         const item = newItems[index];
-        item[field] = value;
-        if (field !== 'description') {
-            item.total = item.quantity * item.price;
-        }
+        item[field] = value; // Update the specific field
+
+        // Recalculate the total based on the full item data
+        const cost = (item.quantity || 0) * (item.priceUSD || 0);
+        const serviceCharge = cost * (item.scPercentage || 0);
+        const vat = cost * (item.vatPercentage || 0);
+
+        item.total = cost + serviceCharge + vat;
+
         setItems(newItems);
     };
 

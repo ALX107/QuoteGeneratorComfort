@@ -6,12 +6,12 @@ function AddServiceModal({ isOpen, onClose, onSave, onRemoveService, initialSele
 
     useEffect(() => {
         if (isOpen) {
-            // Initialize state from props when modal opens
+            // Initialize state from props ONLY when modal opens
             const selectedIds = new Set(initialSelectedServices.map(s => s.id));
             setSelectedServices(initialSelectedServices);
             setAvailableServices(allServices.filter(s => !selectedIds.has(s.id)));
         }
-    }, [isOpen, initialSelectedServices, allServices]);
+    }, [isOpen]); // <-- Depend only on 'isOpen'
 
     if (!isOpen) {
         return null;
