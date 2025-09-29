@@ -5,6 +5,7 @@ import axios from 'axios';
 function QuoteForm({onAddItem, onOpenServiceModal }) {
     const [clientes, setClientes] = useState([]);
     const [aeropuertos, setAeropuertos] = useState([]);
+    const [categoriasOperaciones, setCategoriasOperaciones] = useState([]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -16,6 +17,10 @@ function QuoteForm({onAddItem, onOpenServiceModal }) {
                 // Petición para aeropuertos
                 const aeropuertosResponse = await axios.get('http://localhost:3000/api/listar/aeropuertos');
                 setAeropuertos(aeropuertosResponse.data);
+
+                // Petición para categoras de las operaciones (se muestra en flight type)
+                const categoriasOperacionesResponse = await axios.get('http://localhost:3000/api/listar/categoriasOperaciones');
+                setCategoriasOperaciones(categoriasOperacionesResponse.data);
 
             } catch (error) {
                 console.error('Error fetching data:', error);
@@ -121,14 +126,15 @@ function QuoteForm({onAddItem, onOpenServiceModal }) {
                             </label>
                             <div className="relative mt-1">
                                 <input
-                                    list="flight-type-list"
+                                    list="categoriasOperaciones-list"
                                     id="flight-type"
                                     name="flight-type"
                                     className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
                                 />
-                                <datalist id="flight-type-list">
-                                    <option value="Catering" />
-                                    <option value="Militar" />
+                               <datalist id="categoriasOperaciones-list">
+                                    {categoriasOperaciones.map((categoriaOp) => (
+                                        <option key={categoriaOp.id_cat_operacion} value={categoriaOp.nombre_cat_operacion} />
+                                    ))}
                                 </datalist>
 
                                 <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
@@ -396,7 +402,6 @@ function QuoteForm({onAddItem, onOpenServiceModal }) {
                                         />
 
                                           <datalist id="to-station-list">
-                                              <option>Select a station</option>
                                                 <option>Cancun International Airport (CUN)</option>
                                                 <option>Mexico City International Airport (MEX)</option>
                                                 <option>Guadalajara International Airport (GDL)</option>
