@@ -1,12 +1,28 @@
 import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+
+
 function QuoteForm({onAddItem, onOpenServiceModal }) {
     const [clientes, setClientes] = useState([]);
+    const [aeropuertos, setAeropuertos] = useState([]);
 
     useEffect(() => {
-        fetch('http://localhost:3000/api/clientes')
-            .then(response => response.json())
-            .then(data => setClientes(data))
-            .catch(error => console.error('Error fetching clients:', error));
+        const fetchData = async () => {
+            try {
+                // Petición para clientes
+                const clientesResponse = await axios.get('http://localhost:3000/api/listar/clientes');
+                setClientes(clientesResponse.data);
+
+                // Petición para aeropuertos
+                const aeropuertosResponse = await axios.get('http://localhost:3000/api/listar/aeropuertos');
+                setAeropuertos(aeropuertosResponse.data);
+
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        };
+
+        fetchData();
     }, []);
 
     const [date, setDate] = useState('');
@@ -90,7 +106,7 @@ function QuoteForm({onAddItem, onOpenServiceModal }) {
                                 />
                                 <datalist id="customer-list">
                                     {clientes.map((cliente) => (
-                                        <option key={cliente.id_cliente} value={cliente.nombre} />
+                                        <option key={cliente.id_cliente} value={cliente.nombre_cliente} />
                                     ))}
                                 </datalist>
                                 <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
@@ -247,9 +263,9 @@ function QuoteForm({onAddItem, onOpenServiceModal }) {
                                         className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
                                    />
                                    <datalist id="select-station-list">
-                                        <option>Cancun International Airport (CUN)</option>
-                                        <option>Mexico City International Airport (MEX)</option>
-                                        <option>Guadalajara International Airport (GDL)</option>
+                                        {aeropuertos.map((aeropuerto) => (
+                                        <option key={aeropuerto.id_aeropuerto} value={aeropuerto.nombre_aeropuerto} />
+                                    ))}
                                     </datalist>
 
                                     <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
