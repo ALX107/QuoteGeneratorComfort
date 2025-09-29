@@ -121,7 +121,7 @@ function QuoteForm({onAddItem, onOpenServiceModal }) {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-dark-gray" htmlFor="aircraft-type">
+                            <label className="block text-sm font-medium text-dark-gray" htmlFor="flight-type">
                                 Select Flight Type
                             </label>
                             <div className="relative mt-1">
@@ -148,7 +148,7 @@ function QuoteForm({onAddItem, onOpenServiceModal }) {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-dark-gray">
+                            <label className="block text-sm font-medium text-dark-gray" htmlFor="date">
                                 Date
                             </label>
 
@@ -258,7 +258,7 @@ function QuoteForm({onAddItem, onOpenServiceModal }) {
                         <div className="md:col-span-4 grid grid-cols-1 md:grid-cols-7 gap-4 items-end">
                             {/* Select Station */}
                             <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-dark-gray" htmlFor="station">
+                                <label className="block text-sm font-medium text-dark-gray" htmlFor="select-station">
                                     Select Station
                                 </label>
                                 <div className="relative mt-1">
@@ -312,8 +312,8 @@ function QuoteForm({onAddItem, onOpenServiceModal }) {
             <div className="relative mt-1">
                  <input
                     list="from-station-list"
-                    id="from-statation"
-                    name="statation"
+                    id="from-station"
+                    name="station"
                     className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
                  />
                    <datalist id="from-station-list">
@@ -346,7 +346,7 @@ function QuoteForm({onAddItem, onOpenServiceModal }) {
                         {/* Cuarta Fila */}
                         <div className="md:col-span-4 grid grid-cols-1 md:grid-cols-7 gap-4 items-end">
                         <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-dark-gray" htmlFor="fob">
+                            <label className="block text-sm font-medium text-dark-gray" htmlFor="fbo">
                                 Select FBO
                             </label>
 
@@ -403,10 +403,10 @@ function QuoteForm({onAddItem, onOpenServiceModal }) {
                                             className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
                                         />
 
-                                         <datalist id="to-station-list">
-                                        {aeropuertos.map((aeropuerto) => (
-                                        <option key={aeropuerto.id_aeropuerto} value={aeropuerto.nombre_aeropuerto} />
-                                        ))}
+                                        <datalist id="to-station-list">
+                                            {aeropuertos.map((aeropuerto) => (
+                                            <option key={aeropuerto.id_aeropuerto} value={aeropuerto.nombre_aeropuerto} />
+                                            ))}
                                         </datalist>
 
                                         <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">

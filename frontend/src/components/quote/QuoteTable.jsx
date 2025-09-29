@@ -49,6 +49,8 @@ function QuoteTable({ items, onRemoveItem, onUpdateItem }) {
                                     <td className="px-4 py-2">
                                         <input
                                             type="text"
+                                            id="description"
+                                            name="description"
                                             value={item.description}
                                             onChange={(e) => handleUpdate(index, 'description', e.target.value)}
                                             className="w-full bg-transparent border-none focus:ring-0 p-1"
@@ -57,6 +59,8 @@ function QuoteTable({ items, onRemoveItem, onUpdateItem }) {
                                     <td className="px-4 py-2">
                                         <input
                                             type="number"
+                                            id="quantity"
+                                            name="quantity"
                                             value={item.quantity}
                                             onChange={(e) => handleUpdate(index, 'quantity', e.target.value)}
                                             className="w-20 bg-gray-50 border border-gray-300 rounded-md p-1 text-center focus:ring-sky-500 focus:border-sky-500"
@@ -65,6 +69,8 @@ function QuoteTable({ items, onRemoveItem, onUpdateItem }) {
                                     <td className="px-4 py-2">
                                         <input
                                             type="number"
+                                            id="priceMXN"
+                                            name="priceMXN"
                                             value={item.priceMXN}
                                             onChange={(e) => handleUpdate(index, 'priceMXN', e.target.value)}
                                             className="w-20 bg-gray-50 border border-gray-300 rounded-md p-1 text-center focus:ring-sky-500 focus:border-sky-500"
@@ -73,6 +79,8 @@ function QuoteTable({ items, onRemoveItem, onUpdateItem }) {
                                     <td className="px-4 py-2">
                                         <input
                                             type="number"
+                                            id="priceUSD"
+                                            name="priceUSD"
                                             value={item.priceUSD}
                                             onChange={(e) => handleUpdate(index, 'priceUSD', e.target.value)}
                                             className="w-24 bg-gray-50 border border-gray-300 rounded-md p-1 text-right focus:ring-sky-500 focus:border-sky-500"
@@ -83,6 +91,8 @@ function QuoteTable({ items, onRemoveItem, onUpdateItem }) {
                                     </td>
                                     <td className="px-4 py-2">
                                         <select
+                                            id="scPercentage"
+                                            name="scPercentage"
                                             value={item.scPercentage}
                                             onChange={(e) => handleUpdate(index, 'scPercentage', parseFloat(e.target.value))}
                                             className="w-20 bg-gray-50 border border-gray-300 rounded-md p-1 text-center focus:ring-sky-500 focus:border-sky-500"
@@ -98,6 +108,8 @@ function QuoteTable({ items, onRemoveItem, onUpdateItem }) {
                                     </td>
                                      <td className="px-4 py-2">
                                         <select
+                                            id="vatPercentage"
+                                            name="vatPercentage"
                                             value={item.vatPercentage}
                                             onChange={(e) => handleUpdate(index, 'vatPercentage', parseFloat(e.target.value))}
                                             className="w-20 bg-gray-50 border border-gray-300 rounded-md p-1 text-center focus:ring-sky-500 focus:border-sky-500"
