@@ -317,10 +317,12 @@ function QuoteForm({onAddItem, onOpenServiceModal }) {
                     className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
                  />
                    <datalist id="from-station-list">
-                        <option>Cancun International Airport (CUN)</option>
-                        <option>Mexico City International Airport (MEX)</option>
-                        <option>Guadalajara International Airport (GDL)</option>
-                    </datalist>
+                                    {aeropuertos.map((aeropuerto) => (
+                                        <option key={aeropuerto.id_aeropuerto} value={aeropuerto.nombre_aeropuerto} />
+                                    ))}
+                   </datalist>
+
+                
             </div>
         </div>
     </div>
@@ -401,11 +403,10 @@ function QuoteForm({onAddItem, onOpenServiceModal }) {
                                             className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
                                         />
 
-                                          <datalist id="to-station-list">
-                                                <option>Cancun International Airport (CUN)</option>
-                                                <option>Mexico City International Airport (MEX)</option>
-                                                <option>Guadalajara International Airport (GDL)</option>
-                                            
+                                         <datalist id="to-station-list">
+                                        {aeropuertos.map((aeropuerto) => (
+                                        <option key={aeropuerto.id_aeropuerto} value={aeropuerto.nombre_aeropuerto} />
+                                        ))}
                                         </datalist>
 
                                         <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
