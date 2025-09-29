@@ -1,12 +1,3 @@
-DROP TABLE clientes;
-
-CREATE TABLE clientes (
-    id_cliente SERIAL PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    telefono VARCHAR(20)
-);
-
 -- ========= TABLAS INDEPENDIENTES (No dependen de otras) =========
 
 -- Tabla para almacenar la información de los clientes.
@@ -82,7 +73,7 @@ CREATE TABLE fbos (
 -- Conceptos o servicios estandarizados que se pueden ofrecer.
 CREATE TABLE conceptos_estandarizados (
     id_concepto_std BIGSERIAL PRIMARY KEY,
-    nombre_concpeto_default VARCHAR(255) NOT NULL,
+    nombre_concepto_default VARCHAR(255) NOT NULL,
     id_categoria_concepto BIGINT NOT NULL,
 
     CONSTRAINT fk_conceptos_categoria FOREIGN KEY (id_categoria_concepto) REFERENCES categorias_conceptos(id_cat_concepto)
@@ -90,11 +81,13 @@ CREATE TABLE conceptos_estandarizados (
 
 -------- Servicios especiales con costo fijo para un cliente específico.
 CREATE TABLE servicios_cliente_especiales (
-    id_cliente_especial BIGSERIAL PRIMARY KEY,
+    id_servicio_especial BIGSERIAL PRIMARY KEY, 
+    id_cliente BIGINT NOT NULL, -- FK que referencia al cliente
     nombre_servicio VARCHAR(255) NOT NULL,
     costo_servicio DECIMAL(12, 2) NOT NULL,
 
-    CONSTRAINT fk_servicios_cliente_especial_cliente FOREIGN KEY (id_cliente_espcial) REFERENCES clientes(id_cliente)
+    -- La constraint ahora apunta a la columna correcta
+    CONSTRAINT fk_servicios_cliente_especial_cliente FOREIGN KEY (id_cliente) REFERENCES clientes(id_cliente)
 );
 
 -- ========= TABLAS DEPENDIENTES (Nivel 2) =========
@@ -228,3 +221,4 @@ CREATE TABLE cotizaciones_historico (
     -- incluso si la cotización original se elimina, pero mantenemos el ID para la relación lógica.
     CONSTRAINT chk_tipo_accion CHECK (tipo_accion IN ('CREADA', 'ACTUALIZADA', 'REVERTIDA', 'CANCELADA'))
 );
+
