@@ -5,12 +5,30 @@ import axios from 'axios';
 function QuoteForm({onAddItem, onOpenServiceModal, onSelectionChange }) {
     const [clientes, setClientes] = useState([]);
     const [aeropuertos, setAeropuertos] = useState([]);
+    const [clientesAeronaves, setClientesAeronaves] = useState([]); 
+
     const [allFbos, setAllFbos] = useState([]);
     const [filteredFbos, setFilteredFbos] = useState([]);
+    const [allaeronavesModelos, setAllAeronavesModelos] = useState([]); 
+    const [filteredRegistrations, setFilteredRegistrations] = useState([]);
+    const [filteredAeronavesModelos, setFilteredAeronavesModelos] = useState([]);
+    const [selectedCustomer, setSelectedCustomer] = useState(null);
+    const [modelValue, setModelValue] = useState('');
+    const [registrationValue, setRegistrationValue] = useState('');
+    const [isCaaMember, setIsCaaMember] = useState(false); 
+
+
     const [categoriasOperaciones, setCategoriasOperaciones] = useState([]);
     const [selectedAirportId, setSelectedAirportId] = useState(null);
     const [selectedFboId, setSelectedFboId] = useState(null);
     
+    //Fecha y MTOW
+        const [date, setDate] = useState('');
+        const [etaDate, setEtaDate] = useState('');
+        const [etdDate, setEtdDate] = useState('');
+        const [mtowValue, setMtowValue] = useState("");
+        const [unit, setUnit] = useState("KG");
+
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -26,6 +44,14 @@ function QuoteForm({onAddItem, onOpenServiceModal, onSelectionChange }) {
                 const fbosResponse = await axios.get('http://localhost:3000/api/listar/fbos');
                 setAllFbos(fbosResponse.data);
 
+                // Petición para Modelos Aeronave (necesitamos todos para poder filtrar después)
+                const aeronavesModelosResponse = await axios.get('http://localhost:3000/api/listar/aeronaves_modelos');
+                setAllAeronavesModelos(aeronavesModelosResponse.data);
+
+                // Petición para Clientes Aeronaves
+                const clientesAeronavesResponse = await axios.get('http://localhost:3000/api/listar/clientes_aeronaves');
+                setClientesAeronaves(clientesAeronavesResponse.data);
+
                 // Fetch initial services (generic)
                 onSelectionChange(null, null);
 
@@ -36,6 +62,24 @@ function QuoteForm({onAddItem, onOpenServiceModal, onSelectionChange }) {
 
         fetchData();
     }, []);
+
+     // Efecto para actualizar el estado del checkbox cuando cambia la matrícula seleccionada
+        useEffect(() => {
+            // 1. Busca la aeronave completa en la lista filtrada usando la matrícula seleccionada.
+            const selectedRegistration = filteredRegistrations.find(
+                (reg) => reg.matricula_aeronave === registrationValue
+            );
+
+            // 2. Si se encuentra una aeronave...
+            if (selectedRegistration) {
+                // 3. Actualiza el estado del checkbox.
+                setIsCaaMember(!!selectedRegistration.es_miembro_caa);
+            } else {
+                // 4. Si no hay matrícula seleccionada, asegúrate de que la casilla esté desmarcada.
+                setIsCaaMember(false);
+            }
+        }, [registrationValue, filteredRegistrations]); // 5. Este efecto se ejecuta cuando cambia la matrícula o la lista de matrículas.
+
 
     const handleStationChange = (event) => {
         const selectedAirportName = event.target.value;
@@ -72,31 +116,89 @@ function QuoteForm({onAddItem, onOpenServiceModal, onSelectionChange }) {
         }
     };
 
-    const [date, setDate] = useState('');
-        const [etaDate, setEtaDate] = useState('');
-        const [etdDate, setEtdDate] = useState('');
-        const [value, setValue] = useState("");
-        const [unit, setUnit] = useState("KG");
+            const handleCustomerChange = (event) => {
+            const selectedCustomerName = event.target.value;
+            
+          
 
-        const handleInputChange = (e) => {
-            let inputValue = e.target.value;
+            // Limpiamos los campos relacionados inmediatamente.
+            setSelectedCustomer(null);
+            setModelValue('');
+            setRegistrationValue('');
+            setMtowValue('');
+            setFilteredRegistrations([]);
+            setFilteredAeronavesModelos([]);
+            
+            
 
-            let cleanedValue = inputValue.replace(/[^0-9.]/g, '');
+            const customer = clientes.find(c => c.nombre_cliente === selectedCustomerName);
 
-            const decimalParts = cleanedValue.split('.');
-            if (decimalParts.length > 2) {
-                cleanedValue = decimalParts[0] + '.' + decimalParts.slice(1).join('');
-            }
-        
-            if (cleanedValue === '' || parseFloat(cleanedValue) < 0) {
-                setValue('');
-            } else {
-                setValue(cleanedValue);
+            if (customer) {
+                
+                setSelectedCustomer(customer);
+                
+                const customerAircraftLinks = clientesAeronaves.filter(
+                    registration => registration.id_cliente === customer.id_cliente
+                );
+
+                const uniqueModelIds = [...new Set(customerAircraftLinks.map(registration => registration.id_modelo_aeronave))];
+
+                const models = allaeronavesModelos.filter(model => 
+                    uniqueModelIds.includes(model.id_modelo_aeronave)
+                );
+
+                setFilteredAeronavesModelos(models);
             }
         };
 
+        const handleModelChange = (event) => {
+            const selectedModelName = event.target.value;
+            setModelValue(selectedModelName);
+            setRegistrationValue(''); // Reset registration on model change
+            setMtowValue(''); // Reset MTOW on model change
+        
+            const selectedModel = filteredAeronavesModelos.find(
+                (model) => model.nombre_aeronave === selectedModelName
+            );
+        
+            if (selectedModel && selectedCustomer) {
+                const registrations = clientesAeronaves.filter(
+                    (registration) =>
+                        registration.id_modelo_aeronave === selectedModel.id_modelo_aeronave &&
+                        registration.id_cliente === selectedCustomer.id_cliente
+                );
+                setFilteredRegistrations(registrations);
+        
+                if (selectedModel.mtow_aeronave) {
+                    setMtowValue(selectedModel.mtow_aeronave);
+                    setUnit('KG');
+                }
+            } else {
+                setFilteredRegistrations([]);
+            }
+        };
+
+
+
+            const handleInputChange = (e) => {
+                let inputValue = e.target.value;
+
+                let cleanedValue = inputValue.replace(/[^0-9.]/g, '');
+
+                const decimalParts = cleanedValue.split('.');
+                if (decimalParts.length > 2) {
+                    cleanedValue = decimalParts[0] + '.' + decimalParts.slice(1).join('');
+                }
+            
+                if (cleanedValue === '' || parseFloat(cleanedValue) < 0) {
+                    setValue('');
+                } else {
+                    setValue(cleanedValue);
+                }
+            };
+
         const convertToLB = () => {
-            const currentValue = parseFloat(value);
+            const currentValue = parseFloat(mtowValue);
             if (isNaN(currentValue) || currentValue <=0) {
                 setValue('');
                 return;
@@ -112,7 +214,7 @@ function QuoteForm({onAddItem, onOpenServiceModal, onSelectionChange }) {
             };
           
           const convertToKG = () => {
-            const currentValue = parseFloat(value);
+            const currentValue = parseFloat(mtowValue);
             if (isNaN(currentValue) || currentValue <= 0) {
                 setValue('');
                 return;
@@ -148,6 +250,7 @@ function QuoteForm({onAddItem, onOpenServiceModal, onSelectionChange }) {
                                     list="customer-list"
                                     id="customer"
                                     name="customer"
+                                    onChange={handleCustomerChange}
                                     className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
                                 />
                                 <datalist id="customer-list">
@@ -202,24 +305,7 @@ function QuoteForm({onAddItem, onOpenServiceModal, onSelectionChange }) {
                         </div>
 
                        <div className="col-span-1 md:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4 items-start">
-                        {/* Aircraft Registration */}
-                        <div>
-                            <label className="block text-sm font-medium text-dark-gray" htmlFor="aircraft-registration">
-                                Aircraft Registration
-                            </label>
-                            <input
-                                className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
-                                id="aircraft-registration"
-                                type="text"
-                            />
-                            <div className="checkbox-container flex items-center gap-2 mt-1">
-                                <input id="caa-member" type="checkbox" />
-                                <label htmlFor="caa-member" className="block text-sm font-medium text-dark-gray">
-                                    Is CAA Member
-                                </label>
-                            </div>
-                        </div>
-
+                        
                         {/* Aircraft Model */}
                         <div>
                             <label className="block text-sm font-medium text-dark-gray" htmlFor="aircraft-model">
@@ -231,10 +317,14 @@ function QuoteForm({onAddItem, onOpenServiceModal, onSelectionChange }) {
                                     id="aircraft-model"
                                     name="aircraft-model"
                                     className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
+                                    onChange={handleModelChange}
+                                    value={modelValue}
                                 />
-                                <datalist id="aircraft-model-list">
-                                    <option value="Boeing 737" />
-                                    <option value="Airbus A320 " />
+                                 <datalist id="aircraft-model-list">
+                                    {/* Se mapean las Aeronaves filtradas para mostrarlas como opciones */}
+                                    {filteredAeronavesModelos.map((model) => (
+                                        <option key={model.id_modelo_aeronave} value={model.nombre_aeronave} />
+                                     ))}
                                 </datalist>
                                 
                                 <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
@@ -242,6 +332,42 @@ function QuoteForm({onAddItem, onOpenServiceModal, onSelectionChange }) {
                                 </span>
                             </div>
                         </div>
+                        
+                        {/* Aircraft Registration */}
+                        <div>
+                            <label className="block text-sm font-medium text-dark-gray" htmlFor="aircraft-registration">
+                                Aircraft Registration
+                            </label>
+
+                              <input
+                                    list="aircraft-registration-list"
+                                    className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
+                                    id="aircraft-registration"
+                                    type="text"
+                                    value={registrationValue}
+                                    onChange={(e) => setRegistrationValue(e.target.value)}
+                                />
+
+                            <datalist id="aircraft-registration-list">
+                                    {filteredRegistrations.map((registration) => (
+                                        <option key={registration.id_cliente_aeronave} value={registration.matricula_aeronave} />
+                                    ))}
+                            </datalist>
+
+                            <div className="checkbox-container flex items-center gap-2 mt-1">
+                                <input 
+                                    id="caa-member" 
+                                    type="checkbox" 
+                                    checked={isCaaMember}
+                                    onChange={(e) => setIsCaaMember(e.target.checked)}
+                                />
+                                <label htmlFor="caa-member" className="block text-sm font-medium text-dark-gray">
+                                    Is CAA Member
+                                </label>
+                            </div>
+                        </div>
+
+                        
 
                         {/* Aircraft MTOW */}
                         <div>
@@ -253,7 +379,7 @@ function QuoteForm({onAddItem, onOpenServiceModal, onSelectionChange }) {
                                     className="w-full bg-gray-100 border border-gray-300 rounded-l-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
                                     id="mtow"
                                     type="number"
-                                    value={value === "" ? undefined : value}
+                                    value={mtowValue}
                                     step="any"
                                     onChange={handleInputChange}
                                 />
@@ -275,6 +401,7 @@ function QuoteForm({onAddItem, onOpenServiceModal, onSelectionChange }) {
                                 </div>
                             </div>
                         </div>
+
                     </div>
                         <div>
                             {/*Espacio en blanco*/}

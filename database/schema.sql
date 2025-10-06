@@ -43,21 +43,27 @@ CREATE TABLE categorias_conceptos (
 
 -- ========= TABLAS DEPENDIENTES (Nivel 1) =========
 
--- Aeronaves asociadas a un cliente.
-CREATE TABLE aeronaves (
-    id_aeronave BIGSERIAL PRIMARY KEY,
+-- Tabla "universo" para los modelos de aeronaves.
+CREATE TABLE aeronaves_modelos (
+    id_modelo_aeronave BIGSERIAL PRIMARY KEY,
     icao_aeronave VARCHAR(4) UNIQUE NOT NULL,
     nombre_aeronave VARCHAR(100) NOT NULL,
     -- MTOW (Maximum Takeoff Weight) en toneladas.
     mtow_aeronave DECIMAL(10, 2) NOT NULL,
-    envergadura_aeronave DECIMAL(10, 2) NOT NULL,
-    -- Campos movidos desde la tabla "AeronaveEspeciales" para simplificar.
+    envergadura_aeronave DECIMAL(10, 2) NOT NULL
+);
+
+-- Tabla para las aeronaves específicas de cada cliente (la flota).
+CREATE TABLE clientes_aeronaves (
+    id_cliente_aeronave BIGSERIAL PRIMARY KEY,
+    matricula_aeronave VARCHAR(20) UNIQUE NOT NULL,
     es_miembro_caa BOOLEAN DEFAULT FALSE,
     fecha_vigencia_caa DATE,
-    matricula_aeronave VARCHAR(20) UNIQUE,
     id_cliente BIGINT NOT NULL,
+    id_modelo_aeronave BIGINT NOT NULL,
 
-    CONSTRAINT fk_aeronaves_cliente FOREIGN KEY (id_cliente) REFERENCES clientes(id_cliente)
+    CONSTRAINT fk_cliente_aeronave_cliente FOREIGN KEY (id_cliente) REFERENCES clientes(id_cliente),
+    CONSTRAINT fk_cliente_aeronave_modelo FOREIGN KEY (id_modelo_aeronave) REFERENCES aeronaves_modelos(id_modelo_aeronave)
 );
 
 -- FBOs (Fixed-Base Operators) asociados a un aeropuerto.
@@ -121,7 +127,7 @@ CREATE TABLE cotizaciones (
     -- Relaciones con otras tablas (IDs)
     id_cliente BIGINT NOT NULL,
     id_cat_operacion BIGINT NOT NULL,
-    id_aeronave BIGINT NOT NULL,
+    id_cliente_aeronave BIGINT NOT NULL,
     id_aeropuerto BIGINT NOT NULL,
     id_fbo BIGINT,
     
@@ -145,7 +151,7 @@ CREATE TABLE cotizaciones (
     -- Constraints
     CONSTRAINT fk_cotizaciones_cliente FOREIGN KEY (id_cliente) REFERENCES clientes(id_cliente),
     CONSTRAINT fk_cotizaciones_categoria FOREIGN KEY (id_cat_operacion) REFERENCES categorias_operaciones(id_cat_operacion),
-    CONSTRAINT fk_cotizaciones_aeronave FOREIGN KEY (id_aeronave) REFERENCES aeronaves(id_aeronave),
+    CONSTRAINT fk_cotizaciones_aeronave FOREIGN KEY (id_cliente_aeronave) REFERENCES clientes_aeronaves(id_cliente_aeronave),
     CONSTRAINT fk_cotizaciones_aeropuerto FOREIGN KEY (id_aeropuerto) REFERENCES aeropuertos(id_aeropuerto),
     CONSTRAINT fk_cotizaciones_fbo FOREIGN KEY (id_fbo) REFERENCES fbos(id_fbo),
     CONSTRAINT fk_cotizaciones_aeropuerto_origen FOREIGN KEY (aeropuerto_origen_id) REFERENCES aeropuertos(id_aeropuerto),
@@ -194,7 +200,7 @@ CREATE TABLE cotizaciones_historico (
     exchange_rate DECIMAL(10, 4) NOT NULL,
     id_cliente BIGINT NOT NULL,
     id_cat_operacion BIGINT NOT NULL,
-    id_aeronave BIGINT NOT NULL,
+    id_cliente_aeronave BIGINT NOT NULL,
     id_aeropuerto BIGINT NOT NULL,
     id_fbo BIGINT,
     fecha_llegada DATE,
