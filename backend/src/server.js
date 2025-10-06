@@ -6,6 +6,7 @@ const clientesRoutes = require('./routes/clientes.routes');
 const aeropuertosRoutes = require('./routes/aeropuertos.routes');
 const categoriasOperacionesRoutes = require('./routes/categorias_operaciones.routes');
 const fbosRoutes = require('./routes/fbos.routes');
+const serviciosRoutes = require('./routes/servicios.routes');
 
 const corsOptions = require('./config/cors');
 
@@ -20,6 +21,7 @@ app.use('/api', clientesRoutes);
 app.use('/api', aeropuertosRoutes);
 app.use('/api', categoriasOperacionesRoutes);
 app.use('/api', fbosRoutes);
+app.use('/api', serviciosRoutes);
 
 app.listen(port, () => {
   console.log(`Server listening at http://localhost:${port}`);

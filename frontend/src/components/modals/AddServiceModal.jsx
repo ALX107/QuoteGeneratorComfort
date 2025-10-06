@@ -76,8 +76,9 @@ function AddServiceModal({ isOpen, onClose, onSave, onRemoveService, initialSele
                         <ul className="space-y-3 h-80 overflow-y-auto pr-2">
                             {selectedServices.map(service => (
                                 <li key={service.id} className="flex items-center justify-between p-3 bg-green-50 rounded-lg shadow-sm">
-                                     <div>
+                                    <div>
                                         <p className="font-medium">{service.name}</p>
+                                        <p className="text-sm text-gray-500">{service.description}</p>
                                     </div>
                                     <button
                                         onClick={() => handleRemoveService(service)}

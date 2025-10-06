@@ -1,26 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import QuoteHeader from '../components/quote/QuoteHeader';
 import QuoteForm from '../components/quote/QuoteForm';
 import QuoteTable from '../components/quote/QuoteTable';
 import QuoteTotal from '../components/quote/QuoteTotal';
 import AddServiceModal from '../components/modals/AddServiceModal';
-
-// This would typically come from an API call
-const MOCK_SERVICES = [
-    { id: 1, name: 'Servicio de Catering', description: 'Comida y bebida para el vuelo.' },
-    { id: 2, name: 'Transporte Terrestre', description: 'Vehículo privado en destino.' },
-    { id: 3, name: 'Seguridad Adicional', description: 'Equipo de seguridad personal.' },
-    { id: 4, name: 'Wi-Fi a bordo', description: 'Conexión a internet durante el vuelo.' },
-    { id: 5, name: 'Prensa Internacional', description: 'Periódicos y revistas.' },
-];
-const ALL_SERVICE_NAMES = new Set(MOCK_SERVICES.map(s => s.name));
+import axios from 'axios';
 
 function NewQuote() {
-    const [items, setItems] = useState([
-        { description: 'Servicio de Rampa', quantity: 1, price: 550, total: 550 },
-    ]);
+    const [items, setItems] = useState([]);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [allServices, setAllServices] = useState([]);
+
+    const fetchServices = async (id_aeropuerto, id_fbo) => {
+        try {
+            const response = await axios.get('http://localhost:3000/api/servicios', {
+                params: { id_aeropuerto, id_fbo },
+            });
+            setAllServices(response.data);
+        } catch (error) {
+            console.error('Error fetching services:', error);
+        }
+    };
 
     const handleAddItem = () => {
         const newItem = {
@@ -59,12 +60,30 @@ function NewQuote() {
     };
 
     const handleSaveServices = (selectedServices) => {
-        const newItems = selectedServices.map(service => ({
-            description: service.name,
-            quantity: 1,
-            price: 0, // Default price, user can edit
-            total: 0,
-        }));
+        const exchangeRate = 0.0543; // MXN to USD
+
+        const newItems = selectedServices.map(service => {
+            const priceMXN = service.costo_concepto || 0;
+            const priceUSD = priceMXN * exchangeRate;
+            const quantity = 1;
+            const scPercentage = 0.10;
+            const vatPercentage = 0.10;
+
+            const cost = quantity * priceUSD;
+            const serviceCharge = cost * scPercentage;
+            const vat = cost * vatPercentage;
+            const total = cost + serviceCharge + vat;
+
+            return {
+                description: service.name,
+                quantity,
+                priceMXN,
+                priceUSD,
+                scPercentage,
+                vatPercentage,
+                total,
+            };
+        });
 
         const existingDescriptions = new Set(items.map(item => item.description));
         const uniqueNewItems = newItems.filter(item => !existingDescriptions.has(item.description));
@@ -82,15 +101,18 @@ function NewQuote() {
 
     // Find which of the current items are services to pass to the modal
     const initialSelectedServices = items
-        .filter(item => ALL_SERVICE_NAMES.has(item.description))
-        .map(item => ({ name: item.description, id: MOCK_SERVICES.find(s => s.name === item.description)?.id }));
+        .filter(item => allServices.some(s => s.nombre_local_concepto === item.description))
+        .map(item => {
+            const service = allServices.find(s => s.nombre_local_concepto === item.description);
+            return { ...service, id: service.id_precio_concepto, name: service.nombre_local_concepto };
+        });
 
     return (
         <div className="bg-cafe p-8">
             <div className="bg-gray-50 min-h-screen rounded-lg shadow-lg p-6">
                 <QuoteHeader />
                 <main className="max-w-7xl mx-auto mt-4">
-                    <QuoteForm onAddItem={handleAddItem} onOpenServiceModal={() => setIsModalOpen(true)} />
+                    <QuoteForm onAddItem={handleAddItem} onOpenServiceModal={() => setIsModalOpen(true)} onSelectionChange={fetchServices} />
                     <QuoteTable items={items} onRemoveItem={handleRemoveItem} onUpdateItem={handleUpdateItem} />
                     <QuoteTotal subtotal={subtotal} tax={tax} total={total} />
                 </main>
@@ -100,7 +122,7 @@ function NewQuote() {
                     onSave={handleSaveServices}
                     onRemoveService={handleRemoveServiceByName}
                     initialSelectedServices={initialSelectedServices}
-                    allServices={MOCK_SERVICES}
+                    allServices={allServices.map(s => ({ ...s, id: s.id_precio_concepto, name: s.nombre_local_concepto, description: s.nombre_cat_concepto }))}
                 />
             </div>
         </div>
