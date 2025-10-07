@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
+import Calculator from '../features/Calculator.jsx';
+
+
 
 function QuoteForm({onAddItem, onOpenServiceModal, onSelectionChange }) {
     const [clientes, setClientes] = useState([]);
@@ -639,6 +642,7 @@ function QuoteForm({onAddItem, onOpenServiceModal, onSelectionChange }) {
                 >
                     + Add Empty Row
                 </button>
+                <Calculator />
             </div>
         </main>
     );
