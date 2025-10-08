@@ -20,6 +20,7 @@ const Calculator = () => {
   const [operator, setOperator] = useState(null);
   const [waitingForSecondOperand, setWaitingForSecondOperand] = useState(false);
   const [history, setHistory] = useState('');
+  const [copySuccess, setCopySuccess] = useState(false);
 
   const inputDigit = (digit) => {
     if (waitingForSecondOperand) {
@@ -102,6 +103,16 @@ const Calculator = () => {
     setDisplayValue(displayValue.length > 1 ? displayValue.slice(0, -1) : '0');
   };
 
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(displayValue);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 1000); // Reset después de 1 segundo
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (!isOpen) return;
@@ -145,8 +156,19 @@ const Calculator = () => {
             <div className="text-right text-gray-400 text-lg h-6 truncate" title={history}>
               {history}
             </div>
-            <div className="text-right text-3xl font-bold break-all">
-              {formatOperand(displayValue)}
+            <div className="flex justify-between items-center">
+              <button 
+                onClick={handleCopy}
+                className={`p-1 rounded-full hover:bg-gray-700 transition-colors ${copySuccess ? 'text-green-400' : 'text-gray-400'}`}
+                title="Copy to clipboard"
+              >
+                <span className="material-icons text-xl">
+                  {copySuccess ? 'check' : 'content_copy'}
+                </span>
+              </button>
+              <div className="text-right text-3xl font-bold break-all">
+                {formatOperand(displayValue)}
+              </div>
             </div>
           </div>
 
