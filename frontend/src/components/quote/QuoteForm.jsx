@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, forwardRef, useImperativeHandle } from 'react';
 import axios from 'axios';
 
 import Calculator from '../features/Calculator.jsx';
 
 
 
-function QuoteForm({onAddItem, onOpenServiceModal, onSelectionChange }) {
+const QuoteForm = forwardRef(({onAddItem, onOpenServiceModal, onSelectionChange }, ref) => {
     const [clientes, setClientes] = useState([]);
     const [aeropuertos, setAeropuertos] = useState([]);
     const [clientesAeronaves, setClientesAeronaves] = useState([]); 
@@ -20,10 +20,29 @@ function QuoteForm({onAddItem, onOpenServiceModal, onSelectionChange }) {
     const [registrationValue, setRegistrationValue] = useState('');
     const [isCaaMember, setIsCaaMember] = useState(false); 
 
+    const [customerValue, setCustomerValue] = useState('');
+    const [attnValue, setAttnValue] = useState('');
+    const [exchangeRate, setExchangeRate] = useState('');
+    const [flightType, setFlightType] = useState('');
+
+    const [selectStation, setSelectStation] = useState('');
+    const [fromStation, setFromStation] = useState('');
+    const [toStation, setToStation] = useState('');
+    const [crewFrom, setCrewFrom] = useState('');
+    const [paxFrom, setPaxFrom] = useState('');
+    const [crewTo, setCrewTo] = useState('');
+    const [paxTo, setPaxTo] = useState('');
+    const [quotedBy, setQuotedBy] = useState('');
+    const [fboValue, setFboValue] = useState('');
+
+
 
     const [categoriasOperaciones, setCategoriasOperaciones] = useState([]);
     const [selectedAirportId, setSelectedAirportId] = useState(null);
     const [selectedFboId, setSelectedFboId] = useState(null);
+
+    const [noEta, setNoEta] = useState(false);
+    const [noEtd, setNoEtd] = useState(false); // 
     
     //Fecha y MTOW
         const [date, setDate] = useState('');
@@ -32,8 +51,49 @@ function QuoteForm({onAddItem, onOpenServiceModal, onSelectionChange }) {
         const [mtowValue, setMtowValue] = useState("");
         const [unit, setUnit] = useState("KG");
 
+    useImperativeHandle(ref, () => ({
+        clearAllFields() {
+            setSelectedCustomer(null);
+            setModelValue('');
+            setRegistrationValue('');
+            setMtowValue('');
+            setFilteredRegistrations([]);
+            setFilteredAeronavesModelos([]);
+            setIsCaaMember(false);
+            setSelectedAirportId(null);
+            setSelectedFboId(null);
+            setFilteredFbos([]);
+            setNoEta(false); 
+            setNoEtd(false); 
+
+          
+            
+            const today = new Date();
+            const formattedDate = today.toISOString().split('T')[0];
+            setDate(formattedDate);
+            setEtaDate(formattedDate);
+            setEtdDate(formattedDate);
+
+
+
+            setCustomerValue('');
+            setAttnValue('');
+            setExchangeRate('');
+            setFlightType('');
+            setSelectStation('');
+            setFromStation('');
+            setToStation('');
+            setCrewFrom('');
+            setPaxFrom('');
+            setCrewTo('');
+            setPaxTo('');
+            setFboValue('');
+      
+        }
+    }));
+
     useEffect(() => {
-        const fetchData = async () => {
+            const fetchData = async () => {
             try {
                 const clientesResponse = await axios.get('http://localhost:3000/api/listar/clientes');
                 setClientes(clientesResponse.data);
@@ -194,22 +254,22 @@ function QuoteForm({onAddItem, onOpenServiceModal, onSelectionChange }) {
                 }
             
                 if (cleanedValue === '' || parseFloat(cleanedValue) < 0) {
-                    setValue('');
+                    setMtowValue('');
                 } else {
-                    setValue(cleanedValue);
+                    setMtowValue(cleanedValue);
                 }
             };
 
         const convertToLB = () => {
             const currentValue = parseFloat(mtowValue);
             if (isNaN(currentValue) || currentValue <=0) {
-                setValue('');
+                setMtowValue('');
                 return;
             }
             
             if(unit=== "KG") {
                 const lbValue = (currentValue * 2.20462).toFixed(2);
-                setValue(lbValue);
+                setMtowValue(lbValue);
                 setUnit("LB");
                     } else {
                     setUnit("LB")
@@ -219,13 +279,13 @@ function QuoteForm({onAddItem, onOpenServiceModal, onSelectionChange }) {
           const convertToKG = () => {
             const currentValue = parseFloat(mtowValue);
             if (isNaN(currentValue) || currentValue <= 0) {
-                setValue('');
+                setMtowValue('');
                 return;
             }
 
             if (unit === "LB") {
               const kgValue = (currentValue / 2.20462).toFixed(2);
-              setValue(kgValue);
+              setMtowValue(kgValue);
               setUnit("KG");
                 } else {
                     setUnit("KG")
@@ -253,7 +313,11 @@ function QuoteForm({onAddItem, onOpenServiceModal, onSelectionChange }) {
                                     list="customer-list"
                                     id="customer"
                                     name="customer"
-                                    onChange={handleCustomerChange}
+                                    value = {customerValue}
+                                    onChange={(e) => {
+                                        setCustomerValue(e.target.value);
+                                        handleCustomerChange(e);
+                                    }}
                                     className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
                                 />
                                 <datalist id="customer-list">
@@ -277,6 +341,8 @@ function QuoteForm({onAddItem, onOpenServiceModal, onSelectionChange }) {
                                     id="flight-type"
                                     name="flight-type"
                                     className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
+                                    value={flightType}
+                                    onChange={(e) => setFlightType(e.target.value)}
                                 />
                                <datalist id="categoriasOperaciones-list">
                                     {categoriasOperaciones.map((categoriaOp) => (
@@ -322,6 +388,7 @@ function QuoteForm({onAddItem, onOpenServiceModal, onSelectionChange }) {
                                     className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
                                     onChange={handleModelChange}
                                     value={modelValue}
+                                    
                                 />
                                  <datalist id="aircraft-model-list">
                                     {/* Se mapean las Aeronaves filtradas para mostrarlas como opciones */}
@@ -420,7 +487,11 @@ function QuoteForm({onAddItem, onOpenServiceModal, onSelectionChange }) {
                                 <label className="block text-sm font-medium text-dark-gray" htmlFor="attn">
                                     Attn.
                                 </label>
-                                <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="attn" type="text"  />
+                                <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" 
+                                       id="attn" 
+                                       type="text"  
+                                       value={attnValue}
+                                       onChange={(e) => setAttnValue(e.target.value)}/>
                             </div>
                         </div>
                         
@@ -437,7 +508,12 @@ function QuoteForm({onAddItem, onOpenServiceModal, onSelectionChange }) {
                                         list="select-station-list"
                                         id="select-station"
                                         name="select-station"
-                                        onChange={handleStationChange}
+                                        value = {selectStation}
+                                        onChange={(e) => {
+                                            setSelectStation(e.target.value);
+                                            handleStationChange(e);
+                                        }}
+
                                         className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
                                    />
                                    <datalist id="select-station-list">
@@ -458,7 +534,13 @@ function QuoteForm({onAddItem, onOpenServiceModal, onSelectionChange }) {
                                     Select ETA
                                 </label>
                                 <div className="relative mt-1">
-                                    <input className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="eta" type="date" value={etaDate} onChange={(e) => setEtaDate(e.target.value)} />
+                                    <input className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm
+                                                      disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed" 
+                                           id="eta" 
+                                           type="date" 
+                                           value={etaDate} 
+                                           onChange={(e) => setEtaDate(e.target.value)} 
+                                           disabled={noEta} />
                                 </div>
                             </div>
 
@@ -469,7 +551,12 @@ function QuoteForm({onAddItem, onOpenServiceModal, onSelectionChange }) {
         {/* ETA Checkbox - Con tamaño fijo, no se encogerá */}
         <div className="flex-shrink-0 flex items-end pb-2">
             <div className="flex items-center h-5">
-                <input id="eta-checkbox" name="eta-checkbox" type="checkbox" className="focus:ring-sky-500 h-4 w-4 text-sky-600 border-gray-300 rounded" />
+                <input id="eta-checkbox" 
+                       name="eta-checkbox" 
+                       type="checkbox" 
+                       className="focus:ring-sky-500 h-4 w-4 text-sky-600 border-gray-300 rounded"
+                       checked={noEta}
+                       onChange={(e) => setNoEta(e.target.checked)} />
             </div>
             <div className="ml-2 text-sm">
                 <label htmlFor="eta-checkbox" className="font-medium text-dark-gray whitespace-nowrap">No ETA</label>
@@ -487,6 +574,8 @@ function QuoteForm({onAddItem, onOpenServiceModal, onSelectionChange }) {
                     id="from-station"
                     name="station"
                     className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
+                    value={fromStation}
+                    onChange={(e) => setFromStation(e.target.value)}
                  />
                    <datalist id="from-station-list">
                                     {aeropuertos.map((aeropuerto) => (
@@ -503,7 +592,12 @@ function QuoteForm({onAddItem, onOpenServiceModal, onSelectionChange }) {
                                 <label className="block text-sm font-medium text-dark-gray" htmlFor="crew-from">
                                     Crew
                                 </label>
-                                <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="crew-from" type="number" min="0" onKeyDown={(e) => { if (e.key === '-') { e.preventDefault(); } }} />
+                                <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" 
+                                       id="crew-from" 
+                                       type="number" 
+                                       min="0" onKeyDown={(e) => { if (e.key === '-') { e.preventDefault(); } }} 
+                                       value={crewFrom}
+                                       onChange={(e) => setCrewFrom(e.target.value)} />
                             </div>
 
                             {/* Pax */}
@@ -511,7 +605,12 @@ function QuoteForm({onAddItem, onOpenServiceModal, onSelectionChange }) {
                                 <label className="block text-sm font-medium text-dark-gray" htmlFor="pax-from">
                                     Pax
                                 </label>
-                                <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="pax-from" type="number" min="0" onKeyDown={(e) => { if (e.key === '-') { e.preventDefault(); } }}/>
+                                <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" 
+                                       id="pax-from" 
+                                       type="number" 
+                                       min="0" onKeyDown={(e) => { if (e.key === '-') { e.preventDefault(); } }}
+                                       value={paxFrom}
+                                       onChange={(e) => setPaxFrom(e.target.value)}/>
                             </div>
                         </div>
 
@@ -523,13 +622,18 @@ function QuoteForm({onAddItem, onOpenServiceModal, onSelectionChange }) {
                             </label>
 
                             <div className="relative mt-1">
-                                <input
-                                    list="fbo-list"
-                                    id="fbo"
-                                    name="fbo"
-                                    onChange={handleFboChange}
-                                    className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
-                                />
+                            <input
+                                list="fbo-list"
+                                id="fbo"
+                                name="fbo"
+                                className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
+                                value={fboValue}
+                                onChange={(e) => {
+                                    setFboValue(e.target.value);
+                                    handleFboChange(e);
+                                }}
+                            />
+
                                  
                                 <datalist id="fbo-list">
                                      {/* Se mapean los FBOs filtrados para mostrarlos como opciones */}
@@ -548,7 +652,13 @@ function QuoteForm({onAddItem, onOpenServiceModal, onSelectionChange }) {
                                     Select ETD
                                 </label>
                                 <div className="relative mt-1">
-                                    <input className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="etd" type="date" value={etdDate} onChange={(e) => setEtdDate(e.target.value)} />
+                                    <input className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm
+                                                      disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed" 
+                                           id="etd" 
+                                           type="date" 
+                                           value={etdDate} 
+                                           onChange={(e) => setEtdDate(e.target.value)} 
+                                           disabled={noEtd}/>
                                   
                                 </div>
                         </div>
@@ -558,7 +668,12 @@ function QuoteForm({onAddItem, onOpenServiceModal, onSelectionChange }) {
                          {/* ETD Checkbox */}
                             <div className="flex-shrink-0 flex items-end pb-2">
                                 <div className="flex items-center h-5">
-                                    <input id="etd-checkbox" name="etd-checkbox" type="checkbox" className="focus:ring-sky-500 h-4 w-4 text-sky-600 border-gray-300 rounded" />
+                                    <input id="etd-checkbox" 
+                                           name="etd-checkbox" 
+                                           type="checkbox" 
+                                           className="focus:ring-sky-500 h-4 w-4 text-sky-600 border-gray-300 rounded"
+                                           checked={noEtd}
+                                           onChange={(e) => setNoEtd(e.target.checked)} />
                                 </div>
 
                                 <div className="ml-2 text-sm">
@@ -576,6 +691,8 @@ function QuoteForm({onAddItem, onOpenServiceModal, onSelectionChange }) {
                                             id="to-station"
                                             name="to-station"
                                             className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
+                                            value={toStation}
+                                            onChange={(e) => setToStation(e.target.value)}
                                         />
 
                                         <datalist id="to-station-list">
@@ -597,7 +714,13 @@ function QuoteForm({onAddItem, onOpenServiceModal, onSelectionChange }) {
                                 <label className="block text-sm font-medium text-dark-gray" htmlFor="crew-to">
                                     Crew
                                 </label>
-                                <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="crew-to" type="number" min="0" onKeyDown={(e) => { if (e.key === '-') { e.preventDefault(); } }}/>
+                                <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" 
+                                       id="crew-to" 
+                                       type="number" 
+                                       min="0" 
+                                       onKeyDown={(e) => { if (e.key === '-') { e.preventDefault(); } }}
+                                       value={crewTo}
+                                       onChange={(e) => setCrewTo(e.target.value)}/>
                             </div>
 
                             {/* PAX */}
@@ -605,7 +728,13 @@ function QuoteForm({onAddItem, onOpenServiceModal, onSelectionChange }) {
                                 <label className="block text-sm font-medium text-dark-gray" htmlFor="pax-to">
                                     Pax
                                 </label>
-                                <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="pax-to" type="number" min="0" onKeyDown={(e) => { if (e.key === '-') { e.preventDefault(); } }}/>
+                                <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" 
+                                       id="pax-to" 
+                                       type="number" 
+                                       min="0" 
+                                       onKeyDown={(e) => { if (e.key === '-') { e.preventDefault(); } }}
+                                       value={paxTo}
+                                       onChange={(e) => setPaxTo(e.target.value)}/>
                             </div>   
 
                     </div>
@@ -615,7 +744,13 @@ function QuoteForm({onAddItem, onOpenServiceModal, onSelectionChange }) {
                                     <label className="block text-sm font-medium text-dark-gray" htmlFor="exchange-rate">
                                         Exchange Rate
                                     </label>
-                                    <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="exchange-rate" type="number" min="0" onKeyDown={(e) => { if (e.key === '-') { e.preventDefault(); } }} />
+                                    <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" 
+                                           id="exchange-rate" 
+                                           type="number" 
+                                           min="0" onKeyDown={(e) => { if (e.key === '-') { e.preventDefault(); } }}
+                                           value={exchangeRate}
+                                            onChange={(e) => setExchangeRate(e.target.value)} />
+
                                         <a
                                         href="https://dof.gob.mx/indicadores.php#gsc.tab=0"
                                         target="_blank"
@@ -646,5 +781,5 @@ function QuoteForm({onAddItem, onOpenServiceModal, onSelectionChange }) {
             </div>
         </main>
     );
-}
-export default React.memo(QuoteForm);
+});
+export default QuoteForm;

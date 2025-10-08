@@ -1,7 +1,7 @@
 import React from 'react';
 import RAFLogo from '../../assets/RafLogo.png';
 
-function QuoteHeader() {
+function QuoteHeader({ onClearQuote }) {
     return (
         <header className="flex items-center justify-between bg-cafe-light shadow-md rounded-lg px-8 py-4 mb-6 border border-black">
             {/* Izquierda */}
@@ -28,7 +28,7 @@ function QuoteHeader() {
 
             {/* Derecha */}
             <div>
-                <button className="btn-glass">
+                <button className="btn-glass" onClick={onClearQuote}>
                     Clear Quote
                 </button>
             </div>

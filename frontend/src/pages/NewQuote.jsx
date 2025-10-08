@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import QuoteHeader from '../components/quote/QuoteHeader';
 import QuoteForm from '../components/quote/QuoteForm';
 import QuoteTable from '../components/quote/QuoteTable';
@@ -8,6 +8,7 @@ import axios from 'axios';
 
 function NewQuote() {
     const [items, setItems] = useState([]);
+    const quoteFormRef = useRef();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [allServices, setAllServices] = useState([]);
@@ -36,6 +37,13 @@ function NewQuote() {
         };
         // The update function will correctly calculate the total for the new item
         setItems([...items, newItem]);
+    };
+
+    const handleClearQuote = () => {
+        if (quoteFormRef.current) {
+            quoteFormRef.current.clearAllFields();
+        }
+        setItems([]); // Also clear the items in the table
     };
 
     const handleRemoveItem = (index) => {
@@ -110,9 +118,9 @@ function NewQuote() {
     return (
         <div className="bg-cafe p-8">
             <div className="bg-gray-50 min-h-screen rounded-lg shadow-lg p-6">
-                <QuoteHeader />
+                <QuoteHeader onClearQuote={handleClearQuote} />
                 <main className="max-w-7xl mx-auto mt-4">
-                    <QuoteForm onAddItem={handleAddItem} onOpenServiceModal={() => setIsModalOpen(true)} onSelectionChange={fetchServices} />
+                    <QuoteForm ref={quoteFormRef} onAddItem={handleAddItem} onOpenServiceModal={() => setIsModalOpen(true)} onSelectionChange={fetchServices} />
                     <QuoteTable items={items} onRemoveItem={handleRemoveItem} onUpdateItem={handleUpdateItem} />
                     <QuoteTotal subtotal={subtotal} tax={tax} total={total} />
                 </main>
