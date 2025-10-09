@@ -4,7 +4,6 @@ import axios from 'axios';
 import Calculator from '../features/Calculator.jsx';
 
 
-
 const QuoteForm = forwardRef(({onAddItem, onOpenServiceModal, onSelectionChange }, ref) => {
     const [clientes, setClientes] = useState([]);
     const [aeropuertos, setAeropuertos] = useState([]);
@@ -78,7 +77,6 @@ const QuoteForm = forwardRef(({onAddItem, onOpenServiceModal, onSelectionChange 
 
             setCustomerValue('');
             setAttnValue('');
-            setExchangeRate('');
             setFlightType('');
             setSelectStation('');
             setFromStation('');
@@ -123,8 +121,23 @@ const QuoteForm = forwardRef(({onAddItem, onOpenServiceModal, onSelectionChange 
             }
         };
 
-        fetchData();
-    }, []);
+        const fetchExchangeRate = async () => {
+        try {
+            //Apuntamos a nuestro propio backend
+            const response = await axios.get('http://localhost:3000/api/tipo-de-cambio');
+            
+            setExchangeRate(response.data.tipoDeCambio);
+
+        } catch (error) {
+            setExchangeRate('Error'); 
+        }
+    };
+
+    fetchData();
+    fetchExchangeRate();
+
+}, []);
+
 
      // Efecto para actualizar el estado del checkbox cuando cambia la matrícula seleccionada
         useEffect(() => {
