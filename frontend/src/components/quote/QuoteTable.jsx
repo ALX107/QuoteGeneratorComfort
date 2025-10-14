@@ -5,9 +5,11 @@ function QuoteTable({ items, onRemoveItem, onUpdateItem }) {
     const handleUpdate = (index, field, value) => {
         const numericFields = ['quantity', 'priceMXN', 'priceUSD'];
         if (numericFields.includes(field)) {
-            // For numeric fields, ensure the value is a non-negative number.
-            // parseFloat(value) || 0 handles empty strings, converting them to 0 instead of NaN.
-            const numericValue = Math.max(0, parseFloat(value));
+            const MAX_VALUE = 999999999; // Set a max value to prevent errors with large numbers
+            // For numeric fields, ensure the value is a non-negative number and within the limit.
+            let numericValue = parseFloat(value) || 0;
+            numericValue = Math.max(0, numericValue); // Ensure non-negative
+            numericValue = Math.min(MAX_VALUE, numericValue); // Ensure within limit
             onUpdateItem(index, field, numericValue);
         } else {
             onUpdateItem(index, field, value);

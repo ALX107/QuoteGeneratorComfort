@@ -12,6 +12,29 @@ function NewQuote() {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [allServices, setAllServices] = useState([]);
+    const [totals, setTotals] = useState({
+        cost: 0,
+        sCharge: 0,
+        vat: 0,
+        total: 0,
+    });
+
+    useEffect(() => {
+        const newTotals = items.reduce((acc, item) => {
+            const cost = (item.quantity || 0) * (item.priceUSD || 0);
+            const sCharge = cost * (item.scPercentage || 0);
+            const vat = cost * (item.vatPercentage || 0);
+            
+            acc.cost += cost;
+            acc.sCharge += sCharge;
+            acc.vat += vat;
+            acc.total += item.total; // item.total is already cost + sCharge + vat
+            
+            return acc;
+        }, { cost: 0, sCharge: 0, vat: 0, total: 0 });
+    
+        setTotals(newTotals);
+    }, [items]);
 
     const fetchServices = async (id_aeropuerto, id_fbo) => {
         try {
@@ -55,7 +78,15 @@ function NewQuote() {
     const handleUpdateItem = (index, field, value) => {
         const newItems = [...items];
         const item = newItems[index];
-        item[field] = value; // Update the specific field
+        const exchangeRate = 0.0543; // MXN to USD
+
+        item[field] = value;
+
+        if (field === 'priceMXN') {
+            item.priceUSD = (value || 0) * exchangeRate;
+        } else if (field === 'priceUSD') {
+            item.priceMXN = (value || 0) / exchangeRate;
+        }
 
         // Recalculate the total based on the full item data
         const cost = (item.quantity || 0) * (item.priceUSD || 0);
@@ -103,10 +134,6 @@ function NewQuote() {
         setItems(prevItems => prevItems.filter(item => item.description !== serviceName));
     };
 
-    const subtotal = items.reduce((acc, item) => acc + item.total, 0);
-    const tax = subtotal * 0.16; // 16% IVA
-    const total = subtotal + tax;
-
     // Find which of the current items are services to pass to the modal
     const initialSelectedServices = items
         .filter(item => allServices.some(s => s.nombre_local_concepto === item.description))
@@ -122,7 +149,7 @@ function NewQuote() {
                 <main className="max-w-7xl mx-auto mt-4">
                     <QuoteForm ref={quoteFormRef} onAddItem={handleAddItem} onOpenServiceModal={() => setIsModalOpen(true)} onSelectionChange={fetchServices} />
                     <QuoteTable items={items} onRemoveItem={handleRemoveItem} onUpdateItem={handleUpdateItem} />
-                    <QuoteTotal subtotal={subtotal} tax={tax} total={total} />
+                    <QuoteTotal totals={totals} />
                 </main>
                 <AddServiceModal
                     isOpen={isModalOpen}
