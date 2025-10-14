@@ -3,7 +3,7 @@ import HistoricTable from '../components/historic/HistoricTable';
 
 export default function HistoricoCotizaciones() {
     return (
-        <div className="bg-cafe p-8">
+        <div className="bg-blue-dark p-8">
             <div className="bg-white rounded-lg shadow-lg p-6">
                 <HistoricHeader />
                 <HistoricTable />

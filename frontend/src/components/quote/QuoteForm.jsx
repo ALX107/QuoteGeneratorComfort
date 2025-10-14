@@ -4,7 +4,7 @@ import axios from 'axios';
 import Calculator from '../features/Calculator.jsx';
 
 
-const QuoteForm = forwardRef(({onAddItem, onOpenServiceModal, onSelectionChange }, ref) => {
+const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange, exchangeRate, onExchangeRateChange }, ref) => {
     const [clientes, setClientes] = useState([]);
     const [aeropuertos, setAeropuertos] = useState([]);
     const [clientesAeronaves, setClientesAeronaves] = useState([]); 
@@ -21,7 +21,6 @@ const QuoteForm = forwardRef(({onAddItem, onOpenServiceModal, onSelectionChange 
 
     const [customerValue, setCustomerValue] = useState('');
     const [attnValue, setAttnValue] = useState('');
-    const [exchangeRate, setExchangeRate] = useState('');
     const [flightType, setFlightType] = useState('');
 
     const [selectStation, setSelectStation] = useState('');
@@ -121,20 +120,7 @@ const QuoteForm = forwardRef(({onAddItem, onOpenServiceModal, onSelectionChange 
             }
         };
 
-        const fetchExchangeRate = async () => {
-        try {
-            //Apuntamos a nuestro propio backend
-            const response = await axios.get('http://localhost:3000/api/tipo-de-cambio');
-            
-            setExchangeRate(response.data.tipoDeCambio);
-
-        } catch (error) {
-            setExchangeRate('Error'); 
-        }
-    };
-
-    fetchData();
-    fetchExchangeRate();
+        fetchData();
 
 }, []);
 
@@ -762,7 +748,7 @@ const QuoteForm = forwardRef(({onAddItem, onOpenServiceModal, onSelectionChange 
                                            type="number" 
                                            min="0" onKeyDown={(e) => { if (e.key === '-') { e.preventDefault(); } }}
                                            value={exchangeRate}
-                                            onChange={(e) => setExchangeRate(e.target.value)} />
+                                            onChange={(e) => onExchangeRateChange(e.target.value)} />
 
                                         <a
                                         href="https://dof.gob.mx/indicadores.php#gsc.tab=0"

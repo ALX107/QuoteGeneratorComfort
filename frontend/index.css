@@ -5,11 +5,15 @@ body {
 }
 
 .bg-cafe{
-    background-color: #A5862B;
+    background-color: #a67d03;
 }
 
 .bg-cafe-light{
-    background-color: #c09d45;
+    background-color: #d9b85b;
+}
+
+.bg-blue-dark {
+    background-color: #023059;
 }
 
 .bg-blue {

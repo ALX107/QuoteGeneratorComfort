@@ -9,6 +9,7 @@ import axios from 'axios';
 function NewQuote() {
     const [items, setItems] = useState([]);
     const quoteFormRef = useRef();
+    const [exchangeRate, setExchangeRate] = useState(null); // To store the exchange rate
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [allServices, setAllServices] = useState([]);
@@ -18,6 +19,22 @@ function NewQuote() {
         vat: 0,
         total: 0,
     });
+
+    // Fetch exchange rate on component mount
+    useEffect(() => {
+        const fetchExchangeRate = async () => {
+            try {
+                const response = await axios.get('http://localhost:3000/api/tipo-de-cambio');
+                setExchangeRate(parseFloat(response.data.tipoDeCambio));
+            } catch (error) {
+                console.error('Error fetching exchange rate:', error);
+                // Fallback to a default rate in case of an error
+                setExchangeRate(18); // Fallback USD to MXN rate
+            }
+        };
+
+        fetchExchangeRate();
+    }, []);
 
     useEffect(() => {
         const newTotals = items.reduce((acc, item) => {
@@ -35,6 +52,37 @@ function NewQuote() {
     
         setTotals(newTotals);
     }, [items]);
+
+    // Recalculate all item totals when the exchange rate changes
+    useEffect(() => {
+        if (exchangeRate) {
+            setItems(prevItems =>
+                prevItems.map(item => {
+                    let newPriceUSD = item.priceUSD;
+                    let newPriceMXN = item.priceMXN;
+
+                    if (item.anchorCurrency === 'MXN') {
+                        newPriceUSD = +((item.priceMXN || 0) / exchangeRate).toFixed(4);
+                    } else { // anchorCurrency is 'USD'
+                        newPriceMXN = +((item.priceUSD || 0) * exchangeRate).toFixed(4);
+                    }
+
+                    // Recalculate the total for the item
+                    const cost = (item.quantity || 0) * newPriceUSD;
+                    const serviceCharge = cost * (item.scPercentage || 0);
+                    const vat = cost * (item.vatPercentage || 0);
+                    const newTotal = cost + serviceCharge + vat;
+
+                    return {
+                        ...item,
+                        priceUSD: newPriceUSD,
+                        priceMXN: newPriceMXN,
+                        total: newTotal,
+                    };
+                })
+            );
+        }
+    }, [exchangeRate]);
 
     const fetchServices = async (id_aeropuerto, id_fbo) => {
         try {
@@ -55,10 +103,9 @@ function NewQuote() {
             priceUSD: 0,
             scPercentage: 0.10, // Default 10%
             vatPercentage: 0.10, // Default 10%
-            // Calculated fields
+            anchorCurrency: 'MXN', // Default anchor
             total: 0,
         };
-        // The update function will correctly calculate the total for the new item
         setItems([...items, newItem]);
     };
 
@@ -76,16 +123,19 @@ function NewQuote() {
     };
 
     const handleUpdateItem = (index, field, value) => {
+        if (!exchangeRate) return; // Don't update if exchange rate is not loaded
+
         const newItems = [...items];
         const item = newItems[index];
-        const exchangeRate = 0.0543; // MXN to USD
-
+        
         item[field] = value;
 
         if (field === 'priceMXN') {
-            item.priceUSD = (value || 0) * exchangeRate;
+            item.priceUSD = +((value || 0) / exchangeRate).toFixed(4);
+            item.anchorCurrency = 'MXN'; // Set anchor
         } else if (field === 'priceUSD') {
-            item.priceMXN = (value || 0) / exchangeRate;
+            item.priceMXN = +((value || 0) * exchangeRate).toFixed(4);
+            item.anchorCurrency = 'USD'; // Set anchor
         }
 
         // Recalculate the total based on the full item data
@@ -99,11 +149,11 @@ function NewQuote() {
     };
 
     const handleSaveServices = (selectedServices) => {
-        const exchangeRate = 0.0543; // MXN to USD
+        if (!exchangeRate) return; // Don't save if exchange rate is not loaded
 
         const newItems = selectedServices.map(service => {
             const priceMXN = service.costo_concepto || 0;
-            const priceUSD = priceMXN * exchangeRate;
+            const priceUSD = +((priceMXN || 0) / exchangeRate).toFixed(4);
             const quantity = 1;
             const scPercentage = 0.10;
             const vatPercentage = 0.10;
@@ -120,6 +170,7 @@ function NewQuote() {
                 priceUSD,
                 scPercentage,
                 vatPercentage,
+                anchorCurrency: 'MXN', // Default anchor
                 total,
             };
         });
@@ -143,11 +194,18 @@ function NewQuote() {
         });
 
     return (
-        <div className="bg-cafe p-8">
+        <div className="bg-blue-dark p-8">
             <div className="bg-gray-50 min-h-screen rounded-lg shadow-lg p-6">
                 <QuoteHeader onClearQuote={handleClearQuote} />
                 <main className="max-w-7xl mx-auto mt-4">
-                    <QuoteForm ref={quoteFormRef} onAddItem={handleAddItem} onOpenServiceModal={() => setIsModalOpen(true)} onSelectionChange={fetchServices} />
+                    <QuoteForm
+                        ref={quoteFormRef}
+                        onAddItem={handleAddItem}
+                        onOpenServiceModal={() => setIsModalOpen(true)}
+                        onSelectionChange={fetchServices}
+                        exchangeRate={exchangeRate || ''}
+                        onExchangeRateChange={(value) => setExchangeRate(parseFloat(value) || 0)}
+                    />
                     <QuoteTable items={items} onRemoveItem={handleRemoveItem} onUpdateItem={handleUpdateItem} />
                     <QuoteTotal totals={totals} />
                 </main>
