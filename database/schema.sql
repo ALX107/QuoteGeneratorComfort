@@ -118,7 +118,7 @@ CREATE TABLE precios_conceptos(
 CREATE TABLE cotizaciones (
     id_cotizacion BIGSERIAL PRIMARY KEY,
     -- Información general
-    numero_referencia VARCHAR(50) UNIQUE NOT NULL,
+    numero_referencia VARCHAR(50) UNIQUE, -- quitar restricción not null 
     fecha_cotizacion DATE NOT NULL DEFAULT CURRENT_DATE,
     nombre_solicitante VARCHAR(255),
     nombre_responsable VARCHAR(255),
@@ -225,6 +225,6 @@ CREATE TABLE cotizaciones_historico (
     
     -- No se necesita una FK directa a cotizaciones para permitir que el historial persista
     -- incluso si la cotización original se elimina, pero mantenemos el ID para la relación lógica.
-    CONSTRAINT chk_tipo_accion CHECK (tipo_accion IN ('CREADA', 'ACTUALIZADA', 'REVERTIDA', 'CANCELADA'))
+    CONSTRAINT chk_tipo_accion CHECK (tipo_accion IN ('CREADA', 'ACTUALIZADA', 'REVERTIDA', 'CANCELADA')) --verificar
 );
 

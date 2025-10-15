@@ -1,6 +1,8 @@
 import React, { useEffect, useState, forwardRef, useImperativeHandle } from 'react';
 import axios from 'axios';
 
+
+
 import Calculator from '../features/Calculator.jsx';
 
 
@@ -44,6 +46,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
     
     //Fecha y MTOW
         const [date, setDate] = useState('');
+
         const [etaDate, setEtaDate] = useState('');
         const [etdDate, setEtdDate] = useState('');
         const [mtowValue, setMtowValue] = useState("");
@@ -86,6 +89,37 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
             setPaxTo('');
             setFboValue('');
       
+        },
+        getFormData() {
+            const selectedFlightType = categoriasOperaciones.find(cat => cat.nombre_cat_operacion === flightType);
+            const selectedRegistration = filteredRegistrations.find(reg => reg.matricula_aeronave === registrationValue);
+            const selectedAircraftModel = filteredAeronavesModelos.find(model => model.nombre_aeronave === modelValue);
+            const fromAirport = aeropuertos.find(a => a.icao_aeropuerto === fromStation);
+            const toAirport = aeropuertos.find(a => a.icao_aeropuerto === toStation);
+
+            return {
+                customer: selectedCustomer ? selectedCustomer.id_cliente : null,
+                flightType: selectedFlightType ? selectedFlightType.id_cat_operacion : null,
+                date: date,
+                aircraftModel: selectedAircraftModel ? selectedAircraftModel.id_modelo_aeronave : null,
+                aircraftRegistration: selectedRegistration ? selectedRegistration.id_cliente_aeronave : null,
+                isCaaMember: isCaaMember,
+                mtow: mtowValue,
+                mtowUnit: unit,
+                quotedBy: quotedBy,
+                attn: attnValue,
+                station: selectedAirportId,
+                eta: noEta ? null : etaDate,
+                from: fromAirport ? fromAirport.id_aeropuerto : null,
+                crewFrom: crewFrom,
+                paxFrom: paxFrom,
+                fbo: selectedFboId,
+                etd: noEtd ? null : etdDate,
+                to: toAirport ? toAirport.id_aeropuerto : null,
+                crewTo: crewTo,
+                paxTo: paxTo,
+                exchangeRate: exchangeRate,
+            };
         }
     }));
 
@@ -365,11 +399,17 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                             </label>
 
                             <div className="relative mt-1">
-                                    <input className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+                                    <input className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" 
+                                           id="date" 
+                                           type="date" 
+                                           value={date} 
+                                           onChange={(e) => setDate(e.target.value)} />
                                     <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
                                         <span className="material-icons text-gray-400"></span>
                                     </span>
                             </div>
+
+   
                         </div>
 
                        <div className="col-span-1 md:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4 items-start">
@@ -472,6 +512,9 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                         </div>
 
                     </div>
+
+
+                    
                         <div>
                             {/*Espacio en blanco*/}
                         </div>
@@ -480,7 +523,11 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                 <label className="block text-sm font-medium text-dark-gray" htmlFor="quoted-by">
                                     Quoted by
                                 </label>
-                                <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" id="quoted-by" type="text" defaultValue="Max" />
+                                <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" 
+                                        id="quoted-by" 
+                                        type="text" 
+                                        value={quotedBy}
+                                        onChange={(e) => setQuotedBy(e.target.value)}/> 
                             </div>
                             <div className="mt-4">
                                 <label className="block text-sm font-medium text-dark-gray" htmlFor="attn">

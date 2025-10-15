@@ -185,6 +185,30 @@ function NewQuote() {
         setItems(prevItems => prevItems.filter(item => item.description !== serviceName));
     };
 
+     const handleSaveQuote = async () => {
+        if (quoteFormRef.current) {
+            const quoteData = {
+                ...quoteFormRef.current.getFormData(),
+                items: items,
+                subtotal: subtotal,
+                tax: tax,
+                total: total,
+            };
+            try {
+                const response = await axios.post('http://localhost:3000/api/cotizaciones', quoteData);
+                console.log('Quote saved successfully:', response.data);
+                // Optionally, you can show a success message to the user
+            } catch (error) {
+                console.error('Error saving quote:', error);
+                // Optionally, you can show an error message to the user
+            }
+        }
+    };
+
+    const subtotal = items.reduce((acc, item) => acc + item.total, 0);
+    const tax = subtotal * 0.16; // 16% IVA
+    const total = subtotal + tax;
+
     // Find which of the current items are services to pass to the modal
     const initialSelectedServices = items
         .filter(item => allServices.some(s => s.nombre_local_concepto === item.description))
@@ -196,7 +220,7 @@ function NewQuote() {
     return (
         <div className="bg-blue-dark p-8">
             <div className="bg-gray-50 min-h-screen rounded-lg shadow-lg p-6">
-                <QuoteHeader onClearQuote={handleClearQuote} />
+                <QuoteHeader onClearQuote={handleClearQuote} onSaveQuote={handleSaveQuote} />
                 <main className="max-w-7xl mx-auto mt-4">
                     <QuoteForm
                         ref={quoteFormRef}

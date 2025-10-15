@@ -11,6 +11,8 @@ const fbosRoutes = require('./routes/fbos.routes');
 const serviciosRoutes = require('./routes/servicios.routes');
 const aeronavesModelosRoutes = require('./routes/aeronaves_modelos.routes');
 const clientesAeronavesRoutes = require('./routes/clientes_aeronaves.routes');
+const cotizacionesRoutes = require('./routes/cotizaciones.routes');
+const cotizacionesHistoricoRoutes = require('./routes/cotizaciones_historico.routes');
 
 
 const corsOptions = require('./config/cors');
@@ -21,6 +23,10 @@ const port = 3000;
 // Habilitar CORS con las opciones configuradas
 app.use(cors(corsOptions));
 
+// Middleware para parsear JSON
+app.use(express.json());
+
+
 // Rutas de la API
 app.use('/api', clientesRoutes);
 app.use('/api', aeropuertosRoutes);
@@ -29,6 +35,8 @@ app.use('/api', fbosRoutes);
 app.use('/api', serviciosRoutes);
 app.use('/api', aeronavesModelosRoutes);
 app.use('/api', clientesAeronavesRoutes);
+app.use('/api', cotizacionesRoutes);
+app.use('/api', cotizacionesHistoricoRoutes);
 
 
 app.get('/api/tipo-de-cambio', async (req, res) => {

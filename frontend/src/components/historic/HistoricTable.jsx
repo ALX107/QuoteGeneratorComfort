@@ -1,6 +1,13 @@
 import React from 'react';
 
-function HistoricTable() {
+function HistoricTable({ quotes }) { // Recibe las cotizaciones como props
+    const formatDate = (dateString) => {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        if (isNaN(date)) return 'Invalid Date';
+        return date.toLocaleDateString();
+    };
+
     return (
         <div className="mt-6 bg-white rounded-lg shadow">
             <div className="p-4 border-b border-gray-200">
@@ -25,30 +32,38 @@ function HistoricTable() {
                         </tr>
                     </thead>
                     <tbody>
-                        <tr className="bg-white border-b hover:bg-gray-50">
-                            <td className='px-6 py-4'>
-                                <input type="checkbox" className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
-                            </td>
-                            <td className="px-6 py-4">001</td>
-                            <td className="px-6 py-4">Standard</td>
-                            <td className="px-6 py-4">2024-01-15</td>
-                            <td className="px-6 py-4">JFK</td>
-                            <td className="px-6 py-4">B737</td>
-                            <td className="px-6 py-4">2024-02-01</td>
-                            <td className="px-6 py-4">Acme Corp</td>
-                            <td className="px-6 py-4">$1,500.00</td>
-                            <td className="px-6 py-4">1.00</td>
-                            <td className="px-6 py-4">
-                                <button className="text-amber-300 hover:text-amber-600">
-                                    <span className="material-icons">edit</span>
-                                </button>
-                            </td>
-                            <td className="px-6 py-4">
-                                <button className="text-red-500 hover:text-red-700">
-                                    <span className="material-icons">delete</span>
-                                </button>
-                            </td>
-                        </tr>
+                        {quotes && quotes.length > 0 ? (
+                            quotes.map((quote) => (
+                                <tr key={quote.id_cotizacion} className="bg-white border-b hover:bg-gray-50">
+                                    <td className='px-6 py-4'>
+                                        <input type="checkbox" className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
+                                    </td>
+                                    <td className="px-6 py-4">{quote.numero_referencia}</td>
+                                    <td className="px-6 py-4">{quote.nombre_cat_operacion}</td>
+                                    <td className="px-6 py-4">{formatDate(quote.fecha_cotizacion)}</td>
+                                    <td className="px-6 py-4">{quote.nombre_aeropuerto}</td>
+                                    <td className="px-6 py-4">{quote.matricula_aeronave}</td>
+                                    <td className="px-6 py-4">{formatDate(quote.fecha_llegada)}</td>
+                                    <td className="px-6 py-4">{quote.nombre_cliente}</td>
+                                    <td className="px-6 py-4">{`${parseFloat(quote.total_final || 0).toFixed(2)}`}</td>
+                                    <td className="px-6 py-4">{parseFloat(quote.exchange_rate || 0).toFixed(2)}</td>
+                                    <td className="px-6 py-4">
+                                        <button className="text-amber-300 hover:text-amber-600">
+                                            <span className="material-icons">edit</span>
+                                        </button>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <button className="text-red-500 hover:text-red-700">
+                                            <span className="material-icons">delete</span>
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))
+                        ) : (
+                            <tr>
+                                <td colSpan="12" className="text-center py-4">No quotes found.</td>
+                            </tr>
+                        )}
                     </tbody>
                 </table>
             </div>
