@@ -11,7 +11,7 @@ export default function App() {
     const renderPage = () => {
         switch (currentPage) {
             case 'cotizacion':
-                return <CotizacionNueva />;
+                return <CotizacionNueva onNavigateToHistorico={() => setCurrentPage('historico')} />;
             case 'catalogos':
                 return <Catalogos />;
             case 'historico':
@@ -43,7 +43,7 @@ export default function App() {
                                 className={`px-3 py-2 rounded-md text-sm font-medium ${currentPage === 'historico'
                                     ? 'bg-sky-100 text-sky-700'
                                     : 'text-gray-500 hover:text-gray-700'
-                                    }`}
+                                    } cursor-pointer`}
                             >
                                 Historical
                             </button>
@@ -52,7 +52,7 @@ export default function App() {
                                 className={`px-3 py-2 rounded-md text-sm font-medium ${currentPage === 'catalogos'
                                     ? 'bg-sky-100 text-sky-700'
                                     : 'text-gray-500 hover:text-gray-700'
-                                    }`}
+                                    } cursor-pointer`}
                             >
                                 Catalogs
                             </button>
@@ -61,7 +61,7 @@ export default function App() {
                                 className={`px-3 py-2 rounded-md text-sm font-medium ${currentPage === 'cotizacion'
                                     ? 'bg-sky-100 text-sky-700'
                                     : 'text-gray-500 hover:text-gray-700'
-                                    }`}
+                                    } cursor-pointer`}
                             >
                                 New Quote
                             </button>

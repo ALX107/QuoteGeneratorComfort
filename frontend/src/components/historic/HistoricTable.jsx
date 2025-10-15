@@ -53,7 +53,7 @@ function HistoricTable({ quotes }) { // Recibe las cotizaciones como props
                                         </button>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <button className="text-red-500 hover:text-red-700">
+                                        <button className="btn-trashcan">
                                             <span className="material-icons">delete</span>
                                         </button>
                                     </td>

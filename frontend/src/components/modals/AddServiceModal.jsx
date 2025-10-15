@@ -56,7 +56,7 @@ function AddServiceModal({ isOpen, onClose, onSave, onRemoveService, initialSele
                                     </div>
                                     <button
                                         onClick={() => handleAddService(service)}
-                                        className="bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 transition text-sm"
+                                        className="bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 transition text-sm cursor-pointer"
                                     >
                                         Add
                                     </button>
@@ -82,7 +82,7 @@ function AddServiceModal({ isOpen, onClose, onSave, onRemoveService, initialSele
                                     </div>
                                     <button
                                         onClick={() => handleRemoveService(service)}
-                                        className="bg-red-600 text-white px-3 py-1 rounded-md hover:red-700 transition text-sm"
+                                        className="bg-red-600 text-white px-3 py-1 rounded-md hover:red-700 transition text-sm cursor-pointer"
                                     >
                                         Remove
                                     </button>
@@ -101,13 +101,13 @@ function AddServiceModal({ isOpen, onClose, onSave, onRemoveService, initialSele
                 <div className="flex justify-end mt-8 space-x-4">
                     <button
                         onClick={onClose}
-                        className="px-6 py-2 rounded-lg text-gray-700 bg-gray-200 hover:bg-gray-300 transition"
+                        className="px-6 py-2 rounded-lg text-gray-700 bg-gray-200 hover:bg-gray-300 transition btn-cancel"
                     >
                         Cancel
                     </button>
                     <button
                         onClick={handleSave}
-                        className="px-6 py-2 rounded-lg text-white bg-green-600 hover:bg-green-700 transition"
+                        className="px-6 py-2 rounded-lg text-white bg-green-600 hover:bg-green-700 transition btn-confirm"
                     >
                         Save Services
                     </button>

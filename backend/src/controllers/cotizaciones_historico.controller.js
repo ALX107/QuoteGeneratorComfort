@@ -26,7 +26,8 @@ const getCotizacionesHistorico = async (req, res) => {
       LEFT JOIN
         "clientes_aeronaves" AS ca ON ch.id_cliente_aeronave = ca.id_cliente_aeronave -- FIX: Se usa el alias 'ca'
       ORDER BY
-        ch.fecha_cotizacion DESC;
+        CAST(split_part(ch.numero_referencia, '/', 1) AS INTEGER) DESC,
+        ch.fecha_cotizacion DESC
     `;
     
     const result = await pool.query(query);

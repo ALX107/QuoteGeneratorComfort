@@ -4,14 +4,16 @@ import QuoteForm from '../components/quote/QuoteForm';
 import QuoteTable from '../components/quote/QuoteTable';
 import QuoteTotal from '../components/quote/QuoteTotal';
 import AddServiceModal from '../components/modals/AddServiceModal';
+import ConfirmationModal from '../components/modals/ConfirmationModal';
 import axios from 'axios';
 
-function NewQuote() {
+function NewQuote({ onNavigateToHistorico }) {
     const [items, setItems] = useState([]);
     const quoteFormRef = useRef();
     const [exchangeRate, setExchangeRate] = useState(null); // To store the exchange rate
 
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
     const [allServices, setAllServices] = useState([]);
     const [totals, setTotals] = useState({
         cost: 0,
@@ -110,10 +112,15 @@ function NewQuote() {
     };
 
     const handleClearQuote = () => {
+        setIsConfirmModalOpen(true);
+    };
+
+    const handleConfirmClear = () => {
         if (quoteFormRef.current) {
             quoteFormRef.current.clearAllFields();
         }
         setItems([]); // Also clear the items in the table
+        setIsConfirmModalOpen(false);
     };
 
     const handleRemoveItem = (index) => {
@@ -197,7 +204,8 @@ function NewQuote() {
             try {
                 const response = await axios.post('http://localhost:3000/api/cotizaciones', quoteData);
                 console.log('Quote saved successfully:', response.data);
-                // Optionally, you can show a success message to the user
+                // Navigate to historico after saving
+                onNavigateToHistorico();
             } catch (error) {
                 console.error('Error saving quote:', error);
                 // Optionally, you can show an error message to the user
@@ -241,6 +249,14 @@ function NewQuote() {
                     initialSelectedServices={initialSelectedServices}
                     allServices={allServices.map(s => ({ ...s, id: s.id_precio_concepto, name: s.nombre_local_concepto, description: s.nombre_cat_concepto }))}
                 />
+                 <ConfirmationModal
+                    isOpen={isConfirmModalOpen}
+                    onClose={() => setIsConfirmModalOpen(false)}
+                    onConfirm={handleConfirmClear}
+                    title="Confirm Clear Quote"
+                >
+                    <p> ¿Are you sure you want to clear this quote?</p>
+                </ConfirmationModal>
             </div>
         </div>
     );
