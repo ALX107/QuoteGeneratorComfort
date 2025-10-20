@@ -15,7 +15,7 @@ export default function App() {
             case 'catalogos':
                 return <Catalogos />;
             case 'historico':
-                return <HistoricoCotizaciones />;
+                return <HistoricoCotizaciones onNavigateNewQuote={setCurrentPage} />;
             default:
                 return <HistoricoCotizaciones />;
         }

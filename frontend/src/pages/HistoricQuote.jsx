@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import HistoricHeader from '../components/historic/HistoricHeader';
 import HistoricTable from '../components/historic/HistoricTable';
 
-export default function HistoricoCotizaciones() {
+export default function HistoricoCotizaciones({ onNavigateNewQuote }) {
     const [quotes, setQuotes] = useState([]);
 
     useEffect(() => {
@@ -15,7 +15,7 @@ export default function HistoricoCotizaciones() {
     return (
         <div className="bg-blue-dark p-8">
             <div className="bg-white rounded-lg shadow-lg p-6">
-                <HistoricHeader />
+                <HistoricHeader onNavigateNewQuote={onNavigateNewQuote} />
                 <HistoricTable quotes={quotes} />
             </div>
         </div>
