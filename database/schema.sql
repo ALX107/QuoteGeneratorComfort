@@ -67,10 +67,11 @@ CREATE TABLE clientes_aeronaves (
 );
 
 -- FBOs (Fixed-Base Operators) asociados a un aeropuerto.
+--AQUÍ SE GUARDA SI ES AVIACIÓN COMERCIAL O GENERAL JUNTO CON LOS FBOS SEGÚN SU ID AEROPUERTO
 CREATE TABLE fbos (
     id_fbo BIGSERIAL PRIMARY KEY,
     nombre_fbo VARCHAR(255) NOT NULL,
-    grupo_fbo VARCHAR(255) NOT NULL,
+    grupo_fbo VARCHAR(255) NOT NULL, ---grupo al que pertenece el fbo o si es aviación comercial o general
     id_aeropuerto BIGINT NOT NULL,
 
     CONSTRAINT fk_fbos_aeropuerto FOREIGN KEY (id_aeropuerto) REFERENCES aeropuertos(id_aeropuerto)

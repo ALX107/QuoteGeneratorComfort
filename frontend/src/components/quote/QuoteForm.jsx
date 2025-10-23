@@ -162,8 +162,11 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
             const selectedAircraftModel = filteredAeronavesModelos.find(model => model.nombre_aeronave === modelValue);
             const fromAirport = aeropuertos.find(a => a.icao_aeropuerto === fromStation);
             const toAirport = aeropuertos.find(a => a.icao_aeropuerto === toStation);
+            const stationAirport = aeropuertos.find(a => a.id_aeropuerto === selectedAirportId);
+            const fbo = allFbos.find(f => f.id_fbo === selectedFboId);
 
             return {
+                // Existing fields for saving
                 customer: selectedCustomer ? selectedCustomer.id_cliente : null,
                 flightType: selectedFlightType ? selectedFlightType.id_cat_operacion : null,
                 date: date,
@@ -185,6 +188,15 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                 paxTo: paxTo,
                 exchangeRate: exchangeRate,
 
+                // New fields for PDF
+                customerName: selectedCustomer ? selectedCustomer.nombre_cliente : customerValue,
+                flightTypeName: flightType,
+                aircraftModelName: modelValue,
+                aircraftRegistrationValue: registrationValue, // The string value
+                stationName: stationAirport ? stationAirport.nombre_aeropuerto : selectStation,
+                fromName: fromAirport ? fromAirport.nombre_aeropuerto : fromStation,
+                fboName: fbo ? fbo.nombre_fbo : fboValue,
+                toName: toAirport ? toAirport.nombre_aeropuerto : toStation,
             };
           }
          };
@@ -773,7 +785,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                         <div className="md:col-span-4 grid grid-cols-1 md:grid-cols-7 gap-4 items-end">
                         <div className="md:col-span-2">
                             <label className="block text-sm font-medium text-dark-gray" htmlFor="fbo">
-                                Select FBO
+                                Select Aviation Type
                             </label>
 
                             <div className="relative mt-1">

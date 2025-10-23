@@ -5,6 +5,7 @@ import QuoteTable from '../components/quote/QuoteTable';
 import QuoteTotal from '../components/quote/QuoteTotal';
 import AddServiceModal from '../components/modals/AddServiceModal';
 import ConfirmationModal from '../components/modals/ConfirmationModal';
+import PDFPreviewModal from '../components/modals/PDFPreviewModal';
 import axios from 'axios';
 
 function NewQuote({ onNavigateToHistorico, previewingQuote }) {
@@ -14,6 +15,8 @@ function NewQuote({ onNavigateToHistorico, previewingQuote }) {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+    const [isPdfPreviewOpen, setIsPdfPreviewOpen] = useState(false);
+    const [pdfData, setPdfData] = useState(null);
     const [allServices, setAllServices] = useState([]);
 
     const quoteId = previewingQuote ? previewingQuote.id_cotizacion : null;
@@ -260,6 +263,20 @@ function NewQuote({ onNavigateToHistorico, previewingQuote }) {
         }
     };
 
+    const handlePreviewPdf = () => {
+        if (quoteFormRef.current) {
+            const formData = quoteFormRef.current.getFormData();
+            const fullPdfData = {
+                formData: formData,
+                items: items,
+                totals: totals,
+            };
+
+            setPdfData(fullPdfData);
+            setIsPdfPreviewOpen(true);
+        }
+    };
+
     const subtotal = items.reduce((acc, item) => acc + item.total, 0);
     const tax = subtotal * 0.16; // 16% IVA
     const total = subtotal + tax;
@@ -275,7 +292,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote }) {
     return (
         <div className="bg-blue-dark p-8">
             <div className="bg-gray-50 min-h-screen rounded-lg shadow-lg p-6">
-                <QuoteHeader onClearQuote={handleClearQuote} onSaveQuote={handleSaveQuote} />
+                <QuoteHeader onClearQuote={handleClearQuote} onSaveQuote={handleSaveQuote} onExportToPdf={handlePreviewPdf} />
                 <main className="max-w-7xl mx-auto mt-4">
                     <QuoteForm
                         ref={quoteFormRef}
@@ -304,6 +321,11 @@ function NewQuote({ onNavigateToHistorico, previewingQuote }) {
                 >
                     <p> ¿Are you sure you want to clear this quote?</p>
                 </ConfirmationModal>
+                <PDFPreviewModal
+                    isOpen={isPdfPreviewOpen}
+                    onClose={() => setIsPdfPreviewOpen(false)}
+                    pdfData={pdfData}
+                />
             </div>
         </div>
     );

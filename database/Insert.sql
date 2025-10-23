@@ -17,15 +17,21 @@ INSERT INTO aeropuertos (id_aeropuerto, icao_aeropuerto, nombre_aeropuerto, ciud
 
 -- Categorías de Operaciones
 INSERT INTO categorias_operaciones (id_cat_operacion, nombre_cat_operacion) VALUES
-(1, 'Handling'),
-(2, 'Catering'),
-(3, 'Transporte Terrestre'),
-(4, 'Permisos y Slots'),
-(5, 'Combustible');
+(1, 'N/A'),
+(2, 'AMBULANCE / FAR PART 135'),
+(3, 'CHARTER / FAR PART 135'),
+(4, 'DIPLOMATIC / MILITARY'),
+(5, 'PRIVATE / FAR PART 91'),
+(6, 'CAA / PRIVATE / FAR PART 91'),
+(7, 'FLETAMENTO / FAR PART 121'),
+(8, 'APIS'),
+(9, 'TRANSPORTATION'),
+(10, 'CATERING'),
+(11, 'FUEL / COMBUSTIBLE');
 
 -- Categorías de Conceptos (Servicios)
 INSERT INTO categorias_conceptos (id_cat_concepto, nombre_cat_concepto) VALUES
-(1, 'Servicios en Rampa'),
+(1, 'Servicios en Rampa FBO CANCÚN'),
 (2, 'Limpieza de Aeronave'),
 (3, 'Comisariato y Catering'),
 (4, 'Servicios a Pasajeros'),
@@ -53,7 +59,7 @@ INSERT INTO clientes_aeronaves (id_cliente_aeronave, matricula_aeronave, es_miem
 (5, 'XA-VIP', FALSE, NULL, 3, 5),       -- Global Jet, BBJ2
 (6, 'N789SP', TRUE, '2025-11-10', 5, 2); -- Serv. Pacifico, Global Express
 
--- FBOs (4 por aeropuerto)
+-- TODOS LOS FBOs Y  AQUÍ SE GUARDA AVIACIÓN COMERCIAL Y GENERAL DE CADA AEROPUERTO
 INSERT INTO fbos (id_fbo, nombre_fbo, grupo_fbo, id_aeropuerto) VALUES
 -- FBOs para Toluca (MMTO, id_aeropuerto=2)
 (1, 'Manny Aviation Services', 'Manny Aviation', 2),
@@ -64,7 +70,13 @@ INSERT INTO fbos (id_fbo, nombre_fbo, grupo_fbo, id_aeropuerto) VALUES
 (5, 'Atlantic Aviation', 'Atlantic Aviation', 3),
 (6, 'Signature Flight Support', 'Signature', 3),
 (7, 'Clay Lacy Aviation', 'Clay Lacy', 3),
-(8, 'Landmark Aviation', 'Landmark', 3);
+(8, 'Landmark Aviation', 'Landmark', 3),
+--Se insertan aviación comercial y general para aeropuerto CDMX (id_aeropuerto=1 y 2)
+(9, 'Aviación General', 'Aviación General', 1),
+(11, 'Aviación Comercial', 'Aviación Comercial', 1),
+(12, 'Aviación General', 'Aviación General', 2),
+(13, 'Aviación Comercial', 'Aviación Comercial', 2);
+;
 
 -- Conceptos Estandarizados (Servicios base)
 INSERT INTO conceptos_estandarizados (id_concepto_std, nombre_concepto_default, id_categoria_concepto) VALUES
@@ -91,7 +103,7 @@ INSERT INTO servicios_cliente_especiales (id_servicio_especial, id_cliente, nomb
 
 -- ========= INSERCIÓN DE DATOS EN TABLAS DEPENDIENTES (Nivel 2) =========
 
--- Precios de Conceptos
+-- Precios de Conceptos QUE APLICAN PARA UN AEROPUERTO Y/O FBO ESPECÍFICO
 INSERT INTO precios_conceptos (id_precio_concepto, nombre_local_concepto, costo_concepto, divisa, id_concepto_std, id_aeropuerto, id_fbo) VALUES
 -- ** Escenario: Aeropuerto de Toluca (MMTO, id=2) **
 -- 1. Servicios del AEROPUERTO (sin FBO)
@@ -120,7 +132,11 @@ INSERT INTO precios_conceptos (id_precio_concepto, nombre_local_concepto, costo_
 (20, 'Servicio de Lavatorio', 80.00, 'USD', 4, 2, 3),
 (21, 'GPU (por hora)', 110.00, 'USD', 11, 2, 3),
 (22, 'Taxi Seguro Tripulación', 90.00, 'USD', 6, 2, 3),
-(23, 'Snacks y bebidas de cortesía', 0.00, 'USD', 9, 2, 3);
+(23, 'Snacks y bebidas de cortesía', 0.00, 'USD', 9, 2, 3),
+-- 5. Servicios de Aviación General para Aeropuerto CDMX (id:1)
+(24, 'Landing Fee', 120.00, 'USD', 1, 1, 9),
+-- 6. Servicios de Aviación Comercial para Aeropuerto CDMX (id:1)
+(25, 'Landing Fee', 250.00, 'USD', 1, 1, 11);
 
 -- Cotización 1
 INSERT INTO cotizaciones (

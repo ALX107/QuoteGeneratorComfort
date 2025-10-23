@@ -1,7 +1,7 @@
 import RAFLogo from '../../assets/RafLogo.png';
 import RAFLogoBlanco from '../../assets/RafLogoBlanco.png';
 
-function QuoteHeader({ onClearQuote, onSaveQuote }) {
+function QuoteHeader({ onClearQuote, onSaveQuote, onExportToPdf }) {
     return (
         <header className="flex items-center justify-between bg-blue-dark shadow-md rounded-lg px-8 py-4 mb-6 border border-black">
             {/* Izquierda */}
@@ -12,7 +12,7 @@ function QuoteHeader({ onClearQuote, onSaveQuote }) {
                 <button className="btn-glass">
                     Save as New
                 </button>
-                <button className="btn-glass">
+                <button className="btn-glass" onClick={onExportToPdf}>
                     Export to PDF
                 </button>
             </div>
