@@ -43,6 +43,8 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
 
     const [noEta, setNoEta] = useState(false);
     const [noEtd, setNoEtd] = useState(false); // 
+
+    const [isDataLoaded, setIsDataLoaded] = useState(false);
     
     //Fecha y MTOW
         const [date, setDate] = useState('');
@@ -52,7 +54,10 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
         const [mtowValue, setMtowValue] = useState("");
         const [unit, setUnit] = useState("KG");
 
-    useImperativeHandle(ref, () => ({
+    useImperativeHandle(ref, () => {
+
+    return {
+        
         clearAllFields() {
             setSelectedCustomer(null);
             setModelValue('');
@@ -66,16 +71,12 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
             setFilteredFbos([]);
             setNoEta(false); 
             setNoEtd(false); 
-
-          
             
             const today = new Date();
             const formattedDate = today.toISOString().split('T')[0];
             setDate(formattedDate);
             setEtaDate(formattedDate);
             setEtdDate(formattedDate);
-
-
 
             setCustomerValue('');
             setAttnValue('');
@@ -90,6 +91,71 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
             setFboValue('');
       
         },
+
+        setFormData(quote) {
+
+            if (!isDataLoaded) {
+                setTimeout(() => {
+                    if (ref.current) {
+                        ref.current.setFormData(quote);
+                    }
+                }, 100);
+                return; // Detiene la ejecución actual
+            }
+
+            console.log("¡Datos de listas cargados! Rellenando formulario...");
+    
+            const customer = clientes.find(c => c.id_cliente === quote.id_cliente);
+            const flightType = categoriasOperaciones.find(c => c.id_cat_operacion === quote.id_cat_operacion);
+            const station = aeropuertos.find(a => a.id_aeropuerto === quote.id_aeropuerto);
+            const fbo = allFbos.find(f => f.id_fbo === quote.id_fbo);
+            const from = aeropuertos.find(a => a.id_aeropuerto === quote.aeropuerto_origen_id);
+            const to = aeropuertos.find(a => a.id_aeropuerto === quote.aeropuerto_destino_id);
+
+            setCustomerValue(customer ? customer.nombre_cliente : '');
+            setSelectedCustomer(customer);
+            setFlightType(flightType ? flightType.nombre_cat_operacion : '');
+            setDate(quote.fecha_cotizacion ? new Date(quote.fecha_cotizacion).toISOString().split('T')[0] : '');
+            setQuotedBy(quote.nombre_responsable || '');
+            setAttnValue(quote.nombre_solicitante || '');
+            setSelectStation(station ? station.nombre_aeropuerto : '');
+            setSelectedAirportId(station ? station.id_aeropuerto : null);
+            setEtaDate(quote.fecha_llegada ? new Date(quote.fecha_llegada).toISOString().split('T')[0] : '');
+            setFromStation(from ? from.icao_aeropuerto : '');
+            setCrewFrom(quote.tripulacion_llegada || '');
+            setPaxFrom(quote.pasajeros_llegada || '');
+            setFboValue(fbo ? fbo.nombre_fbo : '');
+            setSelectedFboId(fbo ? fbo.id_fbo : null);
+            setEtdDate(quote.fecha_salida ? new Date(quote.fecha_salida).toISOString().split('T')[0] : '');
+            setToStation(to ? to.icao_aeropuerto : '');
+            setCrewTo(quote.tripulacion_salida || '');
+            setPaxTo(quote.pasajeros_salida || '');
+
+            // Handle aircraft model and registration
+            if (customer) {
+                const customerAircraftLinks = clientesAeronaves.filter(
+                    registration => registration.id_cliente === customer.id_cliente
+                );
+                const uniqueModelIds = [...new Set(customerAircraftLinks.map(registration => registration.id_modelo_aeronave))];
+                const models = allaeronavesModelos.filter(model => 
+                    uniqueModelIds.includes(model.id_modelo_aeronave)
+                );
+                setFilteredAeronavesModelos(models);
+
+                const aircraft = clientesAeronaves.find(a => a.id_cliente_aeronave === quote.id_cliente_aeronave);
+                if (aircraft) {
+                    const model = allaeronavesModelos.find(m => m.id_modelo_aeronave === aircraft.id_modelo_aeronave);
+                    setModelValue(model ? model.nombre_aeronave : '');
+                    setRegistrationValue(aircraft.matricula_aeronave || '');
+                    setMtowValue(model ? model.mtow_aeronave : '');
+                    setIsCaaMember(!!aircraft.es_miembro_caa);
+                }
+            
+            
+        }
+    },
+    
+
         getFormData() {
             const selectedFlightType = categoriasOperaciones.find(cat => cat.nombre_cat_operacion === flightType);
             const selectedRegistration = filteredRegistrations.find(reg => reg.matricula_aeronave === registrationValue);
@@ -101,8 +167,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                 customer: selectedCustomer ? selectedCustomer.id_cliente : null,
                 flightType: selectedFlightType ? selectedFlightType.id_cat_operacion : null,
                 date: date,
-                aircraftModel: selectedAircraftModel ? selectedAircraftModel.id_modelo_aeronave : null,
-                aircraftRegistration: selectedRegistration ? selectedRegistration.id_cliente_aeronave : null,
+                aircraftModel: selectedRegistration ? selectedRegistration.id_cliente_aeronave : null,
                 isCaaMember: isCaaMember,
                 mtow: mtowValue,
                 mtowUnit: unit,
@@ -119,9 +184,51 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                 crewTo: crewTo,
                 paxTo: paxTo,
                 exchangeRate: exchangeRate,
+
             };
-        }
-    }));
+          }
+         };
+         
+        },[
+            isDataLoaded, 
+            clientes,
+            aeropuertos,
+            clientesAeronaves,
+            allFbos,
+            filteredFbos,
+
+            allaeronavesModelos,
+            categoriasOperaciones,
+            filteredRegistrations,
+            filteredAeronavesModelos,
+            selectedCustomer,
+            modelValue,
+            registrationValue,
+            customerValue,
+            attnValue,
+            flightType,
+            selectStation,
+            fromStation,
+            toStation,
+            crewFrom,
+            paxFrom,
+            crewTo,
+            paxTo,
+            quotedBy,
+            fboValue,
+            date,
+            etaDate,
+            etdDate,
+            mtowValue,
+            unit,
+            isCaaMember,
+            noEta,
+            noEtd,
+            selectedAirportId,
+            selectedFboId,
+            
+        ]
+    );
 
     useEffect(() => {
             const fetchData = async () => {
@@ -149,8 +256,11 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                 // Fetch initial services (generic)
                 onSelectionChange(null, null);
 
+                setIsDataLoaded(true); // <-- Indica que las listas se han cargado
+
             } catch (error) {
                 console.error('Error fetching data:', error);
+                
             }
         };
 
@@ -212,10 +322,9 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
         }
     };
 
-            const handleCustomerChange = (event) => {
+    const handleCustomerChange = (event) => {
             const selectedCustomerName = event.target.value;
             
-          
 
             // Limpiamos los campos relacionados inmediatamente.
             setSelectedCustomer(null);

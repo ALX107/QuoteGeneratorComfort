@@ -38,6 +38,30 @@ const getCotizacionesHistorico = async (req, res) => {
   }
 };
 
+const getCotizacionById = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const quoteQuery = 'SELECT * FROM "cotizaciones_historico" WHERE id_cotizacion = $1';
+    const quoteResult = await pool.query(quoteQuery, [id]);
+
+    if (quoteResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Quote not found' });
+    }
+
+    const conceptsQuery = 'SELECT * FROM "cotizacion_conceptos" WHERE id_cotizacion = $1';
+    const conceptsResult = await pool.query(conceptsQuery, [id]);
+
+    const quote = quoteResult.rows[0];
+    const concepts = conceptsResult.rows;
+
+    res.json({ ...quote, servicios: concepts });
+  } catch (err) {
+    console.error('Error fetching quote by id:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 module.exports = {
   getCotizacionesHistorico,
+  getCotizacionById,
 };

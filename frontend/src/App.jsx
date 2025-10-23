@@ -7,17 +7,33 @@ import RAFLogoBlanco from './assets/RafLogoBlanco.png';
 
 export default function App() {
     const [currentPage, setCurrentPage] = useState('historico');
+    const [previewingQuote, setPreviewingQuote] = useState(null);
+
+    const handlePreviewQuote = (quote) => {
+        setPreviewingQuote(quote);
+        setCurrentPage('cotizacion');
+    };
+
+    const handleNavigateToHistorico = () => {
+        setPreviewingQuote(null);
+        setCurrentPage('historico');
+    };
+
+    const handleNavigateNewQuote = () => {
+        setPreviewingQuote(null);
+        setCurrentPage('cotizacion');
+    };
 
     const renderPage = () => {
         switch (currentPage) {
             case 'cotizacion':
-                return <CotizacionNueva onNavigateToHistorico={() => setCurrentPage('historico')} />;
+                return <CotizacionNueva onNavigateToHistorico={handleNavigateToHistorico} previewingQuote={previewingQuote} />;
             case 'catalogos':
                 return <Catalogos />;
             case 'historico':
-                return <HistoricoCotizaciones onNavigateNewQuote={setCurrentPage} />;
+                return <HistoricoCotizaciones onNavigateNewQuote={handleNavigateNewQuote} onPreviewQuote={handlePreviewQuote} />;
             default:
-                return <HistoricoCotizaciones />;
+                return <HistoricoCotizaciones onNavigateNewQuote={handleNavigateNewQuote} onPreviewQuote={handlePreviewQuote} />;
         }
     };
 
@@ -57,7 +73,7 @@ export default function App() {
                                 Catalogs
                             </button>
                             <button
-                                onClick={() => setCurrentPage('cotizacion')}
+                                onClick={handleNavigateNewQuote}
                                 className={`px-3 py-2 rounded-md text-sm font-medium ${currentPage === 'cotizacion'
                                     ? 'bg-sky-100 text-sky-700'
                                     : 'text-gray-500 hover:text-gray-700'

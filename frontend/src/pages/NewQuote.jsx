@@ -7,7 +7,7 @@ import AddServiceModal from '../components/modals/AddServiceModal';
 import ConfirmationModal from '../components/modals/ConfirmationModal';
 import axios from 'axios';
 
-function NewQuote({ onNavigateToHistorico }) {
+function NewQuote({ onNavigateToHistorico, previewingQuote }) {
     const [items, setItems] = useState([]);
     const quoteFormRef = useRef();
     const [exchangeRate, setExchangeRate] = useState(null); // To store the exchange rate
@@ -15,6 +15,9 @@ function NewQuote({ onNavigateToHistorico }) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
     const [allServices, setAllServices] = useState([]);
+
+    const quoteId = previewingQuote ? previewingQuote.id_cotizacion : null;
+
     const [totals, setTotals] = useState({
         cost: 0,
         sCharge: 0,
@@ -22,21 +25,47 @@ function NewQuote({ onNavigateToHistorico }) {
         total: 0,
     });
 
-    // Fetch exchange rate on component mount
     useEffect(() => {
-        const fetchExchangeRate = async () => {
-            try {
-                const response = await axios.get('http://localhost:3000/api/tipo-de-cambio');
-                setExchangeRate(parseFloat(response.data.tipoDeCambio));
-            } catch (error) {
-                console.error('Error fetching exchange rate:', error);
-                // Fallback to a default rate in case of an error
-                setExchangeRate(18); // Fallback USD to MXN rate
+        if (quoteId) {
+            axios.get(`http://localhost:3000/api/cotizacion/${quoteId}`)
+                .then(response => {
+                    const quoteData = response.data;
+                    if (quoteFormRef.current) {
+                        quoteFormRef.current.setFormData(quoteData); //se ejecuta cada vez que cambia quoteId
+                    }
+                    setItems(quoteData.servicios.map(servicio => ({
+                        description: servicio.nombre_servicio,
+                        quantity: servicio.cantidad,
+                        priceMXN: servicio.costo_mxn,
+                        priceUSD: servicio.costo_usd,
+                        scPercentage: servicio.sc_porcentaje,
+                        vatPercentage: servicio.vat_porcentaje,
+                        anchorCurrency: 'MXN', // Assuming MXN is the default anchor
+                        total: servicio.total_usd,
+                    })));
+                    setExchangeRate(quoteData.exchange_rate);
+                })
+                .catch(error => console.error('Error fetching quote details:', error));
+        } else {
+            if (quoteFormRef.current) {
+                quoteFormRef.current.clearAllFields();
             }
-        };
+            setItems([]);
+            // Fetch exchange rate on component mount
+            const fetchExchangeRate = async () => {
+                try {
+                    const response = await axios.get('http://localhost:3000/api/tipo-de-cambio');
+                    setExchangeRate(parseFloat(response.data.tipoDeCambio));
+                } catch (error) {
+                    console.error('Error fetching exchange rate:', error);
+                    // Fallback to a default rate in case of an error
+                    setExchangeRate(18); // Fallback USD to MXN rate
+                }
+            };
 
-        fetchExchangeRate();
-    }, []);
+            fetchExchangeRate();
+        }
+    }, [quoteId]);
 
     useEffect(() => {
         const newTotals = items.reduce((acc, item) => {
@@ -194,13 +223,31 @@ function NewQuote({ onNavigateToHistorico }) {
 
      const handleSaveQuote = async () => {
         if (quoteFormRef.current) {
+            // Map frontend 'items' to backend 'servicios' structure
+            const servicios = items.map(item => {
+                const cost = (item.quantity || 0) * (item.priceUSD || 0);
+                const s_cargo = cost * (item.scPercentage || 0);
+                const vat = cost * (item.vatPercentage || 0);
+                
+                return {
+                    nombre_servicio: item.description,
+                    cantidad: item.quantity,
+                    costo_mxn: item.priceMXN,
+                    costo_usd: item.priceUSD,
+                    sc_porcentaje: item.scPercentage,
+                    vat_porcentaje: item.vatPercentage,
+                    s_cargo: s_cargo,
+                    vat: vat,
+                    total_usd: item.total,
+                };
+            });
+
             const quoteData = {
                 ...quoteFormRef.current.getFormData(),
-                items: items,
-                subtotal: subtotal,
-                tax: tax,
-                total: total,
+                exchangeRate: exchangeRate, // Pass the exchange rate
+                servicios: servicios, // Use the correct key 'servicios'
             };
+
             try {
                 const response = await axios.post('http://localhost:3000/api/cotizaciones', quoteData);
                 console.log('Quote saved successfully:', response.data);

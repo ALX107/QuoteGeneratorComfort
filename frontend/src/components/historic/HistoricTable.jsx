@@ -1,6 +1,6 @@
 import React from 'react';
 
-function HistoricTable({ quotes }) { // Recibe las cotizaciones como props
+function HistoricTable({ quotes, onPreviewQuote }) { // Recibe las cotizaciones como props
     const formatDate = (dateString) => {
         if (!dateString) return 'N/A';
         const date = new Date(dateString);
@@ -27,7 +27,7 @@ function HistoricTable({ quotes }) { // Recibe las cotizaciones como props
                             <th className="px-6 py-3" scope="col">Customer</th>
                             <th className="px-6 py-3" scope="col">Total</th>
                             <th className="px-6 py-3" scope="col">Ex Rate</th>
-                            <th className="px-6 py-3" scope="col">Edit</th>
+                            <th className="px-6 py-3" scope="col">Preview</th>
                             <th className="px-6 py-3" scope="col">Delete</th>
                         </tr>
                     </thead>
@@ -46,12 +46,11 @@ function HistoricTable({ quotes }) { // Recibe las cotizaciones como props
                                     <td className="px-6 py-4">{formatDate(quote.fecha_llegada)}</td>
                                     <td className="px-6 py-4">{quote.nombre_cliente}</td>
                                     <td className="px-6 py-4">{`${parseFloat(quote.total_final || 0).toFixed(2)}`}</td>
-                                    <td className="px-6 py-4">{parseFloat(quote.exchange_rate || 0).toFixed(2)}</td>
+                                    <td className="px-6 py-4">{parseFloat(quote.exchange_rate || 0).toFixed(4)}</td>
                                     <td className="px-6 py-4">
-                                        <button className="text-amber-300 hover:text-amber-600">
-                                            <span className="material-icons">edit</span>
-                                        </button>
-                                    </td>
+                                        <button onClick={() => onPreviewQuote(quote)} className="text-cyan-600 hover:text-cyan-900 cursor-pointer">
+                                            <span className="material-icons">visibility</span>
+                                        </button>                                    </td>
                                     <td className="px-6 py-4">
                                         <button className="btn-trashcan">
                                             <span className="material-icons">delete</span>

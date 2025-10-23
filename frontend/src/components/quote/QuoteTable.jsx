@@ -126,14 +126,14 @@ function QuoteTable({ items, onRemoveItem, onUpdateItem }) {
                                         {((item.priceUSD || 0) * (item.quantity || 0) * (item.vatPercentage || 0)).toFixed(2)}
                                     </td>
                                     <td className="px-4 py-2 font-medium text-gray-900">
-                                        {item.total.toFixed(2)}
+                                        {(parseFloat(item.total) || 0).toFixed(2)}
                                     </td>
                                     <td className="px-4 py-2">
                                         <button
                                             onClick={() => onRemoveItem(index)}
                                             className="btn-trashcan"
                                         >
-                                            <span className="material-icons">delete</span>
+                                            <span className="material-icons"></span>
                                         </button>
                                     </td>
                                 </tr>
