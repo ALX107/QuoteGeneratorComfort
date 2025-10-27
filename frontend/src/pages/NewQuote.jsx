@@ -70,7 +70,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote }) {
         }
     }, [quoteId]);
 
-    useEffect(() => {
+        useEffect(() => {
         const newTotals = items.reduce((acc, item) => {
             const cost = (item.quantity || 0) * (item.priceUSD || 0);
             const sCharge = cost * (item.scPercentage || 0);
@@ -79,7 +79,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote }) {
             acc.cost += cost;
             acc.sCharge += sCharge;
             acc.vat += vat;
-            acc.total += item.total; // item.total is already cost + sCharge + vat
+            acc.total += parseFloat(item.total) || 0; // Ensure item.total is a number
             
             return acc;
         }, { cost: 0, sCharge: 0, vat: 0, total: 0 });

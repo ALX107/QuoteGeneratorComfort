@@ -48,11 +48,11 @@ function HistoricTable({ quotes, onPreviewQuote }) { // Recibe las cotizaciones 
                                     <td className="px-6 py-4">{`${parseFloat(quote.total_final || 0).toFixed(2)}`}</td>
                                     <td className="px-6 py-4">{parseFloat(quote.exchange_rate || 0).toFixed(4)}</td>
                                     <td className="px-6 py-4">
-                                        <button onClick={() => onPreviewQuote(quote)} className="text-cyan-600 hover:text-cyan-900 cursor-pointer">
+                                        <button onClick={() => onPreviewQuote(quote)} className="text-cyan-600 hover:text-cyan-900 cursor-pointer block mx-auto">
                                             <span className="material-icons">visibility</span>
                                         </button>                                    </td>
                                     <td className="px-6 py-4">
-                                        <button className="btn-trashcan">
+                                        <button className="btn-trashcan block mx-auto">
                                             <span className="material-icons">delete</span>
                                         </button>
                                     </td>

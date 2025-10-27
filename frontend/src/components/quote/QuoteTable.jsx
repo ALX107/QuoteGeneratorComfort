@@ -131,9 +131,9 @@ function QuoteTable({ items, onRemoveItem, onUpdateItem }) {
                                     <td className="px-4 py-2">
                                         <button
                                             onClick={() => onRemoveItem(index)}
-                                            className="btn-trashcan"
+                                            className="btn-trashcan block"
                                         >
-                                            <span className="material-icons"></span>
+                                            <span className="material-icons">delete</span>
                                         </button>
                                     </td>
                                 </tr>
