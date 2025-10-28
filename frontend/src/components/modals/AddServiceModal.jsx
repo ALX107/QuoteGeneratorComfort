@@ -1,17 +1,16 @@
 import React, { useState, useEffect } from 'react';
 
-function AddServiceModal({ isOpen, onClose, onSave, onRemoveService, initialSelectedServices, allServices }) {
+function AddServiceModal({ isOpen, onClose, onSave, initialSelectedServices, allServices }) {
     const [availableServices, setAvailableServices] = useState([]);
     const [selectedServices, setSelectedServices] = useState([]);
 
     useEffect(() => {
         if (isOpen) {
-            // Initialize state from props ONLY when modal opens
             const selectedIds = new Set(initialSelectedServices.map(s => s.id));
             setSelectedServices(initialSelectedServices);
             setAvailableServices(allServices.filter(s => !selectedIds.has(s.id)));
         }
-    }, [isOpen]); // <-- Depend only on 'isOpen'
+    }, [isOpen, initialSelectedServices, allServices]);
 
     if (!isOpen) {
         return null;
@@ -23,14 +22,8 @@ function AddServiceModal({ isOpen, onClose, onSave, onRemoveService, initialSele
     };
 
     const handleRemoveService = (service) => {
-        // Move from selected back to available
         setAvailableServices([service, ...availableServices].sort((a, b) => a.id - b.id));
         setSelectedServices(selectedServices.filter(s => s.id !== service.id));
-
-        // Trigger removal from the main quote table
-        if (onRemoveService) {
-            onRemoveService(service.name);
-        }
     };
 
     const handleSave = () => {

@@ -77,10 +77,11 @@ CREATE TABLE fbos (
     CONSTRAINT fk_fbos_aeropuerto FOREIGN KEY (id_aeropuerto) REFERENCES aeropuertos(id_aeropuerto)
 );
 
--- Conceptos o servicios estandarizados que se pueden ofrecer.
-CREATE TABLE conceptos_estandarizados (
+-- Conceptos o servicios default que se pueden ofrecer.
+CREATE TABLE conceptos_default (
     id_concepto_std BIGSERIAL PRIMARY KEY,
     nombre_concepto_default VARCHAR(255) NOT NULL,
+    costo_concepto_default DECIMAL(12, 2) NOT NULL,
     id_categoria_concepto BIGINT NOT NULL,
 
     CONSTRAINT fk_conceptos_categoria FOREIGN KEY (id_categoria_concepto) REFERENCES categorias_conceptos(id_cat_concepto)
@@ -110,7 +111,7 @@ CREATE TABLE precios_conceptos(
     id_aeropuerto BIGINT,
     id_fbo BIGINT,
 
-    CONSTRAINT fk_precios_concepto FOREIGN KEY (id_concepto_std) REFERENCES conceptos_estandarizados(id_concepto_std),
+    CONSTRAINT fk_precios_concepto FOREIGN KEY (id_concepto_std) REFERENCES conceptos_default(id_concepto_std),
     CONSTRAINT fk_precios_aeropuerto FOREIGN KEY (id_aeropuerto) REFERENCES aeropuertos(id_aeropuerto),
     CONSTRAINT fk_precios_fbo FOREIGN KEY (id_fbo) REFERENCES fbos(id_fbo)
 );

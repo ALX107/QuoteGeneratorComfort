@@ -18,6 +18,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote }) {
     const [isPdfPreviewOpen, setIsPdfPreviewOpen] = useState(false);
     const [pdfData, setPdfData] = useState(null);
     const [allServices, setAllServices] = useState([]);
+    const [defaultConceptos, setDefaultConceptos] = useState([]);
 
     const quoteId = previewingQuote ? previewingQuote.id_cotizacion : null;
 
@@ -27,6 +28,20 @@ function NewQuote({ onNavigateToHistorico, previewingQuote }) {
         vat: 0,
         total: 0,
     });
+
+    useEffect(() => {
+        // Fetch default conceptos once when the component mounts
+        const fetchDefaultConceptos = async () => {
+            try {
+                const response = await axios.get('http://localhost:3000/api/conceptos-default');
+                setDefaultConceptos(response.data);
+            } catch (error) {
+                console.error('Error fetching default conceptos:', error);
+            }
+        };
+
+        fetchDefaultConceptos();
+    }, []);
 
     useEffect(() => {
         if (quoteId) {
@@ -50,25 +65,55 @@ function NewQuote({ onNavigateToHistorico, previewingQuote }) {
                 })
                 .catch(error => console.error('Error fetching quote details:', error));
         } else {
+            // This is a new quote, initialize it
             if (quoteFormRef.current) {
                 quoteFormRef.current.clearAllFields();
             }
-            setItems([]);
-            // Fetch exchange rate on component mount
-            const fetchExchangeRate = async () => {
+            const initializeNewQuote = async () => {
+                let currentExchangeRate;
+                // 1. Fetch Exchange Rate
                 try {
                     const response = await axios.get('http://localhost:3000/api/tipo-de-cambio');
-                    setExchangeRate(parseFloat(response.data.tipoDeCambio));
+                    currentExchangeRate = parseFloat(response.data.tipoDeCambio);
+                    setExchangeRate(currentExchangeRate);
                 } catch (error) {
                     console.error('Error fetching exchange rate:', error);
-                    // Fallback to a default rate in case of an error
-                    setExchangeRate(18); // Fallback USD to MXN rate
+                    currentExchangeRate = 18; // Fallback
+                    setExchangeRate(currentExchangeRate);
+                }
+
+                // 2. Use defaultConceptos from state
+                if (defaultConceptos.length > 0 && exchangeRate) {
+                    const newItems = defaultConceptos.map(concepto => {
+                        const priceMXN = concepto.costo_concepto_default || 0;
+                        const priceUSD = +((priceMXN) / exchangeRate).toFixed(4);
+                        const quantity = 1;
+                        const scPercentage = 0.10;
+                        const vatPercentage = 0.10;
+
+                        const cost = quantity * priceUSD;
+                        const serviceCharge = cost * scPercentage;
+                        const vat = cost * vatPercentage;
+                        const total = cost + serviceCharge + vat;
+
+                        return {
+                            description: concepto.nombre_concepto_default,
+                            quantity,
+                            priceMXN,
+                            priceUSD,
+                            scPercentage,
+                            vatPercentage,
+                            anchorCurrency: 'MXN',
+                            total,
+                        };
+                    });
+                    setItems(newItems);
                 }
             };
 
-            fetchExchangeRate();
+            initializeNewQuote();
         }
-    }, [quoteId]);
+    }, [quoteId, defaultConceptos, exchangeRate]);
 
         useEffect(() => {
         const newTotals = items.reduce((acc, item) => {
@@ -119,13 +164,33 @@ function NewQuote({ onNavigateToHistorico, previewingQuote }) {
     }, [exchangeRate]);
 
     const fetchServices = async (id_aeropuerto, id_fbo) => {
-        try {
-            const response = await axios.get('http://localhost:3000/api/servicios', {
-                params: { id_aeropuerto, id_fbo },
-            });
-            setAllServices(response.data);
-        } catch (error) {
-            console.error('Error fetching services:', error);
+        if (id_fbo) {
+            try {
+                const response = await axios.get('http://localhost:3000/api/servicios', {
+                    params: { id_fbo }, // Send only id_fbo
+                });
+                setAllServices(response.data);
+            } catch (error) {
+                console.error('Error fetching FBO services:', error);
+            }
+        } else if (id_aeropuerto) {
+            // When a station is selected but not an FBO, show the default concepts
+            const formattedDefaultConceptos = defaultConceptos.map(c => ({
+                ...c,
+                nombre_local_concepto: c.nombre_concepto_default, // Aligning the property name
+                costo_concepto: c.costo_concepto_default,
+                divisa: 'MXN', // Assuming default is MXN
+            }));
+            setAllServices(formattedDefaultConceptos);
+        } else {
+            // When nothing is selected, also show default concepts
+            const formattedDefaultConceptos = defaultConceptos.map(c => ({
+                ...c,
+                nombre_local_concepto: c.nombre_concepto_default,
+                costo_concepto: c.costo_concepto_default,
+                divisa: 'MXN',
+            }));
+            setAllServices(formattedDefaultConceptos);
         }
     };
 
@@ -187,12 +252,12 @@ function NewQuote({ onNavigateToHistorico, previewingQuote }) {
         setItems(newItems);
     };
 
-    const handleSaveServices = (selectedServices) => {
-        if (!exchangeRate) return; // Don't save if exchange rate is not loaded
+    const handleSaveServices = (selectedServicesFromModal) => {
+        if (!exchangeRate) return;
 
-        const newItems = selectedServices.map(service => {
+        const newServiceItems = selectedServicesFromModal.map(service => {
             const priceMXN = service.costo_concepto || 0;
-            const priceUSD = +((priceMXN || 0) / exchangeRate).toFixed(4);
+            const priceUSD = +((priceMXN) / exchangeRate).toFixed(4);
             const quantity = 1;
             const scPercentage = 0.10;
             const vatPercentage = 0.10;
@@ -209,20 +274,17 @@ function NewQuote({ onNavigateToHistorico, previewingQuote }) {
                 priceUSD,
                 scPercentage,
                 vatPercentage,
-                anchorCurrency: 'MXN', // Default anchor
+                anchorCurrency: 'MXN',
                 total,
             };
         });
 
-        const existingDescriptions = new Set(items.map(item => item.description));
-        const uniqueNewItems = newItems.filter(item => !existingDescriptions.has(item.description));
+        const allServiceDescriptions = new Set(allServices.map(s => s.nombre_local_concepto));
+        const nonServiceItems = items.filter(item => !allServiceDescriptions.has(item.description));
 
-        setItems([...items, ...uniqueNewItems]);
+        setItems([...nonServiceItems, ...newServiceItems]);
     };
 
-    const handleRemoveServiceByName = (serviceName) => {
-        setItems(prevItems => prevItems.filter(item => item.description !== serviceName));
-    };
 
      const handleSaveQuote = async () => {
         if (quoteFormRef.current) {
@@ -286,7 +348,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote }) {
         .filter(item => allServices.some(s => s.nombre_local_concepto === item.description))
         .map(item => {
             const service = allServices.find(s => s.nombre_local_concepto === item.description);
-            return { ...service, id: service.id_precio_concepto, name: service.nombre_local_concepto };
+            return { ...service, id: service.id_precio_concepto || service.id_concepto_std, name: service.nombre_local_concepto };
         });
 
     return (
@@ -309,9 +371,8 @@ function NewQuote({ onNavigateToHistorico, previewingQuote }) {
                     isOpen={isModalOpen}
                     onClose={() => setIsModalOpen(false)}
                     onSave={handleSaveServices}
-                    onRemoveService={handleRemoveServiceByName}
                     initialSelectedServices={initialSelectedServices}
-                    allServices={allServices.map(s => ({ ...s, id: s.id_precio_concepto, name: s.nombre_local_concepto, description: s.nombre_cat_concepto }))}
+                    allServices={allServices.map(s => ({ ...s, id: s.id_precio_concepto || s.id_concepto_std, name: s.nombre_local_concepto, description: s.nombre_cat_concepto }))}
                 />
                  <ConfirmationModal
                     isOpen={isConfirmModalOpen}

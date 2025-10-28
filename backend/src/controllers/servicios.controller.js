@@ -1,10 +1,14 @@
 const pool = require('../config/db');
 
 const getServiciosByAeropuertoOrFbo = async (req, res) => {
-    const { id_aeropuerto, id_fbo } = req.query;
+    const { id_fbo } = req.query;
+
+    if (!id_fbo) {
+        return res.json([]);
+    }
 
     try {
-        let query = `
+        const query = `
             SELECT 
                 pc.id_precio_concepto,
                 pc.nombre_local_concepto,
@@ -13,22 +17,12 @@ const getServiciosByAeropuertoOrFbo = async (req, res) => {
                 cs.nombre_concepto_default,
                 cc.nombre_cat_concepto
             FROM precios_conceptos pc
-            JOIN conceptos_estandarizados cs ON pc.id_concepto_std = cs.id_concepto_std
+            JOIN conceptos_default cs ON pc.id_concepto_std = cs.id_concepto_std
             JOIN categorias_conceptos cc ON cs.id_categoria_concepto = cc.id_cat_concepto
-            WHERE (pc.id_aeropuerto IS NULL AND pc.id_fbo IS NULL)
+            WHERE pc.id_fbo = $1
         `;
 
-        const params = [];
-
-        if (id_fbo) {
-            query += ` OR pc.id_fbo = $1`;
-            params.push(id_fbo);
-        } else if (id_aeropuerto) {
-            query += ` OR pc.id_aeropuerto = $1`;
-            params.push(id_aeropuerto);
-        }
-
-        const result = await pool.query(query, params);
+        const result = await pool.query(query, [id_fbo]);
         res.json(result.rows);
     } catch (error) {
         console.error('Error fetching services:', error);
@@ -36,6 +30,17 @@ const getServiciosByAeropuertoOrFbo = async (req, res) => {
     }
 };
 
+const getDefaultConceptos = async (req, res) => {
+    try {
+        const result = await pool.query('SELECT id_concepto_std, nombre_concepto_default, costo_concepto_default FROM conceptos_default');
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Error fetching default conceptos:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
 module.exports = {
     getServiciosByAeropuertoOrFbo,
+    getDefaultConceptos,
 };

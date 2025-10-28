@@ -1,7 +1,7 @@
 -- ========= INSERCIÓN DE DATOS EN TABLAS INDEPENDIENTES =========
 
 -- Clientes (5 clientes de ejemplo)
-INSERT INTO clientes (id_cliente, nombre_cliente, email_cliente, telefono_cliente, direccion_cliente, ciudad_cliente, estado_cliente, pais_cliente, zip_cliente, contacto_cliente) VALUES
+INSERT INTO clientes (id_cliente, nombre_cliente, email_cliente, telefono_cliente, direccion_cliente, ciudad_cliente, estado_cliente, pais_cliente, zip_cliente, contacto_cliente) VALUES 
 (1, 'AeroCharter Internacional', 'contacto@charterint.com', '+1-202-555-0176', '123 Aviation Avenue', 'Miami', 'Florida', 'USA', '33101', 'Juan Pérez'),
 (2, 'Vuelos Ejecutivos de Lujo', 'ops@vueloslujo.net', '+44 20 7946 0958', '456 Business Jet Rd.', 'Londres', 'Inglaterra', 'Reino Unido', 'SW1A 0AA', 'Laura Gómez'),
 (3, 'Global Jet Services', 'info@globaljets.com', '+52-55-5555-1234', 'Av. Reforma 789', 'Ciudad de México', 'CDMX', 'México', '06500', 'Carlos Rodríguez'),
@@ -31,13 +31,16 @@ INSERT INTO categorias_operaciones (id_cat_operacion, nombre_cat_operacion) VALU
 
 -- Categorías de Conceptos (Servicios)
 INSERT INTO categorias_conceptos (id_cat_concepto, nombre_cat_concepto) VALUES
-(1, 'Servicios en Rampa FBO CANCÚN'),
-(2, 'Limpieza de Aeronave'),
-(3, 'Comisariato y Catering'),
-(4, 'Servicios a Pasajeros'),
-(5, 'Servicios a Tripulación'),
-(6, 'Tasas y Permisos');
-
+(1, 'FBO Services'),
+(2, 'Airport Services'),
+(3, 'Third-Party Services'),
+(4, 'Taxes % Imigration Services'),
+(5, 'Landing Permit'),
+(6, 'Raf Coordination'),
+(7, 'Fuel'),
+(8, 'Apis'),
+(9, 'Additional Services'),
+(10, 'Default');
 ---
 
 -- ========= INSERCIÓN DE DATOS EN TABLAS DEPENDIENTES (Nivel 1) =========
@@ -76,22 +79,18 @@ INSERT INTO fbos (id_fbo, nombre_fbo, grupo_fbo, id_aeropuerto) VALUES
 (11, 'Aviación Comercial', 'Aviación Comercial', 1),
 (12, 'Aviación General', 'Aviación General', 2),
 (13, 'Aviación Comercial', 'Aviación Comercial', 2);
-;
 
--- Conceptos Estandarizados (Servicios base)
-INSERT INTO conceptos_estandarizados (id_concepto_std, nombre_concepto_default, id_categoria_concepto) VALUES
-(1, 'Handling Básico', 1),
-(2, 'Limpieza Interior Estándar', 2),
-(3, 'Agua Potable', 1),
-(4, 'Servicio de Lavatorio', 1),
-(5, 'Catering VIP - Pax', 3),
-(6, 'Transporte Tripulación - Hotel', 5),
-(7, 'TUA (Tarifa de Uso de Aeropuerto)', 6),
-(8, 'Uso de Plataforma por Hora', 6),
-(9, 'Catering Ligero - Tripulación', 3),
-(10, 'Limpieza Exterior', 2),
-(11, 'GPU (Ground Power Unit)', 1),
-(12, 'ASU (Air Start Unit)', 1);
+-- Conceptos Default (Servicios base)
+INSERT INTO conceptos_default (id_concepto_std, nombre_concepto_default, costo_concepto_default, id_categoria_concepto) VALUES
+(1, 'Landing Fee', 920.00, 10),
+(2, 'Embarking / Disembarking', 900.00, 10),
+(3, 'Parking Fee', 300.00, 10),
+(4, 'Overnight', 45, 10),
+(5, 'TUA Internacional', 678, 10),
+(6, 'Landing Permit Cost', 920.00, 10),
+(7, 'Landing Permit Coordination', 920.00, 10),
+(8, 'Raf Coordination', 344, 10),
+(9, 'Agent Supervisory Fee', 455, 10);
 
 -- Servicios Especiales con costo fijo por cliente
 INSERT INTO servicios_cliente_especiales (id_servicio_especial, id_cliente, nombre_servicio, costo_servicio) VALUES
@@ -113,7 +112,7 @@ INSERT INTO precios_conceptos (id_precio_concepto, nombre_local_concepto, costo_
 (3, 'Handling Básico Manny', 850.00, 'USD', 1, 2, 1),
 (4, 'Limpieza Interior Detallada', 300.00, 'USD', 2, 2, 1),
 (5, 'Servicio de Agua y Lavatorio', 150.00, 'USD', 3, 2, 1),
-(6, 'GPU (por hora)', 120.00, 'USD', 11, 2, 1),
+(6, 'GPU (por hora)', 120.00, 'USD', 9, 2, 1),
 (7, 'Catering Gourmet Pax (por persona)', 95.00, 'USD', 5, 2, 1),
 (8, 'Transporte Ejecutivo (Sedan)', 200.00, 'USD', 6, 2, 1),
 (9, 'Descarga de equipaje', 50.00, 'USD', 4, 2, 1),
@@ -121,7 +120,7 @@ INSERT INTO precios_conceptos (id_precio_concepto, nombre_local_concepto, costo_
 (10, 'Handling Integral Universal', 920.00, 'USD', 1, 2, 2),
 (11, 'Limpieza Interior Estándar', 250.00, 'USD', 2, 2, 2),
 (12, 'Servicio de Agua y Lavatorio', 130.00, 'USD', 4, 2, 2),
-(13, 'ASU (por evento)', 250.00, 'USD', 12, 2, 2),
+(13, 'ASU (por evento)', 250.00, 'USD', 9, 2, 2),
 (14, 'Catering Ligero Tripulación (por persona)', 45.00, 'USD', 9, 2, 2),
 (15, 'Transporte en Van de Lujo', 350.00, 'USD', 6, 2, 2),
 (16, 'Coordinación de Aduanas VIP', 180.00, 'USD', 4, 2, 2),
@@ -130,10 +129,11 @@ INSERT INTO precios_conceptos (id_precio_concepto, nombre_local_concepto, costo_
 (18, 'Limpieza Interior Rápida', 180.00, 'USD', 2, 2, 3),
 (19, 'Servicio de Agua', 80.00, 'USD', 3, 2, 3),
 (20, 'Servicio de Lavatorio', 80.00, 'USD', 4, 2, 3),
-(21, 'GPU (por hora)', 110.00, 'USD', 11, 2, 3),
+(21, 'GPU (por hora)', 110.00, 'USD', 9, 2, 3),
 (22, 'Taxi Seguro Tripulación', 90.00, 'USD', 6, 2, 3),
 (23, 'Snacks y bebidas de cortesía', 0.00, 'USD', 9, 2, 3),
 -- 5. Servicios de Aviación General para Aeropuerto CDMX (id:1)
 (24, 'Landing Fee', 120.00, 'USD', 1, 1, 9),
 -- 6. Servicios de Aviación Comercial para Aeropuerto CDMX (id:1)
 (25, 'Landing Fee', 250.00, 'USD', 1, 1, 11);
+

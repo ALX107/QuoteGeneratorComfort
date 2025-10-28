@@ -13,7 +13,7 @@ DROP TABLE IF EXISTS precios_conceptos;
 DROP TABLE IF EXISTS servicios_cliente_especiales;
 DROP TABLE IF EXISTS clientes_aeronaves;
 DROP TABLE IF EXISTS fbos;
-DROP TABLE IF EXISTS conceptos_estandarizados;
+DROP TABLE IF EXISTS conceptos_default;
 
 -- Nivel 0: Tablas independientes (no dependen de ninguna otra).
 DROP TABLE IF EXISTS clientes;
