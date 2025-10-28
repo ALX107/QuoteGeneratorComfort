@@ -302,7 +302,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
     const handleStationChange = (event) => {
         const selectedAirportName = event.target.value;
         const selectedAirport = aeropuertos.find(
-            (a) => a.nombre_aeropuerto === selectedAirportName
+            (a) => a.icao_aeropuerto === selectedAirportName
         );
 
         if (selectedAirport) {
@@ -334,9 +334,12 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
         }
     };
 
+    //Carga ambas listas (modelos y matrículas) filtradas por cliente
     const handleCustomerChange = (event) => {
+
             const selectedCustomerName = event.target.value;
             
+            setCustomerValue(selectedCustomerName);
 
             // Limpiamos los campos relacionados inmediatamente.
             setSelectedCustomer(null);
@@ -345,32 +348,47 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
             setMtowValue('');
             setFilteredRegistrations([]);
             setFilteredAeronavesModelos([]);
-            
-            
 
+            //Buscar si el cliente existe en la lista 
             const customer = clientes.find(c => c.nombre_cliente === selectedCustomerName);
 
-            if (customer) {
-                
+            if (customer) {  
                 setSelectedCustomer(customer);
                 
+                // --- Cargar Matrículas del Cliente ---
                 const customerAircraftLinks = clientesAeronaves.filter(
                     registration => registration.id_cliente === customer.id_cliente
                 );
+                
+                // Setear TODAS las matrículas de ese cliente 
+                setFilteredRegistrations(customerAircraftLinks);
 
+                // --- Cargar Modelos del Cliente ---
                 const uniqueModelIds = [...new Set(customerAircraftLinks.map(registration => registration.id_modelo_aeronave))];
 
+                // Filtrar la lista maestra de modelos
                 const models = allaeronavesModelos.filter(model => 
                     uniqueModelIds.includes(model.id_modelo_aeronave)
                 );
 
+                // Setear TODOS los modelos de ese cliente
                 setFilteredAeronavesModelos(models);
+            } else{
+
+                //El cliente no fue encontrado, es un nombre nuevo.
+                // 'selectedCustomer' se queda como null.
+
+                console.log("Cliente NUEVO. Cargando TODOS los modelos.");
+                // Cargar TODOS los modelos del universo
+                setFilteredAeronavesModelos(allaeronavesModelos);
             }
         };
 
+        //(Flow 1: Cliente -> Modelo -> Matrícula) Se dispara al seleccionar un modelo. Filtra la lista de matrículas.
         const handleModelChange = (event) => {
             const selectedModelName = event.target.value;
             setModelValue(selectedModelName);
+
             setRegistrationValue(''); // Reset registration on model change
             setMtowValue(''); // Reset MTOW on model change
         
@@ -378,23 +396,75 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                 (model) => model.nombre_aeronave === selectedModelName
             );
         
-            if (selectedModel && selectedCustomer) {
-                const registrations = clientesAeronaves.filter(
-                    (registration) =>
-                        registration.id_modelo_aeronave === selectedModel.id_modelo_aeronave &&
-                        registration.id_cliente === selectedCustomer.id_cliente
-                );
-                setFilteredRegistrations(registrations);
-        
+            if (selectedModel) {
+
                 if (selectedModel.mtow_aeronave) {
                     setMtowValue(selectedModel.mtow_aeronave);
                     setUnit('KG');
                 }
-            } else {
-                setFilteredRegistrations([]);
-            }
-        };
 
+                    //Filtrar matrículas solo si hay un cliente existente seleccionado
+                    if (selectedCustomer) {
+                        // Filtrar la lista de matrículas para que solo muestre las de este modelo
+                        const modelRegistrations = clientesAeronaves.filter(
+                            (registration) =>
+                                registration.id_modelo_aeronave === selectedModel.id_modelo_aeronave &&
+                                registration.id_cliente === selectedCustomer.id_cliente
+                        );
+                        setFilteredRegistrations(modelRegistrations);
+                    }
+    
+                } else if (!selectedModelName) {
+                    // Si el usuario borra el campo modelo, reseteamos la lista de matrículas
+
+                    if (selectedCustomer) {
+                        const customerAircraftLinks = clientesAeronaves.filter(
+                            registration => registration.id_cliente === selectedCustomer?.id_cliente
+                        );
+                        setFilteredRegistrations(customerAircraftLinks || []);
+                    }
+                };
+
+            };
+
+            //(Flow 2: Cliente -> Matrícula -> Modelo) Se dispara al seleccionar una matrícula. Autocompleta el modelo y MTOW.
+            const handleRegistrationChange = (event) => {
+                const selectedMatricula = event.target.value;
+
+                //Actualiza el valor que el usuario está escribiendo
+                setRegistrationValue(selectedMatricula);
+                
+
+                //Solo intenta autocompletar el modelo si el cliente existe
+                if (selectedCustomer) {
+                    setModelValue('');
+                    setMtowValue('');
+
+                    // Buscar la matrícula seleccionada filtrada por cliente
+                    // por si el usuario escribe una matrícula sin haber filtrado por modelo.
+                    const selectedRegistration = clientesAeronaves.find(
+                        reg => reg.matricula_aeronave === selectedMatricula && 
+                            reg.id_cliente === selectedCustomer?.id_cliente
+                    );
+
+                    if (selectedRegistration) {
+                        // Encontrar el modelo correspondiente a esta matrícula
+                        const model = allaeronavesModelos.find(
+                            m => m.id_modelo_aeronave === selectedRegistration.id_modelo_aeronave
+                        );
+
+                        if (model) {
+                            // Autocompletar Modelo y MTOW
+                            setModelValue(model.nombre_aeronave);
+                            
+                            if (model.mtow_aeronave) {
+                                setMtowValue(model.mtow_aeronave);
+                                setUnit('KG');
+                            }
+                        }
+                    }
+                }
+            };
 
 
             const handleInputChange = (e) => {
@@ -446,14 +516,14 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                 }
             };
       
-    useEffect(() => {
-        const today = new Date();
-        const formattedDate = today.toISOString().split('T')[0];
-        setDate(formattedDate); 
-        setEtaDate(formattedDate);
-        setEtdDate(formattedDate);
+            useEffect(() => {
+                const today = new Date();
+                const formattedDate = today.toISOString().split('T')[0];
+                setDate(formattedDate); 
+                setEtaDate(formattedDate);
+                setEtdDate(formattedDate);
 
-    }, []);
+            }, []);
 
     return (
         <main className="pt-6">
@@ -534,36 +604,8 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                         </div>
 
                        <div className="col-span-1 md:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4 items-start">
-                        
-                        {/* Aircraft Model */}
-                        <div>
-                            <label className="block text-sm font-medium text-dark-gray" htmlFor="aircraft-model">
-                                Aircraft Model
-                            </label>
-                            <div className="relative mt-1">
-                                <input
-                                    list="aircraft-model-list"
-                                    id="aircraft-model"
-                                    name="aircraft-model"
-                                    className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
-                                    onChange={handleModelChange}
-                                    value={modelValue}
-                                    
-                                />
-                                 <datalist id="aircraft-model-list">
-                                    {/* Se mapean las Aeronaves filtradas para mostrarlas como opciones */}
-                                    {filteredAeronavesModelos.map((model) => (
-                                        <option key={model.id_modelo_aeronave} value={model.nombre_aeronave} />
-                                     ))}
-                                </datalist>
-                                
-                                <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                                    <span className="material-icons text-gray-400"></span>
-                                </span>
-                            </div>
-                        </div>
-                        
-                        {/* Aircraft Registration */}
+
+                           {/* Aircraft Registration (Flow 2)*/}
                         <div>
                             <label className="block text-sm font-medium text-dark-gray" htmlFor="aircraft-registration">
                                 Aircraft Registration
@@ -575,10 +617,12 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                     id="aircraft-registration"
                                     type="text"
                                     value={registrationValue}
-                                    onChange={(e) => setRegistrationValue(e.target.value)}
+                                    onChange={handleRegistrationChange}
+                                    //disabled={!customerValue}
                                 />
 
                             <datalist id="aircraft-registration-list">
+                                {/* Mapea las matrículas filtradas (ya sea por cliente o por modelo) */}
                                     {filteredRegistrations.map((registration) => (
                                         <option key={registration.id_cliente_aeronave} value={registration.matricula_aeronave} />
                                     ))}
@@ -596,7 +640,35 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                 </label>
                             </div>
                         </div>
-
+                        
+                        {/* Aircraft Model (Flow 1)*/}
+                        <div>
+                            <label className="block text-sm font-medium text-dark-gray" htmlFor="aircraft-model">
+                                Aircraft Model
+                            </label>
+                            <div className="relative mt-1">
+                                <input
+                                    list="aircraft-model-list"
+                                    id="aircraft-model"
+                                    name="aircraft-model"
+                                    className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
+                                    onChange={handleModelChange}
+                                    value={modelValue}
+                                    //disabled={!customerValue}
+                                    
+                                />
+                                 <datalist id="aircraft-model-list">
+                                    {/* Mapear los modelos filtrados por CLIENTE */}
+                                    {filteredAeronavesModelos.map((model) => (
+                                        <option key={model.id_modelo_aeronave} value={model.nombre_aeronave} />
+                                     ))}
+                                </datalist>
+                                
+                                <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                    <span className="material-icons text-gray-400"></span>
+                                </span>
+                            </div>
+                        </div>
                         
 
                         {/* Aircraft MTOW */}
@@ -685,7 +757,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                    />
                                    <datalist id="select-station-list">
                                         {aeropuertos.map((aeropuerto) => (
-                                        <option key={aeropuerto.id_aeropuerto} value={aeropuerto.nombre_aeropuerto}/>
+                                        <option key={aeropuerto.id_aeropuerto} value={aeropuerto.icao_aeropuerto}/>
                                     ))}
                                     </datalist>
 
