@@ -334,6 +334,13 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
         }
     };
 
+    const handleIntegerChange = (setter) => (e) => {
+        const value = e.target.value;
+        if (/^[0-9]*$/.test(value)) {
+            setter(value);
+        }
+    };
+
     //Carga ambas listas (modelos y matrículas) filtradas por cliente
     const handleCustomerChange = (event) => {
 
@@ -833,10 +840,10 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                 </label>
                                 <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" 
                                        id="crew-from" 
-                                       type="number" 
-                                       min="0" onKeyDown={(e) => { if (e.key === '-') { e.preventDefault(); } }} 
+                                       type="text" 
+                                       inputMode="numeric"
                                        value={crewFrom}
-                                       onChange={(e) => setCrewFrom(e.target.value)} />
+                                       onChange={handleIntegerChange(setCrewFrom)} />
                             </div>
 
                             {/* Pax */}
@@ -846,10 +853,10 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                 </label>
                                 <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" 
                                        id="pax-from" 
-                                       type="number" 
-                                       min="0" onKeyDown={(e) => { if (e.key === '-') { e.preventDefault(); } }}
+                                       type="text" 
+                                       inputMode="numeric"
                                        value={paxFrom}
-                                       onChange={(e) => setPaxFrom(e.target.value)}/>
+                                       onChange={handleIntegerChange(setPaxFrom)}/>
                             </div>
                         </div>
 
@@ -955,11 +962,10 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                 </label>
                                 <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" 
                                        id="crew-to" 
-                                       type="number" 
-                                       min="0" 
-                                       onKeyDown={(e) => { if (e.key === '-') { e.preventDefault(); } }}
+                                       type="text" 
+                                       inputMode="numeric"
                                        value={crewTo}
-                                       onChange={(e) => setCrewTo(e.target.value)}/>
+                                       onChange={handleIntegerChange(setCrewTo)}/>
                             </div>
 
                             {/* PAX */}
@@ -969,11 +975,10 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                 </label>
                                 <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" 
                                        id="pax-to" 
-                                       type="number" 
-                                       min="0" 
-                                       onKeyDown={(e) => { if (e.key === '-') { e.preventDefault(); } }}
+                                       type="text" 
+                                       inputMode="numeric"
                                        value={paxTo}
-                                       onChange={(e) => setPaxTo(e.target.value)}/>
+                                       onChange={handleIntegerChange(setPaxTo)}/>
                             </div>   
 
                     </div>

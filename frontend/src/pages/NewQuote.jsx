@@ -83,10 +83,10 @@ function NewQuote({ onNavigateToHistorico, previewingQuote }) {
                 }
 
                 // 2. Use defaultConceptos from state
-                if (defaultConceptos.length > 0 && exchangeRate) {
+                if (defaultConceptos.length > 0) {
                     const newItems = defaultConceptos.map(concepto => {
                         const priceMXN = concepto.costo_concepto_default || 0;
-                        const priceUSD = +((priceMXN) / exchangeRate).toFixed(4);
+                        const priceUSD = +((priceMXN) / currentExchangeRate).toFixed(4);
                         const quantity = 1;
                         const scPercentage = 0.10;
                         const vatPercentage = 0.10;
@@ -113,7 +113,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote }) {
 
             initializeNewQuote();
         }
-    }, [quoteId, defaultConceptos, exchangeRate]);
+    }, [quoteId, defaultConceptos]);
 
         useEffect(() => {
         const newTotals = items.reduce((acc, item) => {

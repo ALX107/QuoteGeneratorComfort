@@ -157,7 +157,7 @@ const InfoField = ({ label, value }) => (
 // Create Document Component
 const QuotePDFDocument = ({ formData, items, totals }) => (
   <Document>
-    <Page size="A4" style={styles.page}>
+    <Page size="LETTER" style={styles.page}>
       <View style={styles.header}>
         <Image style={styles.logo} src={RAFLogo} />
         <View style={styles.headerInfo}>

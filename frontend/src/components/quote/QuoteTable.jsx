@@ -5,12 +5,41 @@ function QuoteTable({ items, onRemoveItem, onUpdateItem }) {
     const handleUpdate = (index, field, value) => {
         const numericFields = ['quantity', 'priceMXN', 'priceUSD'];
         if (numericFields.includes(field)) {
-            const MAX_VALUE = 999999999; // Set a max value to prevent errors with large numbers
-            // For numeric fields, ensure the value is a non-negative number and within the limit.
-            let numericValue = parseFloat(value) || 0;
-            numericValue = Math.max(0, numericValue); // Ensure non-negative
-            numericValue = Math.min(MAX_VALUE, numericValue); // Ensure within limit
-            onUpdateItem(index, field, numericValue);
+            let isValidFormat = false;
+            if (field === 'quantity') {
+                isValidFormat = /^[0-9]*$/.test(value);
+            } else {
+                isValidFormat = /^[0-9]*\.?[0-9]*$/.test(value);
+            }
+
+            if (!isValidFormat) {
+                return; // Reject invalid format
+            }
+
+            // If the value is empty or just a decimal point, it's valid so far
+            if (value === '' || value === '.') {
+                onUpdateItem(index, field, value);
+                return;
+            }
+
+            const numericValue = parseFloat(value);
+
+            // Check against max values
+            if (field === 'quantity' && numericValue > 999) {
+                return; // Reject if over max
+            }
+
+            if ((field === 'priceMXN' || field === 'priceUSD')) {
+                if (numericValue >= 10000000) { 
+                    return; // Reject if over max
+                }
+                const parts = value.split('.');
+                if (parts.length > 1 && parts[1].length > 2) {
+                    return; // Reject if more than 2 decimal places
+                }
+            }
+
+            onUpdateItem(index, field, value);
         } else {
             onUpdateItem(index, field, value);
         }
@@ -60,7 +89,8 @@ function QuoteTable({ items, onRemoveItem, onUpdateItem }) {
                                     </td>
                                     <td className="px-4 py-2">
                                         <input
-                                            type="number"
+                                            type="text"
+                                            inputMode="numeric"
                                             id="quantity"
                                             name="quantity"
                                             value={item.quantity}
@@ -70,7 +100,8 @@ function QuoteTable({ items, onRemoveItem, onUpdateItem }) {
                                     </td>
                                     <td className="px-4 py-2">
                                         <input
-                                            type="number"
+                                            type="text"
+                                            inputMode="decimal"
                                             id="priceMXN"
                                             name="priceMXN"
                                             value={item.priceMXN}
@@ -80,7 +111,8 @@ function QuoteTable({ items, onRemoveItem, onUpdateItem }) {
                                     </td>
                                     <td className="px-4 py-2">
                                         <input
-                                            type="number"
+                                            type="text"
+                                            inputMode="decimal"
                                             id="priceUSD"
                                             name="priceUSD"
                                             value={item.priceUSD}

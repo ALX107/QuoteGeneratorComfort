@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 function AddServiceModal({ isOpen, onClose, onSave, initialSelectedServices, allServices }) {
     const [availableServices, setAvailableServices] = useState([]);
     const [selectedServices, setSelectedServices] = useState([]);
+    const [searchAvailable, setSearchAvailable] = useState('');
+    const [searchSelected, setSearchSelected] = useState('');
 
     useEffect(() => {
         if (isOpen) {
@@ -31,6 +33,14 @@ function AddServiceModal({ isOpen, onClose, onSave, initialSelectedServices, all
         onClose();
     };
 
+    const filteredAvailable = availableServices.filter(service =>
+        service.name.toLowerCase().includes(searchAvailable.toLowerCase())
+    );
+
+    const filteredSelected = selectedServices.filter(service =>
+        service.name.toLowerCase().includes(searchSelected.toLowerCase())
+    );
+
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
             <div className="bg-white rounded-lg shadow-2xl p-8 w-full max-w-4xl">
@@ -40,8 +50,20 @@ function AddServiceModal({ isOpen, onClose, onSave, initialSelectedServices, all
                     {/* Columna Izquierda: Servicios Disponibles */}
                     <div>
                         <h3 className="text-lg font-semibold mb-4 border-b pb-2">Available Services</h3>
+                        <div className="relative mb-4">
+                            <span className="absolute inset-y-0 left-0 flex items-center pl-3">
+                                <span className="material-icons text-gray-400">search</span>
+                            </span>
+                            <input
+                                type="text"
+                                placeholder="Search available services..."
+                                value={searchAvailable}
+                                onChange={(e) => setSearchAvailable(e.target.value)}
+                                className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-10 pr-4 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500"
+                            />
+                        </div>
                         <ul className="space-y-3 h-80 overflow-y-auto pr-2">
-                            {availableServices.map(service => (
+                            {filteredAvailable.map(service => (
                                 <li key={service.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg shadow-sm">
                                     <div>
                                         <p className="font-medium">{service.name}</p>
@@ -55,9 +77,9 @@ function AddServiceModal({ isOpen, onClose, onSave, initialSelectedServices, all
                                     </button>
                                 </li>
                             ))}
-                             {availableServices.length === 0 && (
+                             {filteredAvailable.length === 0 && (
                                 <div className="text-center text-gray-400 pt-16">
-                                    <p>There are no more services available.</p>
+                                    <p>No services match your search.</p>
                                 </div>
                             )}
                         </ul>
@@ -66,8 +88,20 @@ function AddServiceModal({ isOpen, onClose, onSave, initialSelectedServices, all
                     {/* Columna Derecha: Servicios Agregados */}
                     <div>
                         <h3 className="text-lg font-semibold mb-4 border-b pb-2">Added Services</h3>
+                        <div className="relative mb-4">
+                            <span className="absolute inset-y-0 left-0 flex items-center pl-3">
+                                <span className="material-icons text-gray-400">search</span>
+                            </span>
+                            <input
+                                type="text"
+                                placeholder="Search added services..."
+                                value={searchSelected}
+                                onChange={(e) => setSearchSelected(e.target.value)}
+                                className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-10 pr-4 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500"
+                            />
+                        </div>
                         <ul className="space-y-3 h-80 overflow-y-auto pr-2">
-                            {selectedServices.map(service => (
+                            {filteredSelected.map(service => (
                                 <li key={service.id} className="flex items-center justify-between p-3 bg-green-50 rounded-lg shadow-sm">
                                     <div>
                                         <p className="font-medium">{service.name}</p>
@@ -81,9 +115,9 @@ function AddServiceModal({ isOpen, onClose, onSave, initialSelectedServices, all
                                     </button>
                                 </li>
                             ))}
-                             {selectedServices.length === 0 && (
+                             {filteredSelected.length === 0 && (
                                 <div className="text-center text-gray-400 pt-16">
-                                    <p>The added services will appear here.</p>
+                                    <p>No services match your search.</p>
                                 </div>
                             )}
                         </ul>
