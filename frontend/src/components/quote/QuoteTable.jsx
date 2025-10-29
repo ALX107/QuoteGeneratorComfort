@@ -1,6 +1,6 @@
 import React from 'react';
 
-function QuoteTable({ items, onRemoveItem, onUpdateItem }) {
+function QuoteTable({ items, onRemoveItem, onUpdateItem, isReadOnly }) {
 
     const handleUpdate = (index, field, value) => {
         const numericFields = ['quantity', 'priceMXN', 'priceUSD'];
@@ -76,7 +76,7 @@ function QuoteTable({ items, onRemoveItem, onUpdateItem }) {
                             </tr>
                         ) : (
                             items.map((item, index) => (
-                                <tr key={index} className="bg-white border-b hover:bg-gray-50">
+                                <tr key={index} className="bg-white border-b hover:bg-gray-50 ">
                                     <td className="px-4 py-2">
                                         <input
                                             type="text"
@@ -84,7 +84,8 @@ function QuoteTable({ items, onRemoveItem, onUpdateItem }) {
                                             name="description"
                                             value={item.description}
                                             onChange={(e) => handleUpdate(index, 'description', e.target.value)}
-                                            className="w-full bg-transparent border-none focus:ring-0 p-1"
+                                            disabled={isReadOnly}
+                                            className="w-full bg-transparent border-none focus:ring-0 p-1 disabled:cursor-not-allowed"
                                         />
                                     </td>
                                     <td className="px-4 py-2">
@@ -95,7 +96,8 @@ function QuoteTable({ items, onRemoveItem, onUpdateItem }) {
                                             name="quantity"
                                             value={item.quantity}
                                             onChange={(e) => handleUpdate(index, 'quantity', e.target.value)}
-                                            className="w-20 bg-gray-50 border border-gray-300 rounded-md p-1 text-center focus:ring-sky-500 focus:border-sky-500"
+                                            disabled={isReadOnly}
+                                            className="w-20 bg-gray-50 border border-gray-300 rounded-md p-1 text-center focus:ring-sky-500 focus:border-sky-500 disabled:cursor-not-allowed"
                                         />
                                     </td>
                                     <td className="px-4 py-2">
@@ -106,7 +108,9 @@ function QuoteTable({ items, onRemoveItem, onUpdateItem }) {
                                             name="priceMXN"
                                             value={item.priceMXN}
                                             onChange={(e) => handleUpdate(index, 'priceMXN', e.target.value)}
-                                            className="w-20 bg-gray-50 border border-gray-300 rounded-md p-1 text-center focus:ring-sky-500 focus:border-sky-500"
+                                            disabled={isReadOnly}
+                                            className="w-20 bg-gray-50 border border-gray-300 rounded-md p-1 text-center focus:ring-sky-500 focus:border-sky-500 disabled:cursor-not-allowed"
+                                        
                                         />
                                     </td>
                                     <td className="px-4 py-2">
@@ -117,8 +121,10 @@ function QuoteTable({ items, onRemoveItem, onUpdateItem }) {
                                             name="priceUSD"
                                             value={item.priceUSD}
                                             onChange={(e) => handleUpdate(index, 'priceUSD', e.target.value)}
-                                            className="w-24 bg-gray-50 border border-gray-300 rounded-md p-1 text-right focus:ring-sky-500 focus:border-sky-500"
+                                            disabled={isReadOnly}
+                                            className="w-20 bg-gray-50 border border-gray-300 rounded-md p-1 text-center focus:ring-sky-500 focus:border-sky-500 disabled:cursor-not-allowed"
                                         />
+                                        
                                     </td>
                                     <td className="px-4 py-2 font-medium text-gray-900">
                                         {((item.quantity || 0) * (item.priceUSD || 0)).toFixed(2)}
@@ -129,7 +135,9 @@ function QuoteTable({ items, onRemoveItem, onUpdateItem }) {
                                             name="scPercentage"
                                             value={item.scPercentage}
                                             onChange={(e) => handleUpdate(index, 'scPercentage', parseFloat(e.target.value))}
-                                            className="w-20 bg-gray-50 border border-gray-300 rounded-md p-1 text-center focus:ring-sky-500 focus:border-sky-500"
+                                            disabled={isReadOnly}
+                                            className="w-20 bg-gray-50 border border-gray-300 rounded-md p-1 text-center focus:ring-sky-500 focus:border-sky-500 disabled:cursor-not-allowed"
+                                        
                                         >
                                             <option value="0.10">10%</option>
                                             <option value="0.12">12%</option>
@@ -146,7 +154,9 @@ function QuoteTable({ items, onRemoveItem, onUpdateItem }) {
                                             name="vatPercentage"
                                             value={item.vatPercentage}
                                             onChange={(e) => handleUpdate(index, 'vatPercentage', parseFloat(e.target.value))}
-                                            className="w-20 bg-gray-50 border border-gray-300 rounded-md p-1 text-center focus:ring-sky-500 focus:border-sky-500"
+                                            disabled={isReadOnly}
+                                            className="w-20 bg-gray-50 border border-gray-300 rounded-md p-1 text-center focus:ring-sky-500 focus:border-sky-500 disabled:cursor-not-allowed"
+                                        
                                         >
                                             <option value="0.10">10%</option>
                                             <option value="0.12">12%</option>
@@ -163,7 +173,9 @@ function QuoteTable({ items, onRemoveItem, onUpdateItem }) {
                                     <td className="px-4 py-2">
                                         <button
                                             onClick={() => onRemoveItem(index)}
-                                            className="btn-trashcan block"
+                                            className="btn-trashcan block disabled:cursor-not-allowed"
+                                            disabled={isReadOnly}
+                                            
                                         >
                                             <span className="material-icons">delete</span>
                                         </button>

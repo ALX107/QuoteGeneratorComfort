@@ -20,6 +20,8 @@ function NewQuote({ onNavigateToHistorico, previewingQuote }) {
     const [allServices, setAllServices] = useState([]);
     const [defaultConceptos, setDefaultConceptos] = useState([]);
 
+    const [isReadOnly, setIsReadOnly] = useState(false);
+
     const quoteId = previewingQuote ? previewingQuote.id_cotizacion : null;
 
     const [totals, setTotals] = useState({
@@ -45,6 +47,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote }) {
 
     useEffect(() => {
         if (quoteId) {
+            setIsReadOnly(true); // Bloquea el formulario al previsualizar
             axios.get(`http://localhost:3000/api/cotizacion/${quoteId}`)
                 .then(response => {
                     const quoteData = response.data;
@@ -66,6 +69,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote }) {
                 .catch(error => console.error('Error fetching quote details:', error));
         } else {
             // This is a new quote, initialize it
+            setIsReadOnly(false); // Asegura que el formulario esté editable para una nueva cotización
             if (quoteFormRef.current) {
                 quoteFormRef.current.clearAllFields();
             }
@@ -218,6 +222,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote }) {
         }
         setItems([]); // Also clear the items in the table
         setIsConfirmModalOpen(false);
+        setIsReadOnly(false);
     };
 
     const handleRemoveItem = (index) => {
@@ -354,7 +359,11 @@ function NewQuote({ onNavigateToHistorico, previewingQuote }) {
     return (
         <div className="bg-blue-dark p-8">
             <div className="bg-gray-50 min-h-screen rounded-lg shadow-lg p-6">
-                <QuoteHeader onClearQuote={handleClearQuote} onSaveQuote={handleSaveQuote} onExportToPdf={handlePreviewPdf} />
+                <QuoteHeader onClearQuote={handleClearQuote}
+                             onSaveQuote={handleSaveQuote} 
+                             onExportToPdf={handlePreviewPdf}
+                             isReadOnly={isReadOnly}                            
+                />
                 <main className="max-w-7xl mx-auto mt-4">
                     <QuoteForm
                         ref={quoteFormRef}
@@ -363,8 +372,13 @@ function NewQuote({ onNavigateToHistorico, previewingQuote }) {
                         onSelectionChange={fetchServices}
                         exchangeRate={exchangeRate || ''}
                         onExchangeRateChange={(value) => setExchangeRate(parseFloat(value) || 0)}
+                        isReadOnly={isReadOnly}
                     />
-                    <QuoteTable items={items} onRemoveItem={handleRemoveItem} onUpdateItem={handleUpdateItem} />
+                    <QuoteTable items={items} 
+                                onRemoveItem={handleRemoveItem} 
+                                onUpdateItem={handleUpdateItem}
+                                isReadOnly={isReadOnly} 
+                    />
                     <QuoteTotal totals={totals} />
                 </main>
                 <AddServiceModal

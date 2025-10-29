@@ -6,7 +6,7 @@ import axios from 'axios';
 import Calculator from '../features/Calculator.jsx';
 
 
-const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange, exchangeRate, onExchangeRateChange }, ref) => {
+const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange, exchangeRate, onExchangeRateChange, isReadOnly}, ref) => {
     const [clientes, setClientes] = useState([]);
     const [aeropuertos, setAeropuertos] = useState([]);
     const [clientesAeronaves, setClientesAeronaves] = useState([]); 
@@ -549,8 +549,9 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                         setCustomerValue(e.target.value);
                                         handleCustomerChange(e);
                                     }}
-                                    className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
-                                />
+                                    className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm disabled:cursor-not-allowed"
+                                    disabled={isReadOnly}
+                               />
                                 <datalist id="customer-list">
                                     {clientes.map((cliente) => (
                                         <option key={cliente.id_cliente} value={cliente.nombre_cliente} />
@@ -571,7 +572,9 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                     list="categoriasOperaciones-list"
                                     id="flight-type"
                                     name="flight-type"
-                                    className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
+                                    className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm disabled:cursor-not-allowed"
+                                    disabled={isReadOnly}
+                               
                                     value={flightType}
                                     onChange={(e) => setFlightType(e.target.value)}
                                 />
@@ -597,11 +600,12 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                             </label>
 
                             <div className="relative mt-1">
-                                    <input className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" 
+                                    <input className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm disabled:cursor-not-allowed" 
                                            id="date" 
                                            type="date" 
                                            value={date} 
-                                           onChange={(e) => setDate(e.target.value)} />
+                                           onChange={(e) => setDate(e.target.value)}
+                                           disabled={isReadOnly} />
                                     <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
                                         <span className="material-icons text-gray-400"></span>
                                     </span>
@@ -620,11 +624,12 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
 
                               <input
                                     list="aircraft-registration-list"
-                                    className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
+                                    className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm disabled:cursor-not-allowed"
                                     id="aircraft-registration"
                                     type="text"
                                     value={registrationValue}
                                     onChange={handleRegistrationChange}
+                                    disabled={isReadOnly}
                                     //disabled={!customerValue}
                                 />
 
@@ -641,6 +646,8 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                     type="checkbox" 
                                     checked={isCaaMember}
                                     onChange={(e) => setIsCaaMember(e.target.checked)}
+                                    disabled={isReadOnly}
+                                    className='disabled:bg-gray-200 disabled:cursor-not-allowed'
                                 />
                                 <label htmlFor="caa-member" className="block text-sm font-medium text-dark-gray">
                                     Is CAA Member
@@ -658,9 +665,10 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                     list="aircraft-model-list"
                                     id="aircraft-model"
                                     name="aircraft-model"
-                                    className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
+                                    className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm disabled:cursor-not-allowed"
                                     onChange={handleModelChange}
                                     value={modelValue}
+                                    disabled={isReadOnly}
                                     //disabled={!customerValue}
                                     
                                 />
@@ -685,25 +693,28 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                             </label>
                             <div className="flex items-center mt-1">
                                 <input
-                                    className="w-full bg-gray-100 border border-gray-300 rounded-l-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
+                                    className="w-full bg-gray-100 border border-gray-300 rounded-l-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm disabled:cursor-not-allowed"
                                     id="mtow"
                                     type="number"
                                     value={mtowValue}
                                     step="any"
                                     onChange={handleInputChange}
+                                    disabled={isReadOnly}
                                 />
                                 <div className="flex">
                                     <button
                                         type="button"
-                                        className={`px-3 py-2 border-t border-b border-gray-300 text-dark-gray text-sm ${unit === "KG" ? "bg-gray-200" : "bg-white"}`}
+                                        className={`px-3 py-2 border-t border-b border-gray-300 text-dark-gray text-sm ${unit === "KG" ? "bg-gray-200" : "bg-white disabled:cursor-not-allowed"}`}
                                         onClick={convertToKG}
+                                        disabled={isReadOnly}
                                     >
                                         KG
                                     </button>
                                     <button
                                         type="button"
-                                        className={`px-3 py-2 border border-gray-300 text-sm rounded-r-md ${unit === "LB" ? "bg-sky-600 text-white" : "bg-white text-dark-gray"}`}
+                                        className={`px-3 py-2 border border-gray-300 text-sm rounded-r-md ${unit === "LB" ? "bg-sky-600 text-white" : "bg-white text-dark-gray disabled:cursor-not-allowed"}`}
                                         onClick={convertToLB}
+                                        disabled={isReadOnly}
                                     >
                                         LB
                                     </button>
@@ -723,21 +734,23 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                 <label className="block text-sm font-medium text-dark-gray" htmlFor="quoted-by">
                                     Quoted by
                                 </label>
-                                <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" 
+                                <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm disabled:cursor-not-allowed" 
                                         id="quoted-by" 
                                         type="text" 
                                         value={quotedBy}
-                                        onChange={(e) => setQuotedBy(e.target.value)}/> 
+                                        onChange={(e) => setQuotedBy(e.target.value)}
+                                        disabled={isReadOnly}/> 
                             </div>
                             <div className="mt-4">
                                 <label className="block text-sm font-medium text-dark-gray" htmlFor="attn">
                                     Attn.
                                 </label>
-                                <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" 
+                                <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm disabled:cursor-not-allowed" 
                                        id="attn" 
                                        type="text"  
                                        value={attnValue}
-                                       onChange={(e) => setAttnValue(e.target.value)}/>
+                                       onChange={(e) => setAttnValue(e.target.value)}
+                                       disabled={isReadOnly}/>
                             </div>
                         </div>
                         
@@ -760,7 +773,10 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                             handleStationChange(e);
                                         }}
 
-                                        className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
+                                        className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm disabled:cursor-not-allowed"
+                                        disabled={isReadOnly}
+                                        
+
                                    />
                                    <datalist id="select-station-list">
                                         {aeropuertos.map((aeropuerto) => (
@@ -786,7 +802,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                            type="date" 
                                            value={etaDate} 
                                            onChange={(e) => setEtaDate(e.target.value)} 
-                                           disabled={noEta} />
+                                           disabled={noEta || isReadOnly} />
                                 </div>
                             </div>
 
@@ -800,9 +816,10 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                 <input id="eta-checkbox" 
                        name="eta-checkbox" 
                        type="checkbox" 
-                       className="focus:ring-sky-500 h-4 w-4 text-sky-600 border-gray-300 rounded"
+                       className="focus:ring-sky-500 h-4 w-4 text-sky-600 border-gray-300 rounded disabled:bg-gray-200 disabled:cursor-not-allowed"
                        checked={noEta}
-                       onChange={(e) => setNoEta(e.target.checked)} />
+                       onChange={(e) => setNoEta(e.target.checked)} 
+                       disabled={isReadOnly}/>
             </div>
             <div className="ml-2 text-sm">
                 <label htmlFor="eta-checkbox" className="font-medium text-dark-gray whitespace-nowrap">No ETA</label>
@@ -819,9 +836,10 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                     list="from-station-list"
                     id="from-station"
                     name="station"
-                    className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
+                    className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm disabled:cursor-not-allowed"
                     value={fromStation}
                     onChange={(e) => setFromStation(e.target.value)}
+                    disabled={isReadOnly}
                  />
                    <datalist id="from-station-list">
                                     {aeropuertos.map((aeropuerto) => (
@@ -838,12 +856,13 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                 <label className="block text-sm font-medium text-dark-gray" htmlFor="crew-from">
                                     Crew
                                 </label>
-                                <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" 
+                                <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm disabled:cursor-not-allowed" 
                                        id="crew-from" 
                                        type="text" 
                                        inputMode="numeric"
                                        value={crewFrom}
-                                       onChange={handleIntegerChange(setCrewFrom)} />
+                                       onChange={handleIntegerChange(setCrewFrom)}
+                                       disabled={isReadOnly} />
                             </div>
 
                             {/* Pax */}
@@ -851,12 +870,14 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                 <label className="block text-sm font-medium text-dark-gray" htmlFor="pax-from">
                                     Pax
                                 </label>
-                                <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" 
+                                <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm disabled:cursor-not-allowed" 
                                        id="pax-from" 
                                        type="text" 
                                        inputMode="numeric"
                                        value={paxFrom}
-                                       onChange={handleIntegerChange(setPaxFrom)}/>
+                                       onChange={handleIntegerChange(setPaxFrom)}
+                                       disabled={isReadOnly}
+                                       />
                             </div>
                         </div>
 
@@ -872,12 +893,13 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                 list="fbo-list"
                                 id="fbo"
                                 name="fbo"
-                                className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
+                                className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm disabled:cursor-not-allowed"
                                 value={fboValue}
                                 onChange={(e) => {
                                     setFboValue(e.target.value);
                                     handleFboChange(e);
                                 }}
+                                disabled={isReadOnly}
                             />
 
                                  
@@ -904,7 +926,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                            type="date" 
                                            value={etdDate} 
                                            onChange={(e) => setEtdDate(e.target.value)} 
-                                           disabled={noEtd}/>
+                                           disabled={noEtd || isReadOnly}/>
                                   
                                 </div>
                         </div>
@@ -917,9 +939,10 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                     <input id="etd-checkbox" 
                                            name="etd-checkbox" 
                                            type="checkbox" 
-                                           className="focus:ring-sky-500 h-4 w-4 text-sky-600 border-gray-300 rounded"
+                                           className="focus:ring-sky-500 h-4 w-4 text-sky-600 border-gray-300 rounded disabled:cursor-not-allowed"
                                            checked={noEtd}
-                                           onChange={(e) => setNoEtd(e.target.checked)} />
+                                           onChange={(e) => setNoEtd(e.target.checked)}
+                                           disabled={isReadOnly} />
                                 </div>
 
                                 <div className="ml-2 text-sm">
@@ -936,9 +959,10 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                             list="to-station-list"
                                             id="to-station"
                                             name="to-station"
-                                            className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm"
+                                            className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm disabled:cursor-not-allowed"
                                             value={toStation}
                                             onChange={(e) => setToStation(e.target.value)}
+                                            disabled={isReadOnly}
                                         />
 
                                         <datalist id="to-station-list">
@@ -960,12 +984,13 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                 <label className="block text-sm font-medium text-dark-gray" htmlFor="crew-to">
                                     Crew
                                 </label>
-                                <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" 
+                                <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm disabled:cursor-not-allowed" 
                                        id="crew-to" 
                                        type="text" 
                                        inputMode="numeric"
                                        value={crewTo}
-                                       onChange={handleIntegerChange(setCrewTo)}/>
+                                       onChange={handleIntegerChange(setCrewTo)}
+                                       disabled={isReadOnly}/>
                             </div>
 
                             {/* PAX */}
@@ -973,12 +998,13 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                 <label className="block text-sm font-medium text-dark-gray" htmlFor="pax-to">
                                     Pax
                                 </label>
-                                <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" 
+                                <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm disabled:cursor-not-allowed" 
                                        id="pax-to" 
                                        type="text" 
                                        inputMode="numeric"
                                        value={paxTo}
-                                       onChange={handleIntegerChange(setPaxTo)}/>
+                                       onChange={handleIntegerChange(setPaxTo)}
+                                       disabled={isReadOnly}/>
                             </div>   
 
                     </div>
@@ -988,12 +1014,13 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                     <label className="block text-sm font-medium text-dark-gray" htmlFor="exchange-rate">
                                         Exchange Rate
                                     </label>
-                                    <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm" 
+                                    <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm disabled:cursor-not-allowed" 
                                            id="exchange-rate" 
                                            type="number" 
                                            min="0" onKeyDown={(e) => { if (e.key === '-') { e.preventDefault(); } }}
                                            value={exchangeRate}
-                                            onChange={(e) => onExchangeRateChange(e.target.value)} />
+                                           onChange={(e) => onExchangeRateChange(e.target.value)} 
+                                           disabled={isReadOnly}/>
 
                                         <a
                                         href="https://dof.gob.mx/indicadores.php#gsc.tab=0"
@@ -1010,18 +1037,22 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                 <button
                     type="button"
                     onClick={onOpenServiceModal}
-                    className="btn-glass"
+                    
+                    className="btn-glass disabled:opacity-60"
+                    disabled={isReadOnly}
                 >
                     + Add Service
                 </button>
                 <button
                     type="button"
                     onClick={onAddItem}
-                    className="btn-glass"
+
+                    className="btn-glass disabled:opacity-60"
+                    disabled={isReadOnly}
                 >
                     + Add Empty Row
                 </button>
-                <Calculator />
+                <Calculator isReadOnly={isReadOnly} />
             </div>
         </main>
     );

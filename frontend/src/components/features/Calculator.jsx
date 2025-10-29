@@ -12,7 +12,7 @@ function formatOperand(operand) {
   return `${INTEGER_FORMATTER.format(integer)}.${decimal}`;
 }
 
-const Calculator = () => {
+const Calculator = ({ isReadOnly }) => {
   const [isOpen, setIsOpen] = useState(false);
   
   const [displayValue, setDisplayValue] = useState('0');
@@ -146,7 +146,10 @@ const Calculator = () => {
 
   return (
     <div className="relative">
-      <button onClick={() => setIsOpen(!isOpen)} className="btn-glass p-2 flex items-center space-x-2">
+      <button 
+        onClick={() => setIsOpen(!isOpen)} 
+        className="btn-glass p-2 flex items-center space-x-2 disabled:opacity-60"
+        disabled={isReadOnly}>
         <span className="material-icons">calculate</span>
       </button>
 
