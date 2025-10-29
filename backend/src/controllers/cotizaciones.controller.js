@@ -6,7 +6,7 @@ const createQuote = async (req, res) => {
     // Extrae los datos del formulario y el arreglo de servicios del cuerpo de la solicitud.
     const {
       customer, flightType, date, aircraftModel, quotedBy,
-      attn, station, eta, from, crewFrom, paxFrom, fbo,
+      attn, station, eta, from, crewFrom, paxFrom, fbo, isCaaMember,
       etd, to, crewTo, paxTo, exchangeRate,
       servicios // Este es el arreglo de servicios/conceptos
     } = req.body;
@@ -95,21 +95,21 @@ const createQuote = async (req, res) => {
     const historicoQuery = `
       INSERT INTO "cotizaciones_historico" (
         id_cliente, id_cat_operacion, fecha_cotizacion, id_cliente_aeronave,
-        nombre_responsable, nombre_solicitante, id_aeropuerto, fecha_llegada,
+        nombre_responsable, nombre_solicitante, id_aeropuerto, es_miembro_caa, fecha_llegada,
         aeropuerto_origen_id, tripulacion_llegada, pasajeros_llegada, id_fbo,
         fecha_salida, aeropuerto_destino_id, tripulacion_salida, pasajeros_salida,
         exchange_rate, id_cotizacion, numero_referencia, tipo_accion, version,
         total_costo, total_s_cargo, total_vat, total_final
       ) 
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25);
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26);
     `;
 
     const historicoValues = [
-      customer, flightType, date, aircraftModel, quotedBy,
-      attn, station, eta, from, crewFrom, paxFrom, fbo,
-      etd, to, crewTo, paxTo, exchangeRate,
-      idCotizacion, numero_referencia, tipo_accion, version,
-      total_costo, total_s_cargo, total_vat, total_final
+      customer, flightType, date, aircraftModel, quotedBy, // 5
+      attn, station, isCaaMember, eta, from, // 10
+      crewFrom, paxFrom, fbo, etd, to, // 15
+      crewTo, paxTo, exchangeRate, idCotizacion, numero_referencia, // 20
+      tipo_accion, version, total_costo, total_s_cargo, total_vat, total_final // 26
     ];
     
     await pool.query(historicoQuery, historicoValues);

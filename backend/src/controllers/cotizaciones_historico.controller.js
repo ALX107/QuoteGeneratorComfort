@@ -13,7 +13,7 @@ const getCotizacionesHistorico = async (req, res) => {
         ch.exchange_rate,
         c.nombre_cliente AS nombre_cliente,      -- Nombre del cliente desde la tabla 'clientes'
         co.nombre_cat_operacion AS nombre_cat_operacion,              -- Nombre de la operación desde 'categorias_operaciones'
-        a.nombre_aeropuerto AS nombre_aeropuerto,                  -- Nombre del aeropuerto desde 'aeropuertos'
+        a.icao_aeropuerto AS icao_aeropuerto,                  -- ICAO del aeropuerto desde 'aeropuertos'
         ca.matricula_aeronave AS matricula_aeronave             -- Matrícula de la aeronave desde 'cliente_aeronaves'
       FROM
         "cotizaciones_historico" AS ch

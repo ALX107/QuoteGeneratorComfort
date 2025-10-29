@@ -41,7 +41,7 @@ function HistoricTable({ quotes, onPreviewQuote }) { // Recibe las cotizaciones 
                                     <td className="px-6 py-4">{quote.numero_referencia}</td>
                                     <td className="px-6 py-4">{quote.nombre_cat_operacion}</td>
                                     <td className="px-6 py-4">{formatDate(quote.fecha_cotizacion)}</td>
-                                    <td className="px-6 py-4">{quote.nombre_aeropuerto}</td>
+                                    <td className="px-6 py-4">{quote.icao_aeropuerto}</td>
                                     <td className="px-6 py-4">{quote.matricula_aeronave}</td>
                                     <td className="px-6 py-4">{formatDate(quote.fecha_llegada)}</td>
                                     <td className="px-6 py-4">{quote.nombre_cliente}</td>

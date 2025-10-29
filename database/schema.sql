@@ -201,6 +201,7 @@ CREATE TABLE cotizaciones_historico (
     nombre_responsable VARCHAR(255),
     exchange_rate DECIMAL(10, 4) NOT NULL,
     id_cliente BIGINT NOT NULL,
+    es_miembro_caa BOOLEAN, 
     id_cat_operacion BIGINT NOT NULL,
     id_cliente_aeronave BIGINT NOT NULL,
     id_aeropuerto BIGINT NOT NULL,
@@ -229,4 +230,3 @@ CREATE TABLE cotizaciones_historico (
     -- incluso si la cotización original se elimina, pero mantenemos el ID para la relación lógica.
     CONSTRAINT chk_tipo_accion CHECK (tipo_accion IN ('CREADA', 'ACTUALIZADA', 'REVERTIDA', 'CANCELADA')) --verificar
 );
-

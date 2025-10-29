@@ -118,15 +118,23 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
             setDate(quote.fecha_cotizacion ? new Date(quote.fecha_cotizacion).toISOString().split('T')[0] : '');
             setQuotedBy(quote.nombre_responsable || '');
             setAttnValue(quote.nombre_solicitante || '');
-            setSelectStation(station ? station.nombre_aeropuerto : '');
+            setSelectStation(station ? station.icao_aeropuerto : '');
             setSelectedAirportId(station ? station.id_aeropuerto : null);
+
+            // Si la fecha es null, marca el checkbox y limpia el campo de fecha.
+            setNoEta(quote.fecha_llegada === null);
             setEtaDate(quote.fecha_llegada ? new Date(quote.fecha_llegada).toISOString().split('T')[0] : '');
+
             setFromStation(from ? from.icao_aeropuerto : '');
             setCrewFrom(quote.tripulacion_llegada || '');
             setPaxFrom(quote.pasajeros_llegada || '');
             setFboValue(fbo ? fbo.nombre_fbo : '');
             setSelectedFboId(fbo ? fbo.id_fbo : null);
+
+            // Si la fecha es null, marca el checkbox y limpia el campo de fecha.
+            setNoEtd(quote.fecha_salida === null);
             setEtdDate(quote.fecha_salida ? new Date(quote.fecha_salida).toISOString().split('T')[0] : '');
+
             setToStation(to ? to.icao_aeropuerto : '');
             setCrewTo(quote.tripulacion_salida || '');
             setPaxTo(quote.pasajeros_salida || '');
@@ -148,7 +156,8 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                     setModelValue(model ? model.nombre_aeronave : '');
                     setRegistrationValue(aircraft.matricula_aeronave || '');
                     setMtowValue(model ? model.mtow_aeronave : '');
-                    setIsCaaMember(!!aircraft.es_miembro_caa);
+                    // Usamos el valor de la cotización guardada, que es el más reciente.
+                    setIsCaaMember(!!quote.es_miembro_caa);
                 }
             
             
@@ -797,11 +806,13 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                 </label>
                                 <div className="relative mt-1">
                                     <input className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm
-                                                      disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed" 
-                                           id="eta" 
-                                           type="date" 
-                                           value={etaDate} 
-                                           onChange={(e) => setEtaDate(e.target.value)} 
+                                                      disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed disabled:text-opacity-70" 
+                                           id="eta"
+                                           type={etaDate ? 'date' : 'text'}
+                                           value={etaDate}
+                                           placeholder="No ETA Selected"
+                                           //onFocus={(e) => e.target.type = 'date'}
+                                           onChange={(e) => setEtaDate(e.target.value)}
                                            disabled={noEta || isReadOnly} />
                                 </div>
                             </div>
@@ -921,11 +932,13 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                 </label>
                                 <div className="relative mt-1">
                                     <input className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm
-                                                      disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed" 
-                                           id="etd" 
-                                           type="date" 
-                                           value={etdDate} 
-                                           onChange={(e) => setEtdDate(e.target.value)} 
+                                                      disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed disabled:text-opacity-80" 
+                                           id="etd"
+                                           type={etdDate ? 'date' : 'text'}
+                                           value={etdDate}
+                                           placeholder="No ETD Selected"
+                                           onFocus={(e) => e.target.type = 'date'}
+                                           onChange={(e) => setEtdDate(e.target.value)}
                                            disabled={noEtd || isReadOnly}/>
                                   
                                 </div>
