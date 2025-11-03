@@ -1,4 +1,4 @@
-import React, { useEffect, useState, forwardRef, useImperativeHandle } from 'react';
+import React, { useEffect, useState, forwardRef, useImperativeHandle, useRef } from 'react';
 import axios from 'axios';
 
 
@@ -45,6 +45,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
     const [noEtd, setNoEtd] = useState(false); // 
 
     const [isDataLoaded, setIsDataLoaded] = useState(false);
+    const dataFetchedRef = useRef(false);
     
     //Fecha y MTOW
         const [date, setDate] = useState('');
@@ -252,42 +253,61 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
     );
 
     useEffect(() => {
+        // Previene la doble llamada de la API en StrictMode
+        if (dataFetchedRef.current) {
+            return;
+        }
+        dataFetchedRef.current = true;
+
+
+        const today = new Date();
+        const formattedDate = today.toISOString().split('T')[0];
+        setDate(formattedDate); 
+        setEtaDate(formattedDate);
+        setEtdDate(formattedDate);
+
             const fetchData = async () => {
             try {
-                const clientesResponse = await axios.get('http://localhost:3000/api/listar/clientes');
+               const [
+                        clientesResponse,
+                        aeropuertosResponse,
+                        categoriasOperacionesResponse,
+                        fbosResponse,
+                        aeronavesModelosResponse,
+                        clientesAeronavesResponse
+                    ] = await Promise.all([
+                    axios.get('http://localhost:3000/api/listar/clientes'),
+                    axios.get('http://localhost:3000/api/listar/aeropuertos'),
+                    axios.get('http://localhost:3000/api/listar/categoriasOperaciones'),
+                    axios.get('http://localhost:3000/api/listar/fbos'),
+                    axios.get('http://localhost:3000/api/listar/aeronaves_modelos'),
+                    axios.get('http://localhost:3000/api/listar/clientes_aeronaves')
+                ]);
+
+                // 3. Setea todos los estados
                 setClientes(clientesResponse.data);
-
-                const aeropuertosResponse = await axios.get('http://localhost:3000/api/listar/aeropuertos');
                 setAeropuertos(aeropuertosResponse.data);
-
-                const categoriasOperacionesResponse = await axios.get('http://localhost:3000/api/listar/categoriasOperaciones');
                 setCategoriasOperaciones(categoriasOperacionesResponse.data);
-
-                const fbosResponse = await axios.get('http://localhost:3000/api/listar/fbos');
                 setAllFbos(fbosResponse.data);
-
-                // Petición para Modelos Aeronave (necesitamos todos para poder filtrar después)
-                const aeronavesModelosResponse = await axios.get('http://localhost:3000/api/listar/aeronaves_modelos');
                 setAllAeronavesModelos(aeronavesModelosResponse.data);
-
-                // Petición para Clientes Aeronaves
-                const clientesAeronavesResponse = await axios.get('http://localhost:3000/api/listar/clientes_aeronaves');
                 setClientesAeronaves(clientesAeronavesResponse.data);
 
-                // Fetch initial services (generic)
+                // 4. Llama a las funciones prop
                 onSelectionChange(null, null);
-
-                setIsDataLoaded(true); // <-- Indica que las listas se han cargado
 
             } catch (error) {
                 console.error('Error fetching data:', error);
-                
+            } finally {
+                // 5. Indica que la carga terminó
+                setIsDataLoaded(true); // <-- Indica que las listas se han cargado
             }
         };
 
         fetchData();
 
-}, []);
+    }, []);
+
+                
 
 
      // Efecto para actualizar el estado del checkbox cuando cambia la matrícula seleccionada
@@ -531,15 +551,6 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                     setUnit("KG")
                 }
             };
-      
-            useEffect(() => {
-                const today = new Date();
-                const formattedDate = today.toISOString().split('T')[0];
-                setDate(formattedDate); 
-                setEtaDate(formattedDate);
-                setEtdDate(formattedDate);
-
-            }, []);
 
     return (
         <main className="pt-6">

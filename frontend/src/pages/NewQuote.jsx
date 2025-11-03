@@ -10,6 +10,8 @@ import axios from 'axios';
 
 function NewQuote({ onNavigateToHistorico, previewingQuote }) {
     const [items, setItems] = useState([]);
+    const conceptsFetchedRef = useRef(false);
+    const exchangeRateFetchedRef = useRef(false);
     const quoteFormRef = useRef();
     const [exchangeRate, setExchangeRate] = useState(null); // To store the exchange rate
 
@@ -21,6 +23,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote }) {
     const [defaultConceptos, setDefaultConceptos] = useState([]);
 
     const [isReadOnly, setIsReadOnly] = useState(false);
+    const [originalReference, setOriginalReference] = useState(null);
 
     const quoteId = previewingQuote ? previewingQuote.id_cotizacion : null;
 
@@ -33,6 +36,11 @@ function NewQuote({ onNavigateToHistorico, previewingQuote }) {
 
     useEffect(() => {
         // Fetch default conceptos once when the component mounts
+        // Previene la doble llamada de la API en StrictMode
+        if (conceptsFetchedRef.current) {
+            return;
+        }
+        conceptsFetchedRef.current = true;
         const fetchDefaultConceptos = async () => {
             try {
                 const response = await axios.get('http://localhost:3000/api/conceptos-default');
@@ -46,6 +54,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote }) {
     }, []);
 
     useEffect(() => {
+        //Si es una cotización existente, cargar sus datos (Previewing Quote)
         if (quoteId) {
             setIsReadOnly(true); // Bloquea el formulario al previsualizar
             axios.get(`http://localhost:3000/api/cotizacion/${quoteId}`)
@@ -64,72 +73,91 @@ function NewQuote({ onNavigateToHistorico, previewingQuote }) {
                         anchorCurrency: 'MXN', // Assuming MXN is the default anchor
                         total: servicio.total_usd,
                     })));
+                    //Usa el tipo de cambio guardado en la cotización
                     setExchangeRate(quoteData.exchange_rate);
                 })
                 .catch(error => console.error('Error fetching quote details:', error));
+        //Si es nueva cotización
         } else {
-            // This is a new quote, initialize it
+            // Limpia todo y busca el tipo de cambio
             setIsReadOnly(false); // Asegura que el formulario esté editable para una nueva cotización
             if (quoteFormRef.current) {
                 quoteFormRef.current.clearAllFields();
+                setOriginalReference(null); // Limpiamos la referencia al crear una nueva cotización desde cero
             }
-            const initializeNewQuote = async () => {
-                let currentExchangeRate;
-                // 1. Fetch Exchange Rate
+            const fetchExchangeRate = async () => {
+                // Previene la doble llamada de la API en StrictMode para el tipo de cambio
+                if (exchangeRateFetchedRef.current) {
+                    return;
+                }
+                exchangeRateFetchedRef.current = true;
+
                 try {
                     const response = await axios.get('http://localhost:3000/api/tipo-de-cambio');
-                    currentExchangeRate = parseFloat(response.data.tipoDeCambio);
-                    setExchangeRate(currentExchangeRate);
+                    setExchangeRate(parseFloat(response.data.tipoDeCambio));
                 } catch (error) {
                     console.error('Error fetching exchange rate:', error);
-                    currentExchangeRate = 18; // Fallback
-                    setExchangeRate(currentExchangeRate);
-                }
-
-                // 2. Use defaultConceptos from state
-                if (defaultConceptos.length > 0) {
-                    const newItems = defaultConceptos.map(concepto => {
-                        const priceMXN = concepto.costo_concepto_default || 0;
-                        const priceUSD = +((priceMXN) / currentExchangeRate).toFixed(4);
-                        const quantity = 1;
-                        const scPercentage = 0.10;
-                        const vatPercentage = 0.10;
-
-                        const cost = quantity * priceUSD;
-                        const serviceCharge = cost * scPercentage;
-                        const vat = cost * vatPercentage;
-                        const total = cost + serviceCharge + vat;
-
-                        return {
-                            description: concepto.nombre_concepto_default,
-                            quantity,
-                            priceMXN,
-                            priceUSD,
-                            scPercentage,
-                            vatPercentage,
-                            anchorCurrency: 'MXN',
-                            total,
-                        };
-                    });
-                    setItems(newItems);
+                    setExchangeRate(18);
                 }
             };
 
-            initializeNewQuote();
+            fetchExchangeRate(); // <-- Llamada a la API (Solo 1 vez por carga)
         }
-    }, [quoteId, defaultConceptos]);
+    }, [quoteId]);
+
+    useEffect(() => {
+
+        // CONDICIÓN DE SEGURIDAD:
+        // Solo ejecuta este bloque si:
+        // 1. Es una cotización nueva (quoteId es null).
+        // 2. Ya tenemos los conceptos por defecto.
+        // 3. Ya tenemos un tipo de cambio válido (mayor que 0).
+        if (!quoteId && defaultConceptos.length > 0 && exchangeRate > 0) {
+            const newItems = defaultConceptos.map(concepto => {
+                const priceMXN = concepto.costo_concepto_default || 0;
+                // Ahora estamos seguros de que 'exchangeRate' es un número válido.
+                const priceUSD = +((priceMXN) / exchangeRate).toFixed(4);
+                const quantity = 1;
+                const scPercentage = 0.10;
+                const vatPercentage = 0.10;
+
+                const cost = quantity * priceUSD;
+                const serviceCharge = cost * scPercentage;
+                const vat = cost * vatPercentage;
+                const total = cost + serviceCharge + vat;
+
+                return {
+                    description: concepto.nombre_concepto_default,
+                    quantity,
+                    priceMXN,
+                    priceUSD,
+                    scPercentage,
+                    vatPercentage,
+                    anchorCurrency: 'MXN',
+                    total,
+                };
+            });
+            setItems(newItems);
+        }
+            
+    }, [quoteId, defaultConceptos, exchangeRate]);
 
         useEffect(() => {
         const newTotals = items.reduce((acc, item) => {
-            const cost = (item.quantity || 0) * (item.priceUSD || 0);
-            const sCharge = cost * (item.scPercentage || 0);
-            const vat = cost * (item.vatPercentage || 0);
+            // Aseguramos que todos los valores sean numéricos, con 0 como fallback.
+            const quantity = parseFloat(item.quantity) || 0;
+            const priceUSD = parseFloat(item.priceUSD) || 0;
+            const scPercentage = parseFloat(item.scPercentage) || 0;
+            const vatPercentage = parseFloat(item.vatPercentage) || 0;
+            
+            const cost = quantity * priceUSD;
+            const sCharge = cost * scPercentage;
+            const vat = cost * vatPercentage;
             
             acc.cost += cost;
             acc.sCharge += sCharge;
             acc.vat += vat;
-            acc.total += parseFloat(item.total) || 0; // Ensure item.total is a number
-            
+            acc.total += cost + sCharge + vat; // Recalculamos el total aquí para mayor seguridad
             return acc;
         }, { cost: 0, sCharge: 0, vat: 0, total: 0 });
     
