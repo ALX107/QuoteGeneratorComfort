@@ -1,7 +1,7 @@
 import RAFLogo from '../../assets/RafLogo.png';
 import RAFLogoBlanco from '../../assets/RafLogoBlanco.png';
 
-function HistoricHeader({ onNavigateNewQuote }) {
+function HistoricHeader({ onNavigateNewQuote, searchTerm, handleSearch }) {
     return (
         <header className="flex items-center justify-between bg-blue-dark shadow-md rounded-lg px-8 py-4 mb-6 border border-black">
 
@@ -9,9 +9,6 @@ function HistoricHeader({ onNavigateNewQuote }) {
             <div className="flex items-center space-x-3">
                 <button onClick={() => onNavigateNewQuote('cotizacion')} className="btn-glass flex items-center space-x-2">
                     New
-                </button>
-                <button className="btn-glass flex items-center space-x-2">
-                    Find
                 </button>
                 <button className="btn-glass flex items-center space-x-2">
                     Join
@@ -25,6 +22,13 @@ function HistoricHeader({ onNavigateNewQuote }) {
                 <button className="btn-glass flex items-center space-x-2">
                     Filter:2025
                 </button>
+                <input 
+                    type="text"
+                    placeholder="Search..."
+                    className="btn-glass flex items-center space-x-2"
+                    value={searchTerm}
+                    onChange={handleSearch}
+                />
             </div>
 
             {/* Derecha */}

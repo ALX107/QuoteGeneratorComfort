@@ -366,7 +366,16 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
     const handleIntegerChange = (setter) => (e) => {
         const value = e.target.value;
         if (/^[0-9]*$/.test(value)) {
-            setter(value);
+            if (value === '') {
+                setter('');
+                return;
+            }
+            const num = parseInt(value, 10);
+            if (num <= 999) {
+                setter(value);
+            } else {
+                setter('999');
+            }
         }
     };
 
