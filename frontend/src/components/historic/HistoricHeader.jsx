@@ -1,7 +1,19 @@
-import RAFLogo from '../../assets/RafLogo.png';
 import RAFLogoBlanco from '../../assets/RafLogoBlanco.png';
 
-function HistoricHeader({ onNavigateNewQuote, searchTerm, handleSearch }) {
+function HistoricHeader({ 
+    onNavigateNewQuote, 
+    searchTerm, 
+    handleSearch,
+    airports,
+    aircrafts,
+    years,
+    selectedAirport,
+    setSelectedAirport,
+    selectedAircraft,
+    setSelectedAircraft,
+    selectedYear,
+    setSelectedYear
+}) {
     return (
         <header className="flex items-center justify-between bg-blue-dark shadow-md rounded-lg px-8 py-4 mb-6 border border-black">
 
@@ -19,9 +31,40 @@ function HistoricHeader({ onNavigateNewQuote, searchTerm, handleSearch }) {
                 <button className="btn-glass flex items-center space-x-2">
                     Export to Excel
                 </button>
-                <button className="btn-glass flex items-center space-x-2">
-                    Filter:2025
-                </button>
+
+                <select
+                    value={selectedYear}
+                    onChange={(e) => setSelectedYear(parseInt(e.target.value, 10) || '')}
+                    className="btn-glass"
+                >
+                    <option value="">All Years</option>
+                    {years.map(year => (
+                        <option key={year} value={year}>{year}</option>
+                    ))}
+                </select>
+
+                <select
+                    value={selectedAirport}
+                    onChange={(e) => setSelectedAirport(e.target.value)}
+                    className="btn-glass"
+                >
+                    <option value="">All Airports</option>
+                    {airports.map(airport => (
+                        <option key={airport} value={airport}>{airport}</option>
+                    ))}
+                </select>
+
+                <select
+                    value={selectedAircraft}
+                    onChange={(e) => setSelectedAircraft(e.target.value)}
+                    className="btn-glass"
+                >
+                    <option value="">All Aircrafts</option>
+                    {aircrafts.map(aircraft => (
+                        <option key={aircraft} value={aircraft}>{aircraft}</option>
+                    ))}
+                </select>
+
                 <input 
                     type="text"
                     placeholder="Search..."

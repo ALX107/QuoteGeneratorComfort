@@ -5,6 +5,9 @@ import HistoricTable from '../components/historic/HistoricTable';
 export default function HistoricoCotizaciones({ onNavigateNewQuote, onPreviewQuote }) {
     const [quotes, setQuotes] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
+    const [selectedAirport, setSelectedAirport] = useState('');
+    const [selectedAircraft, setSelectedAircraft] = useState('');
+    const [selectedYear, setSelectedYear] = useState('');
 
     useEffect(() => {
         fetch('http://localhost:3000/api/listar/cotizaciones/historico')
@@ -17,27 +20,47 @@ export default function HistoricoCotizaciones({ onNavigateNewQuote, onPreviewQuo
         setSearchTerm(event.target.value);
     };
 
+    const airports = [...new Set(quotes.map(quote => quote.icao_aeropuerto))].filter(Boolean);
+    const aircrafts = [...new Set(quotes.map(quote => quote.matricula_aeronave))].filter(Boolean);
+    const years = [...new Set(quotes.map(quote => new Date(quote.fecha_cotizacion).getFullYear()))].filter(Boolean);
+
     const filteredQuotes = quotes.filter(quote => {
         const searchTermLower = searchTerm.toLowerCase();
+        const quoteYear = new Date(quote.fecha_cotizacion).getFullYear();
+
         return (
-            (quote.numero_referencia?.toLowerCase() ?? '').includes(searchTermLower) ||
-            (quote.nombre_cat_operacion?.toLowerCase() ?? '').includes(searchTermLower) ||
-            (quote.icao_aeropuerto?.toLowerCase() ?? '').includes(searchTermLower) ||
-            (new Date(quote.fecha_cotizacion).toLocaleDateString() ?? '').includes(searchTermLower) ||
-            (quote.matricula_aeronave?.toString().toLowerCase() ?? '').includes(searchTermLower) ||
-            (quote.nombre_cliente?.toLowerCase() ?? '').includes(searchTermLower) ||
-            (quote.exchange_rate?.toLowerCase() ?? '').includes(searchTermLower) ||
-            (quote.total_final?.toLowerCase() ?? '').includes(searchTermLower)
+            (selectedAirport ? quote.icao_aeropuerto === selectedAirport : true) &&
+            (selectedAircraft ? quote.matricula_aeronave === selectedAircraft : true) &&
+            (selectedYear ? quoteYear === selectedYear : true) &&
+            (
+                (quote.numero_referencia?.toLowerCase() ?? '').includes(searchTermLower) ||
+                (quote.nombre_cat_operacion?.toLowerCase() ?? '').includes(searchTermLower) ||
+                (quote.icao_aeropuerto?.toLowerCase() ?? '').includes(searchTermLower) ||
+                (new Date(quote.fecha_cotizacion).toLocaleDateString() ?? '').includes(searchTermLower) ||
+                (quote.matricula_aeronave?.toString().toLowerCase() ?? '').includes(searchTermLower) ||
+                (quote.nombre_cliente?.toLowerCase() ?? '').includes(searchTermLower) ||
+                (quote.exchange_rate?.toLowerCase() ?? '').includes(searchTermLower) ||
+                (quote.total_final?.toLowerCase() ?? '').includes(searchTermLower)
+            )
         );
     });
 
     return (
         <div className="bg-blue-dark p-8">
             <div className="bg-white rounded-lg shadow-lg p-6">
-                <HistoricHeader 
+                <HistoricHeader
                     onNavigateNewQuote={onNavigateNewQuote}
                     searchTerm={searchTerm}
                     handleSearch={handleSearch}
+                    airports={airports}
+                    aircrafts={aircrafts}
+                    years={years}
+                    selectedAirport={selectedAirport}
+                    setSelectedAirport={setSelectedAirport}
+                    selectedAircraft={selectedAircraft}
+                    setSelectedAircraft={setSelectedAircraft}
+                    selectedYear={selectedYear}
+                    setSelectedYear={setSelectedYear}
                 />
                 <HistoricTable quotes={filteredQuotes} onPreviewQuote={onPreviewQuote} />
             </div>
