@@ -6,7 +6,7 @@ import axios from 'axios';
 import Calculator from '../features/Calculator.jsx';
 
 
-const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange, exchangeRate, onExchangeRateChange, isReadOnly}, ref) => {
+const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange, exchangeRate, onExchangeRateChange, isReadOnly, onDataLoaded }, ref) => {
     const [clientes, setClientes] = useState([]);
     const [aeropuertos, setAeropuertos] = useState([]);
     const [clientesAeronaves, setClientesAeronaves] = useState([]); 
@@ -45,7 +45,8 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
     const [noEtd, setNoEtd] = useState(false); // 
 
     const [isDataLoaded, setIsDataLoaded] = useState(false);
-    const dataFetchedRef = useRef(false);
+    
+    //const dataFetchedRef = useRef(false);
     
     //Fecha y MTOW
         const [date, setDate] = useState('');
@@ -95,17 +96,6 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
 
         setFormData(quote) {
 
-            if (!isDataLoaded) {
-                setTimeout(() => {
-                    if (ref.current) {
-                        ref.current.setFormData(quote);
-                    }
-                }, 100);
-                return; // Detiene la ejecución actual
-            }
-
-            console.log("¡Datos de listas cargados! Rellenando formulario...");
-    
             const customer = clientes.find(c => c.id_cliente === quote.id_cliente);
             const flightType = categoriasOperaciones.find(c => c.id_cat_operacion === quote.id_cat_operacion);
             const station = aeropuertos.find(a => a.id_aeropuerto === quote.id_aeropuerto);
@@ -121,6 +111,9 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
             setAttnValue(quote.nombre_solicitante || '');
             setSelectStation(station ? station.icao_aeropuerto : '');
             setSelectedAirportId(station ? station.id_aeropuerto : null);
+            
+            // SOLUCIÓN: Establecer el valor de CAA directamente desde los datos de la cotización.
+            setIsCaaMember(!!quote.es_miembro_caa);
 
             // Si la fecha es null, marca el checkbox y limpia el campo de fecha.
             setNoEta(quote.fecha_llegada === null);
@@ -165,10 +158,13 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
         }
     },
     
-
-        getFormData() {
+        //Guardar el formulario
+        getFormData() { 
             const selectedFlightType = categoriasOperaciones.find(cat => cat.nombre_cat_operacion === flightType);
-            const selectedRegistration = filteredRegistrations.find(reg => reg.matricula_aeronave === registrationValue);
+            // FIX: Buscar en la lista completa de aeronaves (`clientesAeronaves`) en lugar de solo en la lista filtrada.
+            // Esto asegura que siempre encontremos el ID si la matrícula existe, previniendo el envío de `null`.
+            const selectedRegistration = clientesAeronaves.find(reg => reg.matricula_aeronave === registrationValue);
+
             const selectedAircraftModel = filteredAeronavesModelos.find(model => model.nombre_aeronave === modelValue);
             const fromAirport = aeropuertos.find(a => a.icao_aeropuerto === fromStation);
             const toAirport = aeropuertos.find(a => a.icao_aeropuerto === toStation);
@@ -207,7 +203,39 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                 fromName: fromAirport ? fromAirport.nombre_aeropuerto : fromStation,
                 fboName: fbo ? fbo.nombre_fbo : fboValue,
                 toName: toAirport ? toAirport.nombre_aeropuerto : toStation,
-            };
+            }; 
+          },
+
+          //Clonar el formulario
+          getAllFormData() {
+            return {
+                customerValue,
+                attnValue,
+                flightType,
+                date,
+                quotedBy,
+                selectStation,
+                etaDate,
+                noEta,
+                fromStation,
+                crewFrom,
+                paxFrom,
+                fboValue,
+                etdDate,
+                noEtd,
+                toStation,
+                crewTo,
+                paxTo,
+                registrationValue,
+                isCaaMember,
+                modelValue,
+                mtowValue,
+                unit,
+                // IDs and complex objects that are also part of the state
+                selectedCustomer,
+                selectedAirportId,
+                selectedFboId,
+            }
           }
          };
          
@@ -253,11 +281,11 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
     );
 
     useEffect(() => {
-        // Previene la doble llamada de la API en StrictMode
-        if (dataFetchedRef.current) {
+       // Previene la doble llamada de la API en StrictMode
+       /* if (dataFetchedRef.current) {
             return;
         }
-        dataFetchedRef.current = true;
+        dataFetchedRef.current = true;*/
 
 
         const today = new Date();
@@ -300,6 +328,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
             } finally {
                 // 5. Indica que la carga terminó
                 setIsDataLoaded(true); // <-- Indica que las listas se han cargado
+                if (onDataLoaded) onDataLoaded();
             }
         };
 
@@ -307,25 +336,31 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
 
     }, []);
 
+    // Efecto para sincronizar los checkboxes 'No ETA' y 'No ETD' con sus campos de fecha.
+    useEffect(() => {
+        if (noEta) {
+            setEtaDate(''); // Limpia la fecha si 'No ETA' está marcado
+        }
+    }, [noEta]);
+
+    useEffect(() => {
+        if (noEtd) {
+            setEtdDate(''); // Limpia la fecha si 'No ETD' está marcado
+        }
+    }, [noEtd]);
+
+    // Cuando se desmarca el checkbox, si no hay fecha, se establece la de hoy.
+    const handleNoEtaChange = (e) => {
+        setNoEta(e.target.checked);
+        if (!e.target.checked && !etaDate) setEtaDate(new Date().toISOString().split('T')[0]);
+    };
+
+    const handleNoEtdChange = (e) => {
+        setNoEtd(e.target.checked);
+        if (!e.target.checked && !etdDate) setEtdDate(new Date().toISOString().split('T')[0]);
+    };
                 
 
-
-     // Efecto para actualizar el estado del checkbox cuando cambia la matrícula seleccionada
-        useEffect(() => {
-            // 1. Busca la aeronave completa en la lista filtrada usando la matrícula seleccionada.
-            const selectedRegistration = filteredRegistrations.find(
-                (reg) => reg.matricula_aeronave === registrationValue
-            );
-
-            // 2. Si se encuentra una aeronave...
-            if (selectedRegistration) {
-                // 3. Actualiza el estado del checkbox.
-                setIsCaaMember(!!selectedRegistration.es_miembro_caa);
-            } else {
-                // 4. Si no hay matrícula seleccionada, asegúrate de que la casilla esté desmarcada.
-                setIsCaaMember(false);
-            }
-        }, [registrationValue, filteredRegistrations]); // 5. Este efecto se ejecuta cuando cambia la matrícula o la lista de matrículas.
 
 
     const handleStationChange = (event) => {
@@ -826,12 +861,11 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                 </label>
                                 <div className="relative mt-1">
                                     <input className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm
-                                                      disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed disabled:text-opacity-70" 
-                                           id="eta"
-                                           type={etaDate ? 'date' : 'text'}
+                                                       disabled:cursor-not-allowed disabled:text-opacity-70" 
+                                           id="eta"                                           
+                                           type={noEta ? 'text' : 'date'}
                                            value={etaDate}
                                            placeholder="No ETA Selected"
-                                           //onFocus={(e) => e.target.type = 'date'}
                                            onChange={(e) => setEtaDate(e.target.value)}
                                            disabled={noEta || isReadOnly} />
                                 </div>
@@ -849,7 +883,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                        type="checkbox" 
                        className="focus:ring-sky-500 h-4 w-4 text-sky-600 border-gray-300 rounded disabled:bg-gray-200 disabled:cursor-not-allowed"
                        checked={noEta}
-                       onChange={(e) => setNoEta(e.target.checked)} 
+                       onChange={handleNoEtaChange} 
                        disabled={isReadOnly}/>
             </div>
             <div className="ml-2 text-sm">
@@ -952,9 +986,9 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                 </label>
                                 <div className="relative mt-1">
                                     <input className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm
-                                                      disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed disabled:text-opacity-80" 
+                                                       disabled:cursor-not-allowed disabled:text-opacity-70s" 
                                            id="etd"
-                                           type={etdDate ? 'date' : 'text'}
+                                           type={noEtd ? 'text' : 'date'}
                                            value={etdDate}
                                            placeholder="No ETD Selected"
                                            onFocus={(e) => e.target.type = 'date'}
@@ -974,7 +1008,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                            type="checkbox" 
                                            className="focus:ring-sky-500 h-4 w-4 text-sky-600 border-gray-300 rounded disabled:cursor-not-allowed"
                                            checked={noEtd}
-                                           onChange={(e) => setNoEtd(e.target.checked)}
+                                           onChange={handleNoEtdChange} 
                                            disabled={isReadOnly} />
                                 </div>
 

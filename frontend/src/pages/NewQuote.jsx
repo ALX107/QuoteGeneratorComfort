@@ -8,7 +8,7 @@ import ConfirmationModal from '../components/modals/ConfirmationModal';
 import PDFPreviewModal from '../components/modals/PDFPreviewModal';
 import axios from 'axios';
 
-function NewQuote({ onNavigateToHistorico, previewingQuote }) {
+function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
     const [items, setItems] = useState([]);
     const conceptsFetchedRef = useRef(false);
     const exchangeRateFetchedRef = useRef(false);
@@ -22,8 +22,12 @@ function NewQuote({ onNavigateToHistorico, previewingQuote }) {
     const [allServices, setAllServices] = useState([]);
     const [defaultConceptos, setDefaultConceptos] = useState([]);
 
-    const [isReadOnly, setIsReadOnly] = useState(false);
-    const [originalReference, setOriginalReference] = useState(null);
+    const [isReadOnly, setIsReadOnly] = useState(!!previewingQuote);
+
+    const [onNewQuoteBlocked, setOnNewQuoteBlocked] = useState(true);
+    
+    const [quoteDataForPreview, setQuoteDataForPreview] = useState(null);
+    const [isFormReady, setIsFormReady] = useState(false);
 
     const quoteId = previewingQuote ? previewingQuote.id_cotizacion : null;
 
@@ -60,11 +64,10 @@ function NewQuote({ onNavigateToHistorico, previewingQuote }) {
             axios.get(`http://localhost:3000/api/cotizacion/${quoteId}`)
                 .then(response => {
                     const quoteData = response.data;
-                    if (quoteFormRef.current) {
-                        quoteFormRef.current.setFormData(quoteData); //se ejecuta cada vez que cambia quoteId
-                    }
+                    setQuoteDataForPreview(quoteData); // 1. Guarda los datos de la cotización en el estado
                     setItems(quoteData.servicios.map(servicio => ({
                         description: servicio.nombre_servicio,
+
                         quantity: servicio.cantidad,
                         priceMXN: servicio.costo_mxn,
                         priceUSD: servicio.costo_usd,
@@ -76,14 +79,28 @@ function NewQuote({ onNavigateToHistorico, previewingQuote }) {
                     //Usa el tipo de cambio guardado en la cotización
                     setExchangeRate(quoteData.exchange_rate);
                 })
+                .then(() => setOnNewQuoteBlocked(false))
                 .catch(error => console.error('Error fetching quote details:', error));
+        // Si es una cotización clonada
+        } else if (previewingQuote?.isClone) {
+            setIsReadOnly(false); // El formulario debe ser editable
+            setOnNewQuoteBlocked(true); // Bloqueamos el PDF hasta que se guarde
+            setItems(previewingQuote.items || []); // Seteamos los servicios.
+            setExchangeRate(previewingQuote.exchangeRate); // Usamos el tipo de cambio de la cotización clonada.
+            setQuoteDataForPreview(previewingQuote); // Preparamos los datos para rellenar el formulario.
+            setIsFormReady(false); // Reseteamos para forzar la sincronización
+
+
         //Si es nueva cotización
         } else {
             // Limpia todo y busca el tipo de cambio
             setIsReadOnly(false); // Asegura que el formulario esté editable para una nueva cotización
+            setOnNewQuoteBlocked(true);
+            setQuoteDataForPreview(null); // Limpia los datos de preview
+            setIsFormReady(false); // Resetea el estado de "listo"
+
             if (quoteFormRef.current) {
-                quoteFormRef.current.clearAllFields();
-                setOriginalReference(null); // Limpiamos la referencia al crear una nueva cotización desde cero
+                if (!previewingQuote?.isClone) quoteFormRef.current.clearAllFields();
             }
             const fetchExchangeRate = async () => {
                 // Previene la doble llamada de la API en StrictMode para el tipo de cambio
@@ -95,6 +112,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote }) {
                 try {
                     const response = await axios.get('http://localhost:3000/api/tipo-de-cambio');
                     setExchangeRate(parseFloat(response.data.tipoDeCambio));
+                    
                 } catch (error) {
                     console.error('Error fetching exchange rate:', error);
                     setExchangeRate(18);
@@ -103,7 +121,20 @@ function NewQuote({ onNavigateToHistorico, previewingQuote }) {
 
             fetchExchangeRate(); // <-- Llamada a la API (Solo 1 vez por carga)
         }
-    }, [quoteId]);
+
+    }, [quoteId, previewingQuote]);
+
+    // Se ejecuta cuando los datos de la cotización están listos O cuando el formulario está listo.
+    useEffect(() => {
+        // Solo procede si AMBAS condiciones se cumplen:
+        // 1. Tenemos los datos de la cotización a previsualizar.
+        // 2. El QuoteForm nos ha notificado que sus listas están cargadas.
+        if (quoteDataForPreview && isFormReady && quoteFormRef.current) {
+            console.log("¡Sincronización completa! Rellenando formulario...");
+            quoteFormRef.current.setFormData(quoteDataForPreview);
+        }
+    }, [quoteDataForPreview, isFormReady]);
+
 
     useEffect(() => {
 
@@ -112,9 +143,10 @@ function NewQuote({ onNavigateToHistorico, previewingQuote }) {
         // 1. Es una cotización nueva (quoteId es null).
         // 2. Ya tenemos los conceptos por defecto.
         // 3. Ya tenemos un tipo de cambio válido (mayor que 0).
-        if (!quoteId && defaultConceptos.length > 0 && exchangeRate > 0) {
+        if (!quoteId && !previewingQuote?.isClone && defaultConceptos.length > 0 && exchangeRate > 0) {
             const newItems = defaultConceptos.map(concepto => {
                 const priceMXN = concepto.costo_concepto_default || 0;
+
                 // Ahora estamos seguros de que 'exchangeRate' es un número válido.
                 const priceUSD = +((priceMXN) / exchangeRate).toFixed(4);
                 const quantity = 1;
@@ -136,6 +168,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote }) {
                     anchorCurrency: 'MXN',
                     total,
                 };
+
             });
             setItems(newItems);
         }
@@ -265,6 +298,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote }) {
         const newItems = [...items];
         const item = newItems[index];
         
+
         item[field] = value;
 
         if (field === 'priceMXN') {
@@ -327,6 +361,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote }) {
                 const s_cargo = cost * (item.scPercentage || 0);
                 const vat = cost * (item.vatPercentage || 0);
                 
+
                 return {
                     nombre_servicio: item.description,
                     cantidad: item.quantity,
@@ -351,6 +386,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote }) {
                 console.log('Quote saved successfully:', response.data);
                 // Navigate to historico after saving
                 onNavigateToHistorico();
+
             } catch (error) {
                 console.error('Error saving quote:', error);
                 // Optionally, you can show an error message to the user
@@ -358,13 +394,27 @@ function NewQuote({ onNavigateToHistorico, previewingQuote }) {
         }
     };
 
+    const handleSaveAsNew = () => {
+        if (quoteFormRef.current) {
+            const currentFormData = quoteFormRef.current.getAllFormData();
+            onCloneQuote({
+                ...currentFormData,
+                items: items,
+                servicios: items, // Incluir los servicios al clonar
+                exchangeRate: exchangeRate,
+            });
+        }
+    };
+
     const handlePreviewPdf = () => {
+        setOnNewQuoteBlocked(true);
         if (quoteFormRef.current) {
             const formData = quoteFormRef.current.getFormData();
             const fullPdfData = {
                 formData: formData,
                 items: items,
                 totals: totals,
+
             };
 
             setPdfData(fullPdfData);
@@ -382,6 +432,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote }) {
         .map(item => {
             const service = allServices.find(s => s.nombre_local_concepto === item.description);
             return { ...service, id: service.id_precio_concepto || service.id_concepto_std, name: service.nombre_local_concepto };
+
         });
 
     return (
@@ -390,7 +441,9 @@ function NewQuote({ onNavigateToHistorico, previewingQuote }) {
                 <QuoteHeader onClearQuote={handleClearQuote}
                              onSaveQuote={handleSaveQuote} 
                              onExportToPdf={handlePreviewPdf}
-                             isReadOnly={isReadOnly}                            
+                             isReadOnly={isReadOnly}   
+                             onNewQuoteBlocked={onNewQuoteBlocked}
+                             onSaveAsNew={handleSaveAsNew}                         
                 />
                 <main className="max-w-7xl mx-auto mt-4">
                     <QuoteForm
@@ -398,9 +451,10 @@ function NewQuote({ onNavigateToHistorico, previewingQuote }) {
                         onAddItem={handleAddItem}
                         onOpenServiceModal={() => setIsModalOpen(true)}
                         onSelectionChange={fetchServices}
-                        exchangeRate={exchangeRate || ''}
+                        exchangeRate={previewingQuote ? previewingQuote.exchange_rate : exchangeRate || ''}
                         onExchangeRateChange={(value) => setExchangeRate(parseFloat(value) || 0)}
                         isReadOnly={isReadOnly}
+                        onDataLoaded={() => setIsFormReady(true)}
                     />
                     <QuoteTable items={items} 
                                 onRemoveItem={handleRemoveItem} 
@@ -426,7 +480,13 @@ function NewQuote({ onNavigateToHistorico, previewingQuote }) {
                 </ConfirmationModal>
                 <PDFPreviewModal
                     isOpen={isPdfPreviewOpen}
-                    onClose={() => setIsPdfPreviewOpen(false)}
+                    onClose={() => {
+                        setIsPdfPreviewOpen(false);
+                        // Si estamos en modo preview (quoteId existe), los botones deben volver a habilitarse.
+                        if (quoteId) {
+                            setOnNewQuoteBlocked(false);
+                        }
+                    }}
                     pdfData={pdfData}
                 />
             </div>

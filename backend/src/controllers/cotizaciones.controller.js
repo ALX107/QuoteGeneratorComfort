@@ -14,17 +14,17 @@ const createQuote = async (req, res) => {
     // 1. Crear la cotización principal para obtener su ID
     const cotizacionQuery = `
       INSERT INTO "cotizaciones" (
-        id_cliente, id_cat_operacion, fecha_cotizacion, id_cliente_aeronave,
+        id_cliente, id_cat_operacion, fecha_cotizacion, id_cliente_aeronave, es_miembro_caa,
         nombre_responsable, nombre_solicitante, id_aeropuerto, fecha_llegada,
         aeropuerto_origen_id, tripulacion_llegada, pasajeros_llegada, id_fbo,
         fecha_salida, aeropuerto_destino_id, tripulacion_salida, pasajeros_salida,
         exchange_rate
       ) 
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17) 
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18) 
       RETURNING id_cotizacion;
     `;
     const cotizacionValues = [
-      customer, flightType, date, aircraftModel, quotedBy,
+      customer, flightType, date, aircraftModel, isCaaMember, quotedBy,
       attn, station, eta, from, crewFrom, paxFrom, fbo,
       etd, to, crewTo, paxTo, exchangeRate
     ];

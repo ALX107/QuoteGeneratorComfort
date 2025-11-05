@@ -131,6 +131,7 @@ CREATE TABLE cotizaciones (
     id_cat_operacion BIGINT NOT NULL,
     id_cliente_aeronave BIGINT NOT NULL,
     id_aeropuerto BIGINT NOT NULL,
+    es_miembro_caa BOOLEAN,
     id_fbo BIGINT,
     
     -- Información de la operación

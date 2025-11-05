@@ -9,6 +9,13 @@ export default function App() {
     const [currentPage, setCurrentPage] = useState('historico');
     const [previewingQuote, setPreviewingQuote] = useState(null);
 
+    const handleCloneQuote = (quoteDataToClone) => {
+    setPreviewingQuote({ ...quoteDataToClone, id_cotizacion: null, isClone: true });
+    // Navegamos a la página de nueva cotización
+    // (si no estás ya ahí, esto asegura que se renderice la página correcta)
+    setCurrentPage('cotizacion'); 
+};
+
     const handlePreviewQuote = (quote) => {
         setPreviewingQuote(quote);
         setCurrentPage('cotizacion');
@@ -27,7 +34,7 @@ export default function App() {
     const renderPage = () => {
         switch (currentPage) {
             case 'cotizacion':
-                return <CotizacionNueva onNavigateToHistorico={handleNavigateToHistorico} previewingQuote={previewingQuote} />;
+                return <CotizacionNueva onNavigateToHistorico={handleNavigateToHistorico} previewingQuote={previewingQuote} onCloneQuote={handleCloneQuote} />;
             case 'catalogos':
                 return <Catalogos />;
             case 'historico':
