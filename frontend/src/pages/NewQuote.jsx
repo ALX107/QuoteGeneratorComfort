@@ -396,6 +396,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
 
     const handleSaveAsNew = () => {
         if (quoteFormRef.current) {
+            quoteFormRef.current.clearQuoteNumberOnly();
             const currentFormData = quoteFormRef.current.getAllFormData();
             onCloneQuote({
                 ...currentFormData,
