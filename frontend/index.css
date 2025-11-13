@@ -84,12 +84,13 @@ body {
 }
 
 .btn-cancel {
-    background-color: #dc2f2f; 
+    background-color: #d03939; 
     color: #f9f9f9; 
     border: 1px solid #d1d5db; 
     border-radius: 0.375rem;
     padding: 0.5rem 1rem; 
-    font-size: 0.875rem;
+    font-family: "Segoe UI";
+    font-size: 0.9rem;
     font-weight: 500; 
     cursor: pointer; 
     transition: all 0.2s ease; /* Transición suave para efectos */
@@ -106,12 +107,13 @@ body {
 }
 
 .btn-confirm {
-    background-color: #08a950; 
+    background-color: #158146; 
     color: #f9f9f9; 
     border: 1px solid #1bb94a; 
     border-radius: 0.375rem; 
     padding: 0.5rem 1rem; 
-    font-size: 0.875rem; 
+    font-family: "Segoe UI";
+    font-size: 0.9rem; 
     font-weight: 500;
     cursor: pointer; 
     transition: all 0.2s ease; 

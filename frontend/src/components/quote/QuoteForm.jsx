@@ -359,7 +359,16 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
         setNoEtd(e.target.checked);
         if (!e.target.checked && !etdDate) setEtdDate(new Date().toISOString().split('T')[0]);
     };
-                
+           
+    //No permite que la fecha de ETA sea posterior a la de ETD
+    const handleEtaDateChange = (e) => {
+        const newEta = e.target.value;
+        setEtaDate(newEta);
+        // Si la nueva fecha de llegada es posterior a la de salida, ajusta la de salida.
+        if (newEta && etdDate && newEta > etdDate) {
+            setEtdDate(newEta);
+        }
+    };
 
 
 
@@ -541,6 +550,9 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                 setMtowValue(model.mtow_aeronave);
                                 setUnit('KG');
                             }
+                            // Restaurar la lógica para actualizar el estado de CAA Member
+                            // basado en la matrícula seleccionada.
+                            setIsCaaMember(!!selectedRegistration.es_miembro_caa);
                         }
                     }
                 }
@@ -714,7 +726,14 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                     className='disabled:bg-gray-200 disabled:cursor-not-allowed'
                                 />
                                 <label htmlFor="caa-member" className="block text-sm font-medium text-dark-gray">
-                                    Is CAA Member
+                                    <a
+                                        href="https://www.caa.co.uk/" // <-- Puedes cambiar esta URL por la que necesites
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="underline hover:text-sky-600"
+                                    >
+                                        Is CAA Member
+                                    </a>
                                 </label>
                             </div>
                         </div>
@@ -866,7 +885,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                            type={noEta ? 'text' : 'date'}
                                            value={etaDate}
                                            placeholder="No ETA Selected"
-                                           onChange={(e) => setEtaDate(e.target.value)}
+                                           onChange={handleEtaDateChange}
                                            disabled={noEta || isReadOnly} />
                                 </div>
                             </div>
@@ -993,6 +1012,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                            placeholder="No ETD Selected"
                                            onFocus={(e) => e.target.type = 'date'}
                                            onChange={(e) => setEtdDate(e.target.value)}
+                                           min={etaDate}
                                            disabled={noEtd || isReadOnly}/>
                                   
                                 </div>

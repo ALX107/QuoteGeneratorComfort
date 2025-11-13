@@ -7,8 +7,9 @@ const getCotizacionesHistorico = async (req, res) => {
       SELECT
         ch.id_cotizacion,
         ch.numero_referencia,
-        ch.fecha_cotizacion,
-        ch.fecha_llegada,
+        ch.fecha_modificacion AS fecha_creacion, 
+        ch.fecha_llegada, -- Fecha de llegada (ETA)
+        ch.fecha_salida,  -- Fecha de salida (ETD)
         ch.total_final,
         ch.exchange_rate,
         c.nombre_cliente AS nombre_cliente,      -- Nombre del cliente desde la tabla 'clientes'
@@ -27,7 +28,7 @@ const getCotizacionesHistorico = async (req, res) => {
         "clientes_aeronaves" AS ca ON ch.id_cliente_aeronave = ca.id_cliente_aeronave -- FIX: Se usa el alias 'ca'
       ORDER BY
         CAST(split_part(ch.numero_referencia, '/', 1) AS INTEGER) DESC,
-        ch.fecha_cotizacion DESC
+        ch.fecha_modificacion DESC
     `;
     
     const result = await pool.query(query);

@@ -2,16 +2,34 @@
 const pool = require('../config/db');
 
 const createQuote = async (req, res) => {
-  try {
-    // Extrae los datos del formulario y el arreglo de servicios del cuerpo de la solicitud.
-    const {
+  // Extrae los datos del formulario y el arreglo de servicios del cuerpo de la solicitud.
+  const {
       customer, flightType, date, aircraftModel, quotedBy,
       attn, station, eta, from, crewFrom, paxFrom, fbo, isCaaMember,
       etd, to, crewTo, paxTo, exchangeRate,
       servicios // Este es el arreglo de servicios/conceptos
-    } = req.body;
+  } = req.body;
 
-    // 1. Crear la cotización principal para obtener su ID
+/*
+  // Validar que los campos requeridos por la BD (NOT NULL) no sean nulos.
+  if (!customer || !flightType || !aircraftModel || !station) {
+    console.error('--- VALIDACIÓN FALLIDA: Faltan datos requeridos ---', { customer, flightType, aircraftModel, station });
+    return res.status(400).json({
+      error: 'Datos incompletos.',
+      detalle: 'Faltan campos obligatorios como Cliente, Tipo de Vuelo, Aeronave o Estación. Por favor, complete el formulario.'
+    });
+  }
+*/
+
+  // 1. Obtener un cliente del pool para la transacción
+  const client = await pool.connect();
+
+  try {
+
+    // 2. Iniciar la transacción
+    await client.query('BEGIN');
+
+    // 3. Crear la cotización principal para obtener su ID
     const cotizacionQuery = `
       INSERT INTO "cotizaciones" (
         id_cliente, id_cat_operacion, fecha_cotizacion, id_cliente_aeronave, es_miembro_caa,
@@ -29,17 +47,17 @@ const createQuote = async (req, res) => {
       etd, to, crewTo, paxTo, exchangeRate
     ];
     
-    const nuevaCotizacionResult = await pool.query(cotizacionQuery, cotizacionValues);
+    const nuevaCotizacionResult = await client.query(cotizacionQuery, cotizacionValues);
     const idCotizacion = nuevaCotizacionResult.rows[0].id_cotizacion;
     console.log('--- PRIMER INSERT EXITOSO. ID OBTENIDO:', idCotizacion);
 
-    // 2. Generar número de referencia y otros metadatos
+    // 4. Generar número de referencia y otros metadatos
     const añoActual = new Date().getFullYear().toString().slice(-2);
     const numero_referencia = `${idCotizacion}/${añoActual}`;
     const tipo_accion = 'CREADA';
     const version = 1;
 
-    // 3. Insertar cada concepto en la tabla 'cotizacion_conceptos' y calcular totales
+    // 5. Insertar cada concepto en la tabla 'cotizacion_conceptos' y calcular totales
     let total_costo = 0;
     let total_s_cargo = 0;
     let total_vat = 0;
@@ -64,7 +82,7 @@ const createQuote = async (req, res) => {
         sc_porcentaje, vat_porcentaje, s_cargo, vat, total_usd
       ];
 
-      await pool.query(conceptosQuery, conceptosValues);
+      await client.query(conceptosQuery, conceptosValues);
 
       // Acumular totales. Aseguramos que los valores son numéricos.
       total_costo += parseFloat(costo_usd || 0) * parseInt(cantidad || 1);
@@ -74,7 +92,7 @@ const createQuote = async (req, res) => {
     }
     console.log('--- CONCEPTOS INSERTADOS Y TOTALES CALCULADOS ---');
 
-    // 4. Actualizar la cotización principal con el número de referencia y los totales
+    // 6. Actualizar la cotización principal con el número de referencia y los totales
     const updateQuery = `
       UPDATE "cotizaciones" 
       SET 
@@ -88,10 +106,10 @@ const createQuote = async (req, res) => {
     const updateValues = [
       numero_referencia, total_costo, total_s_cargo, total_vat, total_final, idCotizacion
     ];
-    await pool.query(updateQuery, updateValues);
+    await client.query(updateQuery, updateValues);
     console.log('--- COTIZACIÓN ACTUALIZADA CON TOTALES Y REF ---');
 
-    // 5. Crear el registro en la tabla de histórico con todos los datos, incluyendo totales
+    // 7. Crear el registro en la tabla de histórico con todos los datos, incluyendo totales
     const historicoQuery = `
       INSERT INTO "cotizaciones_historico" (
         id_cliente, id_cat_operacion, fecha_cotizacion, id_cliente_aeronave,
@@ -104,6 +122,7 @@ const createQuote = async (req, res) => {
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26);
     `;
 
+    //customer || null para evitar pasar undefined
     const historicoValues = [
       customer, flightType, date, aircraftModel, quotedBy, // 5
       attn, station, isCaaMember, eta, from, // 10
@@ -112,10 +131,14 @@ const createQuote = async (req, res) => {
       tipo_accion, version, total_costo, total_s_cargo, total_vat, total_final // 26
     ];
     
-    await pool.query(historicoQuery, historicoValues);
+    await client.query(historicoQuery, historicoValues);
     console.log('--- REGISTRO DE HISTÓRICO CREADO ---');
 
-    // 6. Enviar respuesta al cliente
+    // 8. Si todo fue exitoso, confirmar la transacción
+    await client.query('COMMIT');
+    console.log('--- TRANSACCIÓN COMPLETADA (COMMIT) ---');
+
+    // 9. Enviar respuesta al cliente
     res.status(201).json({
       id_cotizacion: idCotizacion,
       numero_referencia: numero_referencia,
@@ -123,11 +146,17 @@ const createQuote = async (req, res) => {
     });
 
   } catch (err) {
+    // Si ocurre cualquier error, revertir la transacción
+    await client.query('ROLLBACK');
+    console.error('--- ERROR EN LA TRANSACCIÓN, SE HIZO ROLLBACK ---');
     console.error('Error al procesar la solicitud:', err);
     res.status(500).json({
       error: 'Ocurrió un error al procesar la solicitud.',
       detalle: err.message
     });
+  } finally {
+    // En cualquier caso (éxito o error), liberar el cliente para devolverlo al pool
+    client.release();
   }
 };
 

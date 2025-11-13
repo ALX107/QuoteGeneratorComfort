@@ -4,8 +4,8 @@ import QuoteForm from '../components/quote/QuoteForm';
 import QuoteTable from '../components/quote/QuoteTable';
 import QuoteTotal from '../components/quote/QuoteTotal';
 import AddServiceModal from '../components/modals/AddServiceModal';
-import ConfirmationModal from '../components/modals/ConfirmationModal';
 import PDFPreviewModal from '../components/modals/PDFPreviewModal';
+import ConfirmationModal, { ExclamationTriangleIcon, InboxArrowDownIcon} from '../components/modals/ConfirmationModal';
 import axios from 'axios';
 
 function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
@@ -16,7 +16,8 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
     const [exchangeRate, setExchangeRate] = useState(null); // To store the exchange rate
 
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+    const [isClearQuoteModalOpen, setIsClearQuoteModalOpen] = useState(false);
+    const [isSaveQuoteModalOpen, setIsSaveQuoteModalOpen] = useState(false);
     const [isPdfPreviewOpen, setIsPdfPreviewOpen] = useState(false);
     const [pdfData, setPdfData] = useState(null);
     const [allServices, setAllServices] = useState([]);
@@ -274,15 +275,15 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
     };
 
     const handleClearQuote = () => {
-        setIsConfirmModalOpen(true);
+        setIsClearQuoteModalOpen(true);
     };
 
-    const handleConfirmClear = () => {
+    const handleClerQuote = () => {
         if (quoteFormRef.current) {
             quoteFormRef.current.clearAllFields();
         }
         setItems([]); // Also clear the items in the table
-        setIsConfirmModalOpen(false);
+        setIsClearQuoteModalOpen(false);
         setIsReadOnly(false);
     };
 
@@ -353,7 +354,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
     };
 
 
-     const handleSaveQuote = async () => {
+     const confirmAndSaveQuote = async () => {
         if (quoteFormRef.current) {
             // Map frontend 'items' to backend 'servicios' structure
             const servicios = items.map(item => {
@@ -391,8 +392,13 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                 console.error('Error saving quote:', error);
                 // Optionally, you can show an error message to the user
             }
-        }
+        };
+        setIsSaveQuoteModalOpen(false);
     };
+
+    const handleSaveQuote = () => {
+        setIsSaveQuoteModalOpen(true);
+    }
 
     const handleSaveAsNew = () => {
         if (quoteFormRef.current) {
@@ -445,13 +451,13 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                              onNewQuoteBlocked={onNewQuoteBlocked}
                              onSaveAsNew={handleSaveAsNew}                         
                 />
-                <main className="max-w-7xl mx-auto mt-4">
+                <main className="max-w-7xl mx-auto mt-4 ">
                     <QuoteForm
                         ref={quoteFormRef}
                         onAddItem={handleAddItem}
                         onOpenServiceModal={() => setIsModalOpen(true)}
                         onSelectionChange={fetchServices}
-                        exchangeRate={previewingQuote ? previewingQuote.exchange_rate : exchangeRate || ''}
+                        exchangeRate={exchangeRate || ''}
                         onExchangeRateChange={(value) => setExchangeRate(parseFloat(value) || 0)}
                         isReadOnly={isReadOnly}
                         onDataLoaded={() => setIsFormReady(true)}
@@ -471,13 +477,29 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                     allServices={allServices.map(s => ({ ...s, id: s.id_precio_concepto || s.id_concepto_std, name: s.nombre_local_concepto, description: s.nombre_cat_concepto }))}
                 />
                  <ConfirmationModal
-                    isOpen={isConfirmModalOpen}
-                    onClose={() => setIsConfirmModalOpen(false)}
-                    onConfirm={handleConfirmClear}
-                    title="Confirm Clear Quote"
+                    isOpen={isClearQuoteModalOpen}
+                    onClose={() => setIsClearQuoteModalOpen(false)}
+                    onConfirm={handleClerQuote}
+                    title="Clear Quote"
+                    icon={ExclamationTriangleIcon} 
+                    iconBgColorClass="bg-red-100"
+                    iconColorClass="text-red-600"  
                 >
-                    <p> ¿Are you sure you want to clear this quote?</p>
+                    <p className="text-base text-gray-700"> ¿Are you sure you want to clear this quote?</p>
                 </ConfirmationModal>
+
+                 <ConfirmationModal
+                    isOpen={isSaveQuoteModalOpen}
+                    onClose={() => setIsSaveQuoteModalOpen(false)}
+                    onConfirm={confirmAndSaveQuote}
+                    title="Save Quote"
+                    icon={InboxArrowDownIcon} 
+                    iconBgColorClass="bg-blue-100"
+                    iconColorClass="text-blue-600" 
+                >
+                    <p className="text-base text-gray-700">Do you want to save this quote?</p>
+                </ConfirmationModal>
+
                 <PDFPreviewModal
                     isOpen={isPdfPreviewOpen}
                     onClose={() => {
