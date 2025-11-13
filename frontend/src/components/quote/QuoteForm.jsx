@@ -34,6 +34,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
     const [paxTo, setPaxTo] = useState('');
     const [quotedBy, setQuotedBy] = useState('');
     const [fboValue, setFboValue] = useState('');
+    const [quoteNumber, setQuoteNumber] = useState(null);
 
 
 
@@ -59,8 +60,13 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
     useImperativeHandle(ref, () => {
 
     return {
+
+        clearQuoteNumberOnly() {
+            setQuoteNumber(null);
+        },
         
         clearAllFields() {
+            setQuoteNumber(null);
             setSelectedCustomer(null);
             setModelValue('');
             setRegistrationValue('');
@@ -95,6 +101,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
         },
 
         setFormData(quote) {
+            setQuoteNumber(quote.numero_referencia || null);
 
             const customer = clientes.find(c => c.id_cliente === quote.id_cliente);
             const flightType = categoriasOperaciones.find(c => c.id_cat_operacion === quote.id_cat_operacion);
@@ -276,6 +283,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
             noEtd,
             selectedAirportId,
             selectedFboId,
+            quoteNumber,
             
         ]
     );
@@ -667,7 +675,17 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                         </div>
 
                         <div>
-                            {/*Espacio en blanco*/}
+                            {quoteNumber && (
+                                <>
+                                    <div className="mt-0 md:mt-0 flex justify-center">
+                                        <div
+                                            className="w-auto bg-gradient-to-r from-sky-500 to-cyan-700 text-white font-semibold rounded-md shadow-md px-3 py-2 text-center text-sm tracking-wide"
+                                        >
+                                            {`#${quoteNumber}`}
+                                        </div>
+                                    </div>
+                                </>
+                            )}
                         </div>
 
                         <div>
@@ -736,6 +754,14 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                     </a>
                                 </label>
                             </div>
+                            <a
+                                href="https://caa.org/my-dashboard"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-sky-600 underline hover:text-sky-800"
+                                >
+                                Verify if it is CAA Member
+                            </a>
                         </div>
                         
                         {/* Aircraft Model (Flow 1)*/}
@@ -1115,7 +1141,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                         rel="noopener noreferrer"
                                         className="text-xs text-sky-600 underline hover:text-sky-800"
                                         >
-                                        Consultar tipo de cambio en el DOF
+                                        Verify exchange rate in DOF
                                         </a>
                                 </div>
                             </div>  
