@@ -8,6 +8,7 @@ export default function HistoricoCotizaciones({ onNavigateNewQuote, onPreviewQuo
     const [selectedAirport, setSelectedAirport] = useState('');
     const [selectedAircraft, setSelectedAircraft] = useState('');
     const [selectedYear, setSelectedYear] = useState('');
+    const [selectedCustomer, setSelectedCustomer] = useState('');
 
     useEffect(() => {
         fetch('http://localhost:3000/api/listar/cotizaciones/historico')
@@ -23,6 +24,7 @@ export default function HistoricoCotizaciones({ onNavigateNewQuote, onPreviewQuo
     const airports = [...new Set(quotes.map(quote => quote.icao_aeropuerto))].filter(Boolean);
     const aircrafts = [...new Set(quotes.map(quote => quote.matricula_aeronave))].filter(Boolean);
     const years = [...new Set(quotes.map(quote => new Date(quote.fecha_cotizacion).getFullYear()))].filter(Boolean);
+    const customers = [...new Set(quotes.map(quote => quote.nombre_cliente))].filter(Boolean);
 
     const filteredQuotes = quotes.filter(quote => {
         const searchTermLower = searchTerm.toLowerCase();
@@ -32,6 +34,7 @@ export default function HistoricoCotizaciones({ onNavigateNewQuote, onPreviewQuo
             (selectedAirport ? quote.icao_aeropuerto === selectedAirport : true) &&
             (selectedAircraft ? quote.matricula_aeronave === selectedAircraft : true) &&
             (selectedYear ? quoteYear === selectedYear : true) &&
+            (selectedCustomer ? quote.nombre_cliente === selectedCustomer : true) &&
             (
                 (quote.numero_referencia?.toLowerCase() ?? '').includes(searchTermLower) ||
                 (quote.nombre_cat_operacion?.toLowerCase() ?? '').includes(searchTermLower) ||
@@ -55,12 +58,15 @@ export default function HistoricoCotizaciones({ onNavigateNewQuote, onPreviewQuo
                     airports={airports}
                     aircrafts={aircrafts}
                     years={years}
+                    customers={customers}
                     selectedAirport={selectedAirport}
                     setSelectedAirport={setSelectedAirport}
                     selectedAircraft={selectedAircraft}
                     setSelectedAircraft={setSelectedAircraft}
                     selectedYear={selectedYear}
                     setSelectedYear={setSelectedYear}
+                    selectedCustomer={selectedCustomer}
+                    setSelectedCustomer={setSelectedCustomer}
                 />
                 <HistoricTable quotes={filteredQuotes} onPreviewQuote={onPreviewQuote} />
             </div>

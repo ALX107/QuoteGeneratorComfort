@@ -231,3 +231,15 @@ CREATE TABLE cotizaciones_historico (
     -- incluso si la cotización original se elimina, pero mantenemos el ID para la relación lógica.
     CONSTRAINT chk_tipo_accion CHECK (tipo_accion IN ('CREADA', 'ACTUALIZADA', 'REVERTIDA', 'CANCELADA')) --verificar
 );
+
+-- ========= TABLA DE USUARIOS PARA LOGIN =========
+CREATE TABLE usuarios (
+    id_usuario BIGSERIAL PRIMARY KEY,
+    username VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    -- rol del usuario (ej. 'admin', 'user')
+    rol VARCHAR(50) NOT NULL DEFAULT 'user',
+    -- si el usuario está activo o inactivo
+    esta_activo BOOLEAN DEFAULT TRUE,
+    fecha_creacion TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);

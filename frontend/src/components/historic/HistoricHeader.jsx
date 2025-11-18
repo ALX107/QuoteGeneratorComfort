@@ -7,12 +7,15 @@ function HistoricHeader({
     airports,
     aircrafts,
     years,
+    customers,
     selectedAirport,
     setSelectedAirport,
     selectedAircraft,
     setSelectedAircraft,
     selectedYear,
-    setSelectedYear
+    setSelectedYear,
+    selectedCustomer,
+    setSelectedCustomer
 }) {
     return (
         <header className="flex items-center justify-between bg-blue-dark shadow-md rounded-lg px-8 py-4 mb-6 border border-black">
@@ -65,21 +68,23 @@ function HistoricHeader({
                     ))}
                 </select>
 
+                <select
+                    value={selectedCustomer}
+                    onChange={(e) => setSelectedCustomer(e.target.value)}
+                    className="btn-glass"
+                >
+                    <option value="">All Customers</option>
+                    {customers.map(customer => (
+                        <option key={customer} value={customer}>{customer}</option>
+                    ))}
+                </select>
+
                 <input 
                     type="text"
                     placeholder="Search..."
                     className="btn-glass flex items-center space-x-2"
                     value={searchTerm}
                     onChange={handleSearch}
-                />
-            </div>
-
-            {/* Derecha */}
-            <div className="flex-1 flex justify-end">
-                <img
-                    alt="RAF International Ground Support Logo"
-                    src={RAFLogoBlanco}
-                    className="h-12 w-auto object-contain" 
                 />
             </div>
         </header>

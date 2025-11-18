@@ -1,7 +1,6 @@
 import React, { useEffect, useState, forwardRef, useImperativeHandle, useRef } from 'react';
 import axios from 'axios';
-
-
+import { jwtDecode } from 'jwt-decode';
 
 import Calculator from '../features/Calculator.jsx';
 
@@ -33,6 +32,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
     const [crewTo, setCrewTo] = useState('');
     const [paxTo, setPaxTo] = useState('');
     const [quotedBy, setQuotedBy] = useState('');
+    const [loggedInUser, setLoggedInUser] = useState('');
     const [fboValue, setFboValue] = useState('');
     const [quoteNumber, setQuoteNumber] = useState(null);
 
@@ -47,7 +47,8 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
 
     const [isDataLoaded, setIsDataLoaded] = useState(false);
     
-    //const dataFetchedRef = useRef(false);
+    // Ref para decodificar el token una sola vez al montar (similar a exchangeRate)
+    const userDecodedRef = useRef(false);
     
     //Fecha y MTOW
         const [date, setDate] = useState('');
@@ -63,6 +64,10 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
 
         clearQuoteNumberOnly() {
             setQuoteNumber(null);
+        },
+
+        setQuotedByValue(userName) {
+            setQuotedBy(userName);
         },
         
         clearAllFields() {
@@ -97,10 +102,14 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
             setCrewTo('');
             setPaxTo('');
             setFboValue('');
+            // Preserva el usuario logueado: restaura quotedBy al usuario autenticado
+            if (loggedInUser) {
+                setQuotedBy(loggedInUser);
+            }
       
         },
 
-        setFormData(quote) {
+        setFormData(quote, preserveCurrentUser = false) {
             setQuoteNumber(quote.numero_referencia || null);
 
             const customer = clientes.find(c => c.id_cliente === quote.id_cliente);
@@ -114,7 +123,10 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
             setSelectedCustomer(customer);
             setFlightType(flightType ? flightType.nombre_cat_operacion : '');
             setDate(quote.fecha_cotizacion ? new Date(quote.fecha_cotizacion).toISOString().split('T')[0] : '');
-            setQuotedBy(quote.nombre_responsable || '');
+            // Si preserveCurrentUser es true (clonación), mantener quotedBy actual; si no, usar del quote
+            if (!preserveCurrentUser) {
+                setQuotedBy(quote.nombre_responsable || '');
+            }
             setAttnValue(quote.nombre_solicitante || '');
             setSelectStation(station ? station.icao_aeropuerto : '');
             setSelectedAirportId(station ? station.id_aeropuerto : null);
@@ -122,7 +134,6 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
             // SOLUCIÓN: Establecer el valor de CAA directamente desde los datos de la cotización.
             setIsCaaMember(!!quote.es_miembro_caa);
 
-            // Si la fecha es null, marca el checkbox y limpia el campo de fecha.
             setNoEta(quote.fecha_llegada === null);
             setEtaDate(quote.fecha_llegada ? new Date(quote.fecha_llegada).toISOString().split('T')[0] : '');
 
@@ -284,34 +295,51 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
             selectedAirportId,
             selectedFboId,
             quoteNumber,
+            loggedInUser,
             
         ]
     );
 
     useEffect(() => {
-       // Previene la doble llamada de la API en StrictMode
-       /* if (dataFetchedRef.current) {
-            return;
+        // CONSOLIDADO: Decodificar token + Cargar datos iniciales (similar a Exchange Rate)
+        // Solo se ejecuta una vez al montar el componente
+        
+        // 1. Decodificar token y cargar usuario logueado (una sola vez)
+        if (!userDecodedRef.current) {
+            userDecodedRef.current = true;
+            const token = localStorage.getItem('token');
+            if (token) {
+                try {
+                    const decodedToken = jwtDecode(token);
+                    const userName = decodedToken.username;
+                    if (userName && typeof userName === 'string') {
+                        setLoggedInUser(userName);
+                        setQuotedBy(userName);
+                    }
+                } catch (error) {
+                    console.error("Error decoding token:", error);
+                }
+            }
         }
-        dataFetchedRef.current = true;*/
 
-
+        // 2. Establecer fechas de hoy
         const today = new Date();
         const formattedDate = today.toISOString().split('T')[0];
-        setDate(formattedDate); 
+        setDate(formattedDate);
         setEtaDate(formattedDate);
         setEtdDate(formattedDate);
 
-            const fetchData = async () => {
+        // 3. Cargar datos de APIs
+        const fetchData = async () => {
             try {
-               const [
-                        clientesResponse,
-                        aeropuertosResponse,
-                        categoriasOperacionesResponse,
-                        fbosResponse,
-                        aeronavesModelosResponse,
-                        clientesAeronavesResponse
-                    ] = await Promise.all([
+                const [
+                    clientesResponse,
+                    aeropuertosResponse,
+                    categoriasOperacionesResponse,
+                    fbosResponse,
+                    aeronavesModelosResponse,
+                    clientesAeronavesResponse
+                ] = await Promise.all([
                     axios.get('http://localhost:3000/api/listar/clientes'),
                     axios.get('http://localhost:3000/api/listar/aeropuertos'),
                     axios.get('http://localhost:3000/api/listar/categoriasOperaciones'),
@@ -320,7 +348,6 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                     axios.get('http://localhost:3000/api/listar/clientes_aeronaves')
                 ]);
 
-                // 3. Setea todos los estados
                 setClientes(clientesResponse.data);
                 setAeropuertos(aeropuertosResponse.data);
                 setCategoriasOperaciones(categoriasOperacionesResponse.data);
@@ -328,20 +355,16 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                 setAllAeronavesModelos(aeronavesModelosResponse.data);
                 setClientesAeronaves(clientesAeronavesResponse.data);
 
-                // 4. Llama a las funciones prop
                 onSelectionChange(null, null);
-
             } catch (error) {
                 console.error('Error fetching data:', error);
             } finally {
-                // 5. Indica que la carga terminó
-                setIsDataLoaded(true); // <-- Indica que las listas se han cargado
+                setIsDataLoaded(true);
                 if (onDataLoaded) onDataLoaded();
             }
         };
 
         fetchData();
-
     }, []);
 
     // Efecto para sincronizar los checkboxes 'No ETA' y 'No ETD' con sus campos de fecha.
@@ -637,7 +660,8 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
 
                         <div>
                             <label className="block text-sm font-medium text-dark-gray" htmlFor="flight-type">
-                                Select Flight Type
+                                Select Category
+                                {/* Category es flight type */}
                             </label>
                             <div className="relative mt-1">
                                 <input
@@ -824,12 +848,12 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                 <label className="block text-sm font-medium text-dark-gray" htmlFor="quoted-by">
                                     Quoted by
                                 </label>
-                                <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm disabled:cursor-not-allowed" 
+                                <input className="mt-1 w-full bg-gray-200 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none sm:text-sm cursor-not-allowed" 
                                         id="quoted-by" 
                                         type="text" 
                                         value={quotedBy}
-                                        onChange={(e) => setQuotedBy(e.target.value)}
-                                        disabled={isReadOnly}/> 
+                                        readOnly
+                                />
                             </div>
                             <div className="mt-4">
                                 <label className="block text-sm font-medium text-dark-gray" htmlFor="attn">

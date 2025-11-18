@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { jwtDecode } from 'jwt-decode';
 import QuoteHeader from '../components/quote/QuoteHeader';
 import QuoteForm from '../components/quote/QuoteForm';
 import QuoteTable from '../components/quote/QuoteTable';
@@ -112,7 +113,6 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                 try {
                     const response = await axios.get('http://localhost:3000/api/tipo-de-cambio');
                     setExchangeRate(parseFloat(response.data.tipoDeCambio));
-                    
                 } catch (error) {
                     console.error('Error fetching exchange rate:', error);
                     setExchangeRate(18);
@@ -131,9 +131,11 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
         // 2. El QuoteForm nos ha notificado que sus listas están cargadas.
         if (quoteDataForPreview && isFormReady && quoteFormRef.current) {
             console.log("¡Sincronización completa! Rellenando formulario...");
-            quoteFormRef.current.setFormData(quoteDataForPreview);
+            // Si es una clonación (isClone = true), preservar el usuario logueado actual
+            const isClone = previewingQuote?.isClone || false;
+            quoteFormRef.current.setFormData(quoteDataForPreview, isClone);
         }
-    }, [quoteDataForPreview, isFormReady]);
+    }, [quoteDataForPreview, isFormReady, previewingQuote]);
 
 
     useEffect(() => {
@@ -397,12 +399,31 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
     const handleSaveAsNew = () => {
         if (quoteFormRef.current) {
             quoteFormRef.current.clearQuoteNumberOnly();
+            
+            // Obtener el usuario logueado actual para reemplazar quotedBy
+            const token = localStorage.getItem('token');
+            let loggedInUser = '';
+            if (token) {
+                try {
+                    const decodedToken = jwtDecode(token);
+                    loggedInUser = decodedToken.username || '';
+                } catch (error) {
+                    console.error("Error decoding token:", error);
+                }
+            }
+            
+            // Asegurarse de que QuoteForm tenga el usuario actual antes de pasar los datos
+            quoteFormRef.current.setQuotedByValue(loggedInUser);
+            
             const currentFormData = quoteFormRef.current.getAllFormData();
+            
             onCloneQuote({
                 ...currentFormData,
+                quotedBy: loggedInUser, // Sobrescribe con el usuario logueado actual
                 items: items,
-                servicios: items, // Incluir los servicios al clonar
+                servicios: items,
                 exchangeRate: exchangeRate,
+                isClone: true, // Marca explícitamente como clonación
             });
         }
     };

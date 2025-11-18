@@ -1,31 +1,46 @@
-
 import React, { useState } from 'react';
-import RafLogo from '../assets/RafLogo.png';
+import RafLogo from '../assets/RafLogoBlanco.png';
+import axios from 'axios';
 
 const Login = ({ onLogin }) => {
-    const [email, setEmail] = useState('');
+    const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         const btn = document.querySelector('.signin-btn');
         btn.textContent = 'Cleared for takeoff...';
         btn.disabled = true;
+        setError('');
 
-        setTimeout(() => {
-            // Here you would typically handle authentication
-            // For now, we'll just call the onLogin callback
-            onLogin();
-        }, 1500);
+        try {
+            const response = await axios.post('http://localhost:3000/api/login', {
+                username,
+                password,
+            });
+
+            const { token } = response.data;
+            localStorage.setItem('token', token); // Guardar el token
+            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`; // Configurar token para futuras peticiones
+
+            if (onLogin) {
+                onLogin();
+            }
+        } catch (err) {
+            btn.textContent = 'Get Started';
+            btn.disabled = false;
+            if (err.response) {
+                setError(err.response.data.message || 'Error en el inicio de sesión');
+            } else {
+                setError('No se pudo conectar al servidor');
+            }
+        }
     };
 
     const togglePassword = () => {
-        const passwordInput = document.getElementById('password');
-        if (passwordInput.type === 'password') {
-            passwordInput.type = 'text';
-        } else {
-            passwordInput.type = 'password';
-        }
+        setShowPassword(s => !s);
     };
 
     return (
@@ -60,7 +75,6 @@ const Login = ({ onLogin }) => {
                     background: #93c5fd;
                     bottom: -100px;
                     right: -100px;
-                    animation-delay: 3s;
                 }
 
                 .blur3 {
@@ -68,7 +82,6 @@ const Login = ({ onLogin }) => {
                     top: 50%;
                     left: 50%;
                     transform: translate(-50%, -50%);
-                    animation-delay: 6s;
                 }
 
                 @keyframes float {
@@ -108,7 +121,7 @@ const Login = ({ onLogin }) => {
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    background: linear-gradient(to bottom, #3b82f6 50%, #374151 50%);
+                    background: linear-gradient(to bottom, #0f172a 50%, #374151 50%);
                     border: 4px solid #9ca3af;
                     box-shadow: 
                         0 0 10px rgba(0,0,0,0.3),
@@ -168,7 +181,7 @@ const Login = ({ onLogin }) => {
                 }
 
                 h1 {
-                    color: #0f172a;
+                    color: #ffffff;
                     font-size: 24px;
                     font-weight: 600;
                     text-align: center;
@@ -176,10 +189,17 @@ const Login = ({ onLogin }) => {
                 }
 
                 .subtitle {
-                    color: black;
+                    color: #e0e7ff;
                     font-size: 15px;
                     text-align: center;
                     margin-bottom: 30px;
+                    line-height: 1.6;
+                }
+                
+                .subtitle-2{
+                    color: #c7d2fe;
+                    font-size: 12px;
+                    text-align: center;
                     line-height: 1.6;
                 }
 
@@ -244,23 +264,6 @@ const Login = ({ onLogin }) => {
 
                 .toggle-password:hover {
                     color: #334155;
-                }
-
-                .forgot-password {
-                    text-align: right;
-                    margin-top: 12px;
-                }
-
-                .forgot-password a {
-                    color: #0f172a;
-                    text-decoration: none;
-                    font-size: 14px;
-                    font-weight: 500;
-                    transition: opacity 0.3s ease;
-                }
-
-                .forgot-password a:hover {
-                    opacity: 0.7;
                 }
 
                 .signin-btn {
@@ -339,6 +342,13 @@ const Login = ({ onLogin }) => {
                     width: 28px;
                     height: 28px;
                 }
+                
+                .error-message {
+                    color: #ff8c69;
+                    text-align: center;
+                    margin-top: 15px;
+                    font-weight: 500;
+                }
 
                 @media (max-width: 480px) {
                     .login-card {
@@ -370,8 +380,8 @@ const Login = ({ onLogin }) => {
                         <img src={RafLogo} alt="RAF International Logo" />
                     </div>
                 </div>
-
                 <div className="login-card">
+                    
                     <h1>Sign in with your credentials</h1>
                     <p className="subtitle">Please fasten your seatbelt</p>
 
@@ -379,15 +389,14 @@ const Login = ({ onLogin }) => {
                         <div className="form-group">
                             <div className="input-wrapper">
                                 <svg className="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                                    <polyline points="22,6 12,13 2,6"/>
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle>
                                 </svg>
                                 <input 
-                                    type="email" 
-                                    id="email" 
-                                    placeholder="Email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
+                                    type="text" 
+                                    id="username" 
+                                    placeholder="Username"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
                                     required
                                 />
                             </div>
@@ -400,36 +409,48 @@ const Login = ({ onLogin }) => {
                                     <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                                 </svg>
                                 <input 
-                                    type="password" 
-                                    id="password" 
-                                    placeholder="Password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    required
-                                />
-                                <svg className="toggle-password" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="20" height="20" onClick={togglePassword}>
-                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-                                    <line x1="1" y1="1" x2="23" y2="23"/>
+                                    type={showPassword ? 'text' : 'password'}
+                                     id="password" 
+                                     placeholder="Password"
+                                     value={password}
+                                     onChange={(e) => setPassword(e.target.value)}
+                                     required
+                                 />
+                                <svg
+                                    className="toggle-password"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    width="20"
+                                    height="20"
+                                    onClick={togglePassword}
+                                    style={{ cursor: 'pointer' }}
+                                >
+                                    {showPassword ? (
+                                        // eye-off (visible -> show "hide" icon)
+                                        <>
+                                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                                            <line x1="1" y1="1" x2="23" y2="23"/>
+                                        </>
+                                    ) : (
+                                        // eye (hidden -> show "view" icon)
+                                        <>
+                                            <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.27 2.943 9.542 7-1.272 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                            <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </>
+                                    )}
                                 </svg>
-                            </div>
-                            <div className="forgot-password">
-                                <a href="#">Forgot password?</a>
-                            </div>
-                        </div>
+                             </div>
+                         </div>
+                        
+                        {error && <p className="error-message">{error}</p>}
 
                         <button type="submit" className="signin-btn">Get Started</button>
                     </form>
 
                     <div className="divider">
-                        <span>Engineered by Lex Groove & Max Bragado</span>
-                    </div>
-
-                    <div className="social-login">
-                        <div className="social-btn" onClick={() => alert('Apple sign-in would be implemented here')}>
-                            <svg viewBox="0 0 24 24" fill="#000000">
-                                <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
-                            </svg>
-                        </div>
+                        <p className='subtitle-2'>Engineered by Alex Linares & Max Bragado</p>
                     </div>
                 </div>
             </div>

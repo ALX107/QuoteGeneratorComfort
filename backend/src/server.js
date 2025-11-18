@@ -13,6 +13,7 @@ const aeronavesModelosRoutes = require('./routes/aeronaves_modelos.routes');
 const clientesAeronavesRoutes = require('./routes/clientes_aeronaves.routes');
 const cotizacionesRoutes = require('./routes/cotizaciones.routes');
 const cotizacionesHistoricoRoutes = require('./routes/cotizaciones_historico.routes');
+const usuariosRoutes = require('./routes/usuarios.routes');
 
 
 const corsOptions = require('./config/cors');
@@ -37,56 +38,107 @@ app.use('/api', aeronavesModelosRoutes);
 app.use('/api', clientesAeronavesRoutes);
 app.use('/api', cotizacionesRoutes);
 app.use('/api', cotizacionesHistoricoRoutes);
+app.use('/api', usuariosRoutes);
 
+// ----- CACHÉ EN MEMORIA -----
+let cacheTipoCambio = {
+    fecha: null,
+    valor: null,
+    timestamp: null 
+};
 
 app.get('/api/tipo-de-cambio', async (req, res) => {
-    const token = '069c2abcc766a1ecd1b91604ad1c08da08a5cb734c0bf8188550ee85937b14ee'; 
-    const idSerie = 'SF43718';
+    const token = '069c2abcc766a1ecd1b91604ad1c08da08a5cb734c0bf8188550ee85937b14ee';
+    const idSerie = 'SF43718'; 
+    const ahora = new Date();
 
-    // 1. Obtenemos la fecha de hoy y le restamos un día.
-    const fecha = new Date();
-    fecha.setDate(fecha.getDate() - 1);
+    // ===== 1. REVISAR SI HAY CACHÉ VÁLIDO =====
+    if (cacheTipoCambio.fecha && cacheTipoCambio.valor) {
+        const cacheEsDeHoy =
+            cacheTipoCambio.timestamp &&
+            new Date(cacheTipoCambio.timestamp).toDateString() === ahora.toDateString();
 
-    // 2. Ajustamos por si ayer fue fin de semana.
-    // getDay() devuelve 0 para Domingo y 6 para Sábado.
-    if (fecha.getDay() === 0) { // Si ayer fue Domingo...
-        fecha.setDate(fecha.getDate() - 2); // ...nos vamos al Viernes.
-    } else if (fecha.getDay() === 6) { // Si ayer fue Sábado...
-        fecha.setDate(fecha.getDate() - 1); // ...nos vamos al Viernes.
+        if (cacheEsDeHoy) {
+            return res.json({
+                fromCache: true,
+                fecha: cacheTipoCambio.fecha,
+                tipoDeCambio: cacheTipoCambio.valor
+            });
+        }
     }
 
-    // 3. Formateamos la fecha al formato YYYY-MM-DD que requiere la API.
-    const anio = fecha.getFullYear();
-    const mes = String(fecha.getMonth() + 1).padStart(2, '0'); // Se suma 1 porque los meses van de 0-11
-    const dia = String(fecha.getDate()).padStart(2, '0');
-    const fechaFormateada = `${anio}-${mes}-${dia}`;
-    
+    // ===== 2. FUNCIONES DE FECHA =====
+    const restarDiaHabil = (fecha) => {
+        fecha.setDate(fecha.getDate() - 1);
+        const dia = fecha.getDay();
 
-    // 4. Construimos la nueva URL pidiendo el dato para la fecha calculada.
-    const url = `https://www.banxico.org.mx/SieAPIRest/service/v1/series/${idSerie}/datos/${fechaFormateada}/${fechaFormateada}`;
-    
-    console.log(`Solicitando tipo de cambio para la fecha: ${fechaFormateada}`); // Para depuración
+        if (dia === 0) fecha.setDate(fecha.getDate() - 2);
+        if (dia === 6) fecha.setDate(fecha.getDate() - 1);
 
-    try {
-        const response = await axios.get(url, {
-            headers: { 'Bmx-Token': token }
-        });
+        return fecha;
+    };
 
-        // Verificamos si la API devolvió datos para esa fecha
-        if (response.data.bmx.series[0].datos.length > 0) {
-            const tipoDeCambio = response.data.bmx.series[0].datos[0].dato;
-            res.json({ tipoDeCambio: tipoDeCambio });
-        } else {
-            // Esto pasaría si consultamos en un día feriado, por ejemplo.
-            res.status(404).json({ error: `No se encontró tipo de cambio para la fecha ${fechaFormateada}.` });
+    const formatearFecha = (f) =>
+        `${f.getFullYear()}-${String(f.getMonth() + 1).padStart(2, '0')}-${String(f.getDate()).padStart(2, '0')}`;
+
+    const consultarBanxico = async (fechaStr) => {
+        const url = `https://www.banxico.org.mx/SieAPIRest/service/v1/series/${idSerie}/datos/${fechaStr}/${fechaStr}?token=${token}`;
+        try {
+            const response = await axios.get(url);
+            const datos = response.data?.bmx?.series?.[0]?.datos;
+            if (datos && datos.length > 0) return datos[0].dato;
+            return null;
+        } catch {
+            return null;
+        }
+    };
+
+    // ===== 3. BUSCAR ÚLTIMO DÍA HÁBIL =====
+    let fecha = restarDiaHabil(new Date());
+    let fechaFormateada = formatearFecha(fecha);
+    let tipoDeCambio = await consultarBanxico(fechaFormateada);
+
+    let intentos = 0;
+    while (!tipoDeCambio && intentos < 10) {
+        fecha = restarDiaHabil(fecha);
+        fechaFormateada = formatearFecha(fecha);
+        tipoDeCambio = await consultarBanxico(fechaFormateada);
+        intentos++;
+    }
+
+    // ===== 4. FALLBACK =====
+    if (!tipoDeCambio) {
+        if (cacheTipoCambio.valor) {
+            // USAR ÚLTIMO VALOR VÁLIDO
+            return res.json({
+                fromCache: true,
+                advertencia: 'No se pudo obtener datos recientes de Banxico, usando último valor válido.',
+                fecha: cacheTipoCambio.fecha,
+                tipoDeCambio: cacheTipoCambio.valor
+            });
         }
 
-    } catch (error) {
-        console.error("Error en el servidor al consultar Banxico:", error.message);
-        res.status(500).json({ error: 'No se pudo obtener el tipo de cambio.' });
+        // SI NO HAY CACHÉ, DEVOLVER VALOR POR DEFECTO
+        return res.json({
+            fromCache: false,
+            advertencia: 'No se pudo obtener datos y no hay valores en caché.',
+            tipoDeCambio: "NO DISPONIBLE"
+        });
     }
-});
 
+    // ===== 5. GUARDAR EN CACHÉ =====
+    cacheTipoCambio = {
+        fecha: fechaFormateada,
+        valor: tipoDeCambio,
+        timestamp: new Date()
+    };
+
+    return res.json({
+        fromCache: false,
+        fecha: fechaFormateada,
+        tipoDeCambio
+    });
+});
 
 app.listen(port, () => {
   console.log(`Server listening at http://localhost:${port}`);

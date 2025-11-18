@@ -1,20 +1,40 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import CotizacionNueva from './pages/NewQuote.jsx';
 import Catalogos from './pages/Catalogos.jsx';
 import HistoricoCotizaciones from './pages/HistoricQuote.jsx';
+import Login from './pages/Login.jsx';
 import '../index.css';
 import RAFLogoBlanco from './assets/RafLogoBlanco.png';
+import axios from 'axios';
 
 export default function App() {
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [currentPage, setCurrentPage] = useState('historico');
     const [previewingQuote, setPreviewingQuote] = useState(null);
 
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+            setIsAuthenticated(true);
+        }
+    }, []);
+
+    const handleLogin = () => {
+        setIsAuthenticated(true);
+        setCurrentPage('historico');
+    };
+
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        delete axios.defaults.headers.common['Authorization'];
+        setIsAuthenticated(false);
+    };
+
     const handleCloneQuote = (quoteDataToClone) => {
-    setPreviewingQuote({ ...quoteDataToClone, id_cotizacion: null, isClone: true });
-    // Navegamos a la página de nueva cotización
-    // (si no estás ya ahí, esto asegura que se renderice la página correcta)
-    setCurrentPage('cotizacion'); 
-};
+        setPreviewingQuote({ ...quoteDataToClone, id_cotizacion: null, isClone: true });
+        setCurrentPage('cotizacion');
+    };
 
     const handlePreviewQuote = (quote) => {
         setPreviewingQuote(quote);
@@ -44,6 +64,10 @@ export default function App() {
         }
     };
 
+    if (!isAuthenticated) {
+        return <Login onLogin={handleLogin} />;
+    }
+
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Navegación */}
@@ -60,7 +84,7 @@ export default function App() {
                                 <h1 className="text-xl font-bold text-white">Quote Generator RAF International Ground Support</h1>
                             </div>
                         </div>
-                        <div className="flex space-x-8">
+                        <div className="flex items-center space-x-8">
                             <button
                                 onClick={() => setCurrentPage('historico')}
                                 className={`px-3 py-2 rounded-md text-sm font-medium ${currentPage === 'historico'
@@ -87,6 +111,12 @@ export default function App() {
                                     } cursor-pointer`}
                             >
                                 New Quote
+                            </button>
+                            <button
+                                onClick={handleLogout}
+                                className="px-3 py-2 rounded-md text-sm font-medium text-red-500 hover:bg-red-100 cursor-pointer"
+                            >
+                                Logout
                             </button>
                         </div>
                     </div>

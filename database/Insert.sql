@@ -27,7 +27,8 @@ INSERT INTO categorias_operaciones (id_cat_operacion, nombre_cat_operacion) VALU
 (8, 'APIS'),
 (9, 'TRANSPORTATION'),
 (10, 'CATERING'),
-(11, 'FUEL / COMBUSTIBLE');
+(11, 'FUEL / COMBUSTIBLE'),
+(12, 'PERMIT');
 
 -- Categorías de Conceptos (Servicios)
 INSERT INTO categorias_conceptos (id_cat_concepto, nombre_cat_concepto) VALUES
