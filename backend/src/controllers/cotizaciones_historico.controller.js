@@ -15,7 +15,8 @@ const getCotizacionesHistorico = async (req, res) => {
         c.nombre_cliente AS nombre_cliente,      -- Nombre del cliente desde la tabla 'clientes'
         co.nombre_cat_operacion AS nombre_cat_operacion,              -- Nombre de la operación desde 'categorias_operaciones'
         a.icao_aeropuerto AS icao_aeropuerto,                  -- ICAO del aeropuerto desde 'aeropuertos'
-        ca.matricula_aeronave AS matricula_aeronave             -- Matrícula de la aeronave desde 'cliente_aeronaves'
+        am.icao_aeronave AS modelo_aeronave,                -- Modelo de la aeronave desde 'aeronaves_modelos'
+        ca.matricula_aeronave AS matricula_aeronave             -- Matrícula de la aeronave desde 'clientes_aeronaves'
       FROM
         "cotizaciones_historico" AS ch
       LEFT JOIN
@@ -24,8 +25,10 @@ const getCotizacionesHistorico = async (req, res) => {
         "categorias_operaciones" AS co ON ch.id_cat_operacion = co.id_cat_operacion -- FIX: Se usa el alias 'co'
       LEFT JOIN
         "aeropuertos" AS a ON ch.id_aeropuerto = a.id_aeropuerto -- FIX: Se usa el alias 'a'
-      LEFT JOIN
+      LEFT JOIN 
         "clientes_aeronaves" AS ca ON ch.id_cliente_aeronave = ca.id_cliente_aeronave -- FIX: Se usa el alias 'ca'
+      LEFT JOIN
+        "aeronaves_modelos" AS am ON ca.id_modelo_aeronave = am.id_modelo_aeronave -- Se une con modelos de aeronave
       ORDER BY
         CAST(split_part(ch.numero_referencia, '/', 1) AS INTEGER) DESC,
         ch.fecha_modificacion DESC
