@@ -21,15 +21,33 @@ export default function HistoricoCotizaciones({ onNavigateNewQuote, onPreviewQuo
         setSearchTerm(event.target.value);
     };
 
-    const airports = [...new Set(quotes.map(quote => quote.icao_aeropuerto))].filter(Boolean);
-    const aircrafts = [...new Set(quotes.map(quote => quote.matricula_aeronave))].filter(Boolean);
-    const years = [...new Set(quotes.map(quote => new Date(quote.fecha_cotizacion).getFullYear()))].filter(Boolean);
+    const airports = [...new Set(quotes.map(quote => quote.icao_aeropuerto))].filter(Boolean).sort();
+    const aircrafts = [...new Set(quotes.map(quote => quote.matricula_aeronave))].filter(Boolean).sort();
+    // FIX: Usar 'fecha_creacion' para obtener los años correctamente.
+    const years = [...new Set(quotes.map(quote => new Date(quote.fecha_creacion).getFullYear()))].filter(Boolean).sort((a, b) => b - a);
     const customers = [...new Set(quotes.map(quote => quote.nombre_cliente))].filter(Boolean);
-
+    
     const filteredQuotes = quotes.filter(quote => {
         const searchTermLower = searchTerm.toLowerCase();
-        const quoteYear = new Date(quote.fecha_cotizacion).getFullYear();
-
+        // FIX: Usar 'fecha_creacion' para filtrar por año.
+        const quoteYear = new Date(quote.fecha_creacion).getFullYear();
+    
+        // FIX: Formatear las fechas como se muestran en la tabla para que la búsqueda coincida.
+        const formattedCreationDate = new Date(quote.fecha_creacion).toLocaleString(undefined, {
+            year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
+        }).toLowerCase();
+    
+        const arrivalDate = quote.fecha_llegada ? new Date(quote.fecha_llegada).toLocaleDateString() : null;
+        const departureDate = quote.fecha_salida ? new Date(quote.fecha_salida).toLocaleDateString() : null;
+        let formattedOperationDate = 'n/a';
+        if (arrivalDate && departureDate) {
+            formattedOperationDate = arrivalDate === departureDate ? arrivalDate : `${arrivalDate} - ${departureDate}`;
+        } else if (arrivalDate) {
+            formattedOperationDate = arrivalDate;
+        } else if (departureDate) {
+            formattedOperationDate = departureDate;
+        }
+    
         return (
             (selectedAirport ? quote.icao_aeropuerto === selectedAirport : true) &&
             (selectedAircraft ? quote.matricula_aeronave === selectedAircraft : true) &&
@@ -37,13 +55,13 @@ export default function HistoricoCotizaciones({ onNavigateNewQuote, onPreviewQuo
             (selectedCustomer ? quote.nombre_cliente === selectedCustomer : true) &&
             (
                 (quote.numero_referencia?.toLowerCase() ?? '').includes(searchTermLower) ||
+                (formattedCreationDate.includes(searchTermLower)) || // Búsqueda por fecha de creación
                 (quote.nombre_cat_operacion?.toLowerCase() ?? '').includes(searchTermLower) ||
                 (quote.icao_aeropuerto?.toLowerCase() ?? '').includes(searchTermLower) ||
-                (new Date(quote.fecha_cotizacion).toLocaleDateString() ?? '').includes(searchTermLower) ||
+                (formattedOperationDate.includes(searchTermLower)) || // Búsqueda por fecha de operación
                 (quote.matricula_aeronave?.toString().toLowerCase() ?? '').includes(searchTermLower) ||
                 (quote.nombre_cliente?.toLowerCase() ?? '').includes(searchTermLower) ||
-                (quote.exchange_rate?.toLowerCase() ?? '').includes(searchTermLower) ||
-                (quote.total_final?.toLowerCase() ?? '').includes(searchTermLower)
+                (quote.total_final?.toString().toLowerCase() ?? '').includes(searchTermLower)
             )
         );
     });

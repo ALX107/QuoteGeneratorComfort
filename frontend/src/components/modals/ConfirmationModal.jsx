@@ -1,36 +1,101 @@
-import React from 'react';
+import React, { Fragment } from 'react';
+import { Dialog, Transition } from '@headlessui/react';
+import { ExclamationTriangleIcon } from '@heroicons/react/24/outline'; 
+import { InboxArrowDownIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 
-function ConfirmationModal({ isOpen, onClose, onConfirm, title, children }) {
-    if (!isOpen) return null;
 
-    return (
-        <>
-            {/* Fondo oscuro con desenfoque */}
-            <div className="fixed inset-0 bg-opacity-80 backdrop-blur-md z-40"></div>
+function ConfirmationModal({ 
+  isOpen, 
+  onClose, 
+  onConfirm, 
+  title, 
+  children, 
+  
+  icon: Icon = ExclamationTriangleIcon, // Por defecto, si no se pasa, usa el de advertencia
+  iconBgColorClass = "bg-red-100",
+  iconColorClass = "text-red-600" 
 
-            {/* Contenido del modal */}
-            <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-lg p-6 z-50 w-1/3">
-                <h2 className="text-xl font-bold mb-4">{title}</h2>
-                <div className="mb-4">
-                    {children}
+}) {
+  return (
+    <Transition.Root show={isOpen} as={Fragment}>
+      <Dialog as="div" className="relative z-50" onClose={onClose}>
+        
+        <Transition.Child
+          as={Fragment}
+          enter="ease-out duration-300"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="ease-in duration-200"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
+        >
+          <div className="fixed inset-0 bg-opacity-75 backdrop-blur-sm transition-opacity" />
+        </Transition.Child>
+
+        <div className="fixed inset-0 z-10 overflow-y-auto">
+          <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+            
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0 scale-95"
+              enterTo="opacity-100 scale-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100 scale-100"
+              leaveTo="opacity-0 scale-95"
+            >
+              <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                  <div className="sm:flex sm:items-start">
+                    
+                    {/* El ícono ahora usa los props 'icon', 'iconBgColorClass' y 'iconColorClass' */}
+                    <div className={`mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full sm:mx-0 sm:h-10 sm:w-10 ${iconBgColorClass}`}>
+                      {/* Aquí renderizamos el componente de ícono que nos pasen */}
+                      <Icon className={`h-6 w-6 ${iconColorClass}`} aria-hidden="true" />
+                    </div>
+
+                    <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
+                      <Dialog.Title as="h3" className="text-lg font-semibold leading-6 text-gray-900">
+                        {title}
+                      </Dialog.Title>
+                      
+                      <div className="mt-2">
+                        <div className="text-sm text-gray-500">
+                          {children}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex justify-end space-x-4">
-                    <button
-                        onClick={onClose}
-                        className="btn-secondary btn-cancel"
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        onClick={onConfirm}
-                        className="btn-danger btn-confirm"
-                    >
-                        Confirm
-                    </button>
+
+                <div className="bg-white px-4 py-3 sm:flex sm:justify-center sm:gap-6">
+                 
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="btn-cancel w-full sm:w-25"
+                  >
+                    Cancel
+                  </button>
+
+                   <button
+                    type="button"
+                    onClick={onConfirm}
+                    className="btn-confirm w-full sm:w-25" 
+                  >
+                    Confirm
+                  </button>
+
                 </div>
-            </div>
-        </>
-    );
+              </Dialog.Panel>
+            </Transition.Child>
+          </div>
+        </div>
+      </Dialog>
+    </Transition.Root>
+  );
 }
 
 export default ConfirmationModal;
+
+export { ExclamationTriangleIcon, InboxArrowDownIcon, CheckCircleIcon };
