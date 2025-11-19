@@ -8,10 +8,13 @@ function HistoricHeader({
     aircrafts,
     years,
     customers,
+    models,
     selectedAirport,
     setSelectedAirport,
     selectedAircraft,
     setSelectedAircraft,
+    selectedModel,
+    setSelectedModel,
     selectedYear,
     setSelectedYear,
     selectedCustomer,
@@ -20,8 +23,7 @@ function HistoricHeader({
     return (
         <header className="flex items-center justify-between bg-blue-dark shadow-md rounded-lg px-8 py-4 mb-6 border border-black">
 
-            {/* Izquierda */}
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center flex-wrap gap-2">
                 <button onClick={() => onNavigateNewQuote('cotizacion')} className="btn-glass flex items-center space-x-2">
                     New
                 </button>
@@ -51,9 +53,20 @@ function HistoricHeader({
                     onChange={(e) => setSelectedAirport(e.target.value)}
                     className="btn-glass"
                 >
-                    <option value="">All Airports</option>
+                    <option value="">All Stations</option>
                     {airports.map(airport => (
                         <option key={airport} value={airport}>{airport}</option>
+                    ))}
+                </select>
+
+                <select
+                    value={selectedModel}
+                    onChange={(e) => setSelectedModel(e.target.value)}
+                    className="btn-glass"
+                >
+                    <option value="">All Aircrafts</option>
+                    {models.map(model => (
+                        <option key={model} value={model}>{model}</option>
                     ))}
                 </select>
 
@@ -62,7 +75,7 @@ function HistoricHeader({
                     onChange={(e) => setSelectedAircraft(e.target.value)}
                     className="btn-glass"
                 >
-                    <option value="">All Aircrafts</option>
+                    <option value="">All Registrations</option>
                     {aircrafts.map(aircraft => (
                         <option key={aircraft} value={aircraft}>{aircraft}</option>
                     ))}
@@ -78,15 +91,17 @@ function HistoricHeader({
                         <option key={customer} value={customer}>{customer}</option>
                     ))}
                 </select>
-
-                <input 
+                
+            </div>
+                <div className="flex items-center space-x-2">
+                    <input 
                     type="text"
                     placeholder="Search..."
                     className="btn-glass flex items-center space-x-2"
                     value={searchTerm}
                     onChange={handleSearch}
-                />
-            </div>
+                    />
+                </div>
         </header>
     );
 }

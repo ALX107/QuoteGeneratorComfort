@@ -9,6 +9,7 @@ export default function HistoricoCotizaciones({ onNavigateNewQuote, onPreviewQuo
     const [selectedAircraft, setSelectedAircraft] = useState('');
     const [selectedYear, setSelectedYear] = useState('');
     const [selectedCustomer, setSelectedCustomer] = useState('');
+    const [selectedModel, setSelectedModel] = useState('');
 
     useEffect(() => {
         fetch('http://localhost:3000/api/listar/cotizaciones/historico')
@@ -25,7 +26,8 @@ export default function HistoricoCotizaciones({ onNavigateNewQuote, onPreviewQuo
     const aircrafts = [...new Set(quotes.map(quote => quote.matricula_aeronave))].filter(Boolean).sort();
     // FIX: Usar 'fecha_creacion' para obtener los años correctamente.
     const years = [...new Set(quotes.map(quote => new Date(quote.fecha_creacion).getFullYear()))].filter(Boolean).sort((a, b) => b - a);
-    const customers = [...new Set(quotes.map(quote => quote.nombre_cliente))].filter(Boolean);
+    const customers = [...new Set(quotes.map(quote => quote.nombre_cliente))].filter(Boolean).sort();
+    const models = [...new Set(quotes.map(quote => quote.modelo_aeronave))].filter(Boolean).sort();
     
     const filteredQuotes = quotes.filter(quote => {
         const searchTermLower = searchTerm.toLowerCase();
@@ -51,6 +53,7 @@ export default function HistoricoCotizaciones({ onNavigateNewQuote, onPreviewQuo
         return (
             (selectedAirport ? quote.icao_aeropuerto === selectedAirport : true) &&
             (selectedAircraft ? quote.matricula_aeronave === selectedAircraft : true) &&
+            (selectedModel ? quote.modelo_aeronave === selectedModel : true) &&
             (selectedYear ? quoteYear === selectedYear : true) &&
             (selectedCustomer ? quote.nombre_cliente === selectedCustomer : true) &&
             (
@@ -60,6 +63,7 @@ export default function HistoricoCotizaciones({ onNavigateNewQuote, onPreviewQuo
                 (quote.icao_aeropuerto?.toLowerCase() ?? '').includes(searchTermLower) ||
                 (formattedOperationDate.includes(searchTermLower)) || // Búsqueda por fecha de operación
                 (quote.matricula_aeronave?.toString().toLowerCase() ?? '').includes(searchTermLower) ||
+                (quote.modelo_aeronave?.toLowerCase() ?? '').includes(searchTermLower) ||
                 (quote.nombre_cliente?.toLowerCase() ?? '').includes(searchTermLower) ||
                 (quote.total_final?.toString().toLowerCase() ?? '').includes(searchTermLower)
             )
@@ -77,10 +81,13 @@ export default function HistoricoCotizaciones({ onNavigateNewQuote, onPreviewQuo
                     aircrafts={aircrafts}
                     years={years}
                     customers={customers}
+                    models={models}
                     selectedAirport={selectedAirport}
                     setSelectedAirport={setSelectedAirport}
                     selectedAircraft={selectedAircraft}
                     setSelectedAircraft={setSelectedAircraft}
+                    selectedModel={selectedModel}
+                    setSelectedModel={setSelectedModel}
                     selectedYear={selectedYear}
                     setSelectedYear={setSelectedYear}
                     selectedCustomer={selectedCustomer}

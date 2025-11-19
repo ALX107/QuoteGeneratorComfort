@@ -768,12 +768,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                     className='disabled:bg-gray-200 disabled:cursor-not-allowed'
                                 />
                                 <label htmlFor="caa-member" className="block text-sm font-medium text-dark-gray">
-                                    <a
-                                        href="https://www.caa.co.uk/" // <-- Puedes cambiar esta URL por la que necesites
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="underline hover:text-sky-600"
-                                    >
+                                    <a>
                                         Is CAA Member
                                     </a>
                                 </label>
