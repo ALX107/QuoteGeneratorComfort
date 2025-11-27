@@ -12,7 +12,7 @@ export default function HistoricoCotizaciones({ onNavigateNewQuote, onPreviewQuo
     const [selectedModel, setSelectedModel] = useState('');
 
     useEffect(() => {
-        fetch('http://localhost:3000/api/listar/cotizaciones/historico')
+        fetch('http://localhost:3000/api/listar/cotizaciones')
             .then(response => response.json())
             .then(data => setQuotes(data))
             .catch(error => console.error('Error fetching quotes:', error));
@@ -27,7 +27,7 @@ export default function HistoricoCotizaciones({ onNavigateNewQuote, onPreviewQuo
     // FIX: Usar 'fecha_creacion' para obtener los años correctamente.
     const years = [...new Set(quotes.map(quote => new Date(quote.fecha_creacion).getFullYear()))].filter(Boolean).sort((a, b) => b - a);
     const customers = [...new Set(quotes.map(quote => quote.nombre_cliente))].filter(Boolean).sort();
-    const models = [...new Set(quotes.map(quote => quote.modelo_aeronave))].filter(Boolean).sort();
+    const models = [...new Set(quotes.map(quote => quote.icao_aeronave))].filter(Boolean).sort();
     
     const filteredQuotes = quotes.filter(quote => {
         const searchTermLower = searchTerm.toLowerCase();
@@ -53,7 +53,7 @@ export default function HistoricoCotizaciones({ onNavigateNewQuote, onPreviewQuo
         return (
             (selectedAirport ? quote.icao_aeropuerto === selectedAirport : true) &&
             (selectedAircraft ? quote.matricula_aeronave === selectedAircraft : true) &&
-            (selectedModel ? quote.modelo_aeronave === selectedModel : true) &&
+            (selectedModel ? quote.icao_aeronave === selectedModel : true) &&
             (selectedYear ? quoteYear === selectedYear : true) &&
             (selectedCustomer ? quote.nombre_cliente === selectedCustomer : true) &&
             (
@@ -63,7 +63,7 @@ export default function HistoricoCotizaciones({ onNavigateNewQuote, onPreviewQuo
                 (quote.icao_aeropuerto?.toLowerCase() ?? '').includes(searchTermLower) ||
                 (formattedOperationDate.includes(searchTermLower)) || // Búsqueda por fecha de operación
                 (quote.matricula_aeronave?.toString().toLowerCase() ?? '').includes(searchTermLower) ||
-                (quote.modelo_aeronave?.toLowerCase() ?? '').includes(searchTermLower) ||
+                (quote.icao_aeronave?.toLowerCase() ?? '').includes(searchTermLower) ||
                 (quote.nombre_cliente?.toLowerCase() ?? '').includes(searchTermLower) ||
                 (quote.total_final?.toString().toLowerCase() ?? '').includes(searchTermLower)
             )

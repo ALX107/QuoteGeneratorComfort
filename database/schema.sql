@@ -1,5 +1,8 @@
 -- ========= TABLAS INDEPENDIENTES (No dependen de otras) =========
 
+-- Secuencia dedicada para el id_cotizacion para que sea independiente de id_historico
+CREATE SEQUENCE cotizacion_id_seq;
+
 -- Tabla para almacenar la información de los clientes.
 CREATE TABLE clientes (
     id_cliente BIGSERIAL PRIMARY KEY,
@@ -115,55 +118,6 @@ CREATE TABLE precios_conceptos(
     CONSTRAINT fk_precios_aeropuerto FOREIGN KEY (id_aeropuerto) REFERENCES aeropuertos(id_aeropuerto),
     CONSTRAINT fk_precios_fbo FOREIGN KEY (id_fbo) REFERENCES fbos(id_fbo)
 );
--------AQÚI ME QUEDÉ-----
--- Tabla principal de cotizaciones. Contiene la información MÁS RECIENTE de la cotización.
-CREATE TABLE cotizaciones (
-    id_cotizacion BIGSERIAL PRIMARY KEY,
-    -- Información general
-    numero_referencia VARCHAR(50) UNIQUE, -- quitar restricción not null 
-    fecha_cotizacion DATE NOT NULL DEFAULT CURRENT_DATE,
-    nombre_solicitante VARCHAR(255),
-    nombre_responsable VARCHAR(255),
-    exchange_rate DECIMAL(10, 4) NOT NULL,
-
-    -- Relaciones con otras tablas (IDs)
-    id_cliente BIGINT NOT NULL,
-    id_cat_operacion BIGINT NOT NULL,
-    id_cliente_aeronave BIGINT NOT NULL,
-    id_aeropuerto BIGINT NOT NULL,
-    id_cliente BIGINT,
-    id_cat_operacion BIGINT,
-    id_cliente_aeronave BIGINT,
-    id_aeropuerto BIGINT,
-    es_miembro_caa BOOLEAN,
-    id_fbo BIGINT,
-    
-    -- Información de la operación
-    fecha_llegada DATE,
-    fecha_salida DATE,
-    aeropuerto_origen_id BIGINT,
-    aeropuerto_destino_id BIGINT,
-    tripulacion_llegada INT,
-    pasajeros_llegada INT,
-    tripulacion_salida INT,
-    pasajeros_salida INT,
-
-    -- Totales (calculados a partir de los conceptos)
-    total_costo DECIMAL(15, 2),
-    total_s_cargo DECIMAL(15, 2),
-    total_vat DECIMAL(15, 2),
-    total_final DECIMAL(15, 2),
-    total_en_palabras VARCHAR(500),
-
-    -- Constraints
-    CONSTRAINT fk_cotizaciones_cliente FOREIGN KEY (id_cliente) REFERENCES clientes(id_cliente),
-    CONSTRAINT fk_cotizaciones_categoria FOREIGN KEY (id_cat_operacion) REFERENCES categorias_operaciones(id_cat_operacion),
-    CONSTRAINT fk_cotizaciones_aeronave FOREIGN KEY (id_cliente_aeronave) REFERENCES clientes_aeronaves(id_cliente_aeronave),
-    CONSTRAINT fk_cotizaciones_aeropuerto FOREIGN KEY (id_aeropuerto) REFERENCES aeropuertos(id_aeropuerto),
-    CONSTRAINT fk_cotizaciones_fbo FOREIGN KEY (id_fbo) REFERENCES fbos(id_fbo),
-    CONSTRAINT fk_cotizaciones_aeropuerto_origen FOREIGN KEY (aeropuerto_origen_id) REFERENCES aeropuertos(id_aeropuerto),
-    CONSTRAINT fk_cotizaciones_aeropuerto_destino FOREIGN KEY (aeropuerto_destino_id) REFERENCES aeropuertos(id_aeropuerto)
-);
 
 
 -- ========= TABLAS DEPENDIENTES (Nivel 3) =========
@@ -189,7 +143,7 @@ CREATE TABLE cotizacion_conceptos (
     vat DECIMAL(12, 2) NOT NULL,
     total_usd DECIMAL(15, 2) NOT NULL,
 
-    CONSTRAINT fk_conceptos_cotizacion FOREIGN KEY (id_cotizacion) REFERENCES cotizaciones(id_cotizacion),
+    CONSTRAINT fk_conceptos_cotizacion FOREIGN KEY (id_cotizacion) REFERENCES cotizaciones_historico(id_cotizacion) ON DELETE CASCADE,
     CONSTRAINT fk_conceptos_precio FOREIGN KEY (id_precio_concepto) REFERENCES precios_conceptos(id_precio_concepto)
 );
 
@@ -197,7 +151,7 @@ CREATE TABLE cotizacion_conceptos (
 CREATE TABLE cotizaciones_historico (
     id_historico BIGSERIAL PRIMARY KEY,
     -- Referencia a la cotización original en la tabla 'cotizaciones'
-    id_cotizacion BIGINT NOT NULL,
+    id_cotizacion BIGINT NOT NULL UNIQUE,
     
     -- Datos de la cotización en el momento del registro
     numero_referencia VARCHAR(50) NOT NULL,
@@ -205,24 +159,35 @@ CREATE TABLE cotizaciones_historico (
     nombre_solicitante VARCHAR(255),
     nombre_responsable VARCHAR(255),
     exchange_rate DECIMAL(10, 4) NOT NULL,
-    id_cliente BIGINT NOT NULL,
-    id_cliente BIGINT,
     es_miembro_caa BOOLEAN, 
-    id_cat_operacion BIGINT NOT NULL,
-    id_cliente_aeronave BIGINT NOT NULL,
-    id_aeropuerto BIGINT NOT NULL,
-    id_cat_operacion BIGINT,
-    id_cliente_aeronave BIGINT,
-    id_aeropuerto BIGINT,
-    id_fbo BIGINT,
     fecha_llegada DATE,
     fecha_salida DATE,
-    aeropuerto_origen_id BIGINT,
-    aeropuerto_destino_id BIGINT,
     tripulacion_llegada INT,
     pasajeros_llegada INT,
     tripulacion_salida INT,
     pasajeros_salida INT,
+
+    -- Campos de relación (pueden ser NULL si el dato es manual)
+    id_cliente BIGINT,
+    id_cat_operacion BIGINT,
+    id_cliente_aeronave BIGINT,
+    id_aeropuerto BIGINT,
+    id_fbo BIGINT,
+    aeropuerto_origen_id BIGINT,
+    aeropuerto_destino_id BIGINT,
+
+    -- Campos SNAPSHOT (la "foto" de los datos al momento de cotizar)
+    cliente VARCHAR(255) NOT NULL,
+    cat_operacion VARCHAR(100) NOT NULL,
+    matricula_aeronave VARCHAR(100) NOT NULL,
+    modelo_aeronave VARCHAR(100), 
+    mtow DECIMAL(10, 2), 
+    mtow_unit VARCHAR(5),                   
+    aeropuerto VARCHAR(100) NOT NULL,
+    fbo VARCHAR(100),
+    aeropuerto_origen VARCHAR(100),
+    aeropuerto_destino VARCHAR(100),
+
     total_costo DECIMAL(15, 2),
     total_s_cargo DECIMAL(15, 2),
     total_vat DECIMAL(15, 2),
@@ -237,7 +202,7 @@ CREATE TABLE cotizaciones_historico (
     
     -- No se necesita una FK directa a cotizaciones para permitir que el historial persista
     -- incluso si la cotización original se elimina, pero mantenemos el ID para la relación lógica.
-    CONSTRAINT chk_tipo_accion CHECK (tipo_accion IN ('CREADA', 'ACTUALIZADA', 'REVERTIDA', 'CANCELADA')) --verificar
+      CONSTRAINT chk_tipo_accion CHECK (tipo_accion IN ('CREADA', 'ACTUALIZADA', 'REVERTIDA', 'CANCELADA'))
 );
 
 -- ========= TABLA DE USUARIOS PARA LOGIN =========

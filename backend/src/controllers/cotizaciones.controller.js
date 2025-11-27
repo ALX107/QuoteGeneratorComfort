@@ -31,7 +31,7 @@ const createQuote = async (req, res) => {
 
     // 3. Crear la cotización principal para obtener su ID
     const cotizacionQuery = `
-      INSERT INTO "cotizaciones" (
+      INSERT INTO "cotizaciones_historico" (
         id_cliente, id_cat_operacion, fecha_cotizacion, id_cliente_aeronave, es_miembro_caa,
         nombre_responsable, nombre_solicitante, id_aeropuerto, fecha_llegada,
         aeropuerto_origen_id, tripulacion_llegada, pasajeros_llegada, id_fbo,
@@ -94,7 +94,7 @@ const createQuote = async (req, res) => {
 
     // 6. Actualizar la cotización principal con el número de referencia y los totales
     const updateQuery = `
-      UPDATE "cotizaciones" 
+      UPDATE "cotizaciones_historico" 
       SET 
         numero_referencia = $1,
         total_costo = $2,
@@ -110,6 +110,7 @@ const createQuote = async (req, res) => {
     console.log('--- COTIZACIÓN ACTUALIZADA CON TOTALES Y REF ---');
 
     // 7. Crear el registro en la tabla de histórico con todos los datos, incluyendo totales
+    /*
     const historicoQuery = `
       INSERT INTO "cotizaciones_historico" (
         id_cliente, id_cat_operacion, fecha_cotizacion, id_cliente_aeronave,
@@ -122,6 +123,8 @@ const createQuote = async (req, res) => {
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26);
     `;
 
+    
+
     //customer || null para evitar pasar undefined
     const historicoValues = [
       customer, flightType, date, aircraftModel, quotedBy, // 5
@@ -133,6 +136,8 @@ const createQuote = async (req, res) => {
     
     await client.query(historicoQuery, historicoValues);
     console.log('--- REGISTRO DE HISTÓRICO CREADO ---');
+
+    */
 
     // 8. Si todo fue exitoso, confirmar la transacción
     await client.query('COMMIT');

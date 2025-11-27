@@ -110,6 +110,8 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
         },
 
         setFormData(quote, preserveCurrentUser = false) {
+
+
             setQuoteNumber(quote.numero_referencia || null);
 
             const customer = clientes.find(c => c.id_cliente === quote.id_cliente);
@@ -119,16 +121,21 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
             const from = aeropuertos.find(a => a.id_aeropuerto === quote.aeropuerto_origen_id);
             const to = aeropuertos.find(a => a.id_aeropuerto === quote.aeropuerto_destino_id);
 
-            setCustomerValue(customer ? customer.nombre_cliente : '');
-            setSelectedCustomer(customer);
-            setFlightType(flightType ? flightType.nombre_cat_operacion : '');
+            
+
+            setCustomerValue(customer ? customer.nombre_cliente : (quote.cliente || ''));            
+            setSelectedCustomer(customer || null); 
+
+            setFlightType(flightType ? flightType.nombre_cat_operacion : (quote.cat_operacion || '')); // Fallback texto
+
             setDate(quote.fecha_cotizacion ? new Date(quote.fecha_cotizacion).toISOString().split('T')[0] : '');
             // Si preserveCurrentUser es true (clonación), mantener quotedBy actual; si no, usar del quote
             if (!preserveCurrentUser) {
                 setQuotedBy(quote.nombre_responsable || '');
             }
             setAttnValue(quote.nombre_solicitante || '');
-            setSelectStation(station ? station.icao_aeropuerto : '');
+
+            setSelectStation(station ? station.icao_aeropuerto : (quote.aeropuerto || '')); 
             setSelectedAirportId(station ? station.id_aeropuerto : null);
             
             // SOLUCIÓN: Establecer el valor de CAA directamente desde los datos de la cotización.
@@ -137,43 +144,73 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
             setNoEta(quote.fecha_llegada === null);
             setEtaDate(quote.fecha_llegada ? new Date(quote.fecha_llegada).toISOString().split('T')[0] : '');
 
-            setFromStation(from ? from.icao_aeropuerto : '');
+            
+            setFromStation(from ? from.icao_aeropuerto : (quote.aeropuerto_origen || ''));
+
+            setToStation(to ? to.icao_aeropuerto : (quote.aeropuerto_destino || ''));
+
+
             setCrewFrom(quote.tripulacion_llegada || '');
             setPaxFrom(quote.pasajeros_llegada || '');
-            setFboValue(fbo ? fbo.nombre_fbo : '');
+
+            setFboValue(fbo ? fbo.nombre_fbo : (quote.fbo || ''));
             setSelectedFboId(fbo ? fbo.id_fbo : null);
 
             // Si la fecha es null, marca el checkbox y limpia el campo de fecha.
             setNoEtd(quote.fecha_salida === null);
             setEtdDate(quote.fecha_salida ? new Date(quote.fecha_salida).toISOString().split('T')[0] : '');
 
-            setToStation(to ? to.icao_aeropuerto : '');
             setCrewTo(quote.tripulacion_salida || '');
             setPaxTo(quote.pasajeros_salida || '');
 
             // Handle aircraft model and registration
+
+            const aircraft = clientesAeronaves.find(a => a.id_cliente_aeronave === quote.id_cliente_aeronave);
+                if (aircraft) {
+                    const model = allaeronavesModelos.find(m => m.id_modelo_aeronave === aircraft.id_modelo_aeronave);
+                    setModelValue(model ? model.nombre_aeronave : '');
+                    setRegistrationValue(aircraft.matricula_aeronave || (quote.matricula_aeronave || ''));
+                    // FIX: Priorizar el MTOW guardado en la cotización (snapshot).
+                    // Si no existe, usar el del catálogo como fallback.
+                    setMtowValue(quote.mtow || (model ? model.mtow_aeronave : ''));
+                    setUnit(quote.mtow_unit || 'KG');
+                } else {
+                // CASO B: Manual / No existe en Catálogo (Usamos SNAPSHOT)
+               
+                
+                setRegistrationValue(quote.matricula_aeronave || ''); // Matrícula snapshot
+                
+                setModelValue(quote.modelo_aeronave || '');         // Modelo snapshot
+                setMtowValue(quote.mtow || '');                     // MTOW snapshot
+                setUnit(quote.mtow_unit || 'KG');                   // Unit snapshot
+                
+
+            }
+
+
             if (customer) {
                 const customerAircraftLinks = clientesAeronaves.filter(
                     registration => registration.id_cliente === customer.id_cliente
                 );
+                setFilteredRegistrations(customerAircraftLinks);
                 const uniqueModelIds = [...new Set(customerAircraftLinks.map(registration => registration.id_modelo_aeronave))];
                 const models = allaeronavesModelos.filter(model => 
                     uniqueModelIds.includes(model.id_modelo_aeronave)
                 );
                 setFilteredAeronavesModelos(models);
+            }
 
-                const aircraft = clientesAeronaves.find(a => a.id_cliente_aeronave === quote.id_cliente_aeronave);
-                if (aircraft) {
-                    const model = allaeronavesModelos.find(m => m.id_modelo_aeronave === aircraft.id_modelo_aeronave);
-                    setModelValue(model ? model.nombre_aeronave : '');
-                    setRegistrationValue(aircraft.matricula_aeronave || '');
-                    setMtowValue(model ? model.mtow_aeronave : '');
-                    // Usamos el valor de la cotización guardada, que es el más reciente.
-                    setIsCaaMember(!!quote.es_miembro_caa);
-                }
+                else {
+        // Si no hay cliente (es manual), permitimos ver todos los modelos 
+        // y vaciamos las matrículas filtradas (porque es manual)
+        setFilteredRegistrations([]);
+        setFilteredAeronavesModelos(allaeronavesModelos);
+    }
+
+                
             
             
-        }
+        
     },
     
         //Guardar el formulario
@@ -197,7 +234,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                 aircraftModel: selectedRegistration ? selectedRegistration.id_cliente_aeronave : null,
                 isCaaMember: isCaaMember,
                 mtow: mtowValue,
-                mtowUnit: unit,
+                mtow_unit: unit,
                 quotedBy: quotedBy,
                 attn: attnValue,
                 station: selectedAirportId,
@@ -213,14 +250,26 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                 exchangeRate: exchangeRate,
 
                 // New fields for PDF
-                customerName: selectedCustomer ? selectedCustomer.nombre_cliente : customerValue,
-                flightTypeName: flightType,
-                aircraftModelName: modelValue,
-                aircraftRegistrationValue: registrationValue, // The string value
-                stationName: stationAirport ? stationAirport.nombre_aeropuerto : selectStation,
-                fromName: fromAirport ? fromAirport.nombre_aeropuerto : fromStation,
-                fboName: fbo ? fbo.nombre_fbo : fboValue,
-                toName: toAirport ? toAirport.nombre_aeropuerto : toStation,
+
+            // 1. Objetos completos (para obtener IDs fácilmente en el padre)
+            selectedCustomer: selectedCustomer,
+            selectedModel: selectedRegistration, // Pasamos el objeto de matrícula completo
+
+            // 2. Valores de Texto Crudo (Lo que el usuario escribió)
+            // ESTO ES LO QUE TE FALTABA PARA EVITAR "label: undefined"
+            customerValue: customerValue,       
+            registrationValue: registrationValue,
+
+            // New fields for PDF
+            customerName: selectedCustomer ? selectedCustomer.nombre_cliente : customerValue,
+            flightTypeName: flightType,
+            aircraftModelName: modelValue,
+            aircraftRegistrationValue: registrationValue, // The string value
+            stationName: stationAirport ? stationAirport.icao_aeropuerto : selectStation,
+            fromName: fromAirport ? fromAirport.nombre_aeropuerto : fromStation,
+            fboName: fbo ? fbo.nombre_fbo : fboValue,
+            toName: toAirport ? toAirport.nombre_aeropuerto : toStation,
+
             }; 
           },
 
@@ -509,7 +558,15 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
             const selectedModelName = event.target.value;
             setModelValue(selectedModelName);
 
-            setRegistrationValue(''); // Reset registration on model change
+            // Verificamos si la matrícula que está escrita actualmente existe en la base de datos
+            const isKnownRegistration = clientesAeronaves.some(
+                reg => reg.matricula_aeronave === registrationValue
+            );
+
+            if (isKnownRegistration) {
+                setRegistrationValue(''); 
+            }
+
             setMtowValue(''); // Reset MTOW on model change
         
             const selectedModel = filteredAeronavesModelos.find(
@@ -553,12 +610,42 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
 
                 //Actualiza el valor que el usuario está escribiendo
                 setRegistrationValue(selectedMatricula);
+
+               if (selectedMatricula === '') {
+                // Limpiamos los campos dependientes para evitar confusiones
+                setModelValue('');
+                setMtowValue('');
+                setIsCaaMember(false);
+
+                // Si hay un cliente seleccionado, RE-CALCULAMOS su lista original de modelos
+                if (selectedCustomer) {
+                    const allCustomerRegistrations = clientesAeronaves.filter(
+                    reg => reg.id_cliente === selectedCustomer.id_cliente
+                ); 
+                setFilteredRegistrations(allCustomerRegistrations);
+
+                    if (allCustomerRegistrations.length > 0) {
+                const uniqueModelIds = [...new Set(allCustomerRegistrations.map(r => r.id_modelo_aeronave))];
+                const customerModels = allaeronavesModelos.filter(model => 
+                    uniqueModelIds.includes(model.id_modelo_aeronave)
+                );
+                setFilteredAeronavesModelos(customerModels);
+            } else {
+                // Si el cliente no tiene nada, mostrar todo el catálogo
+                setFilteredAeronavesModelos(allaeronavesModelos);
+            }
+        } else {
+            // Si no hay cliente, mostrar todo el universo
+            setFilteredAeronavesModelos(allaeronavesModelos);
+            setFilteredRegistrations([]);
+        }
+        return; 
+    }
                 
 
                 //Solo intenta autocompletar el modelo si el cliente existe
                 if (selectedCustomer) {
-                    setModelValue('');
-                    setMtowValue('');
+                   
 
                     // Buscar la matrícula seleccionada filtrada por cliente
                     // por si el usuario escribe una matrícula sin haber filtrado por modelo.
@@ -567,6 +654,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                             reg.id_cliente === selectedCustomer?.id_cliente
                     );
 
+                    //la matricula existe para este cliente
                     if (selectedRegistration) {
                         // Encontrar el modelo correspondiente a esta matrícula
                         const model = allaeronavesModelos.find(
@@ -585,6 +673,10 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                             // basado en la matrícula seleccionada.
                             setIsCaaMember(!!selectedRegistration.es_miembro_caa);
                         }
+                       
+                    }
+                    else {
+                        setFilteredAeronavesModelos(allaeronavesModelos);
                     }
                 }
             };
@@ -832,7 +924,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                 <div className="flex">
                                     <button
                                         type="button"
-                                        className={`px-3 py-2 border-t border-b border-gray-300 text-dark-gray text-sm ${unit === "KG" ? "bg-gray-200" : "bg-white disabled:cursor-not-allowed"}`}
+                                        className={`px-3 py-2 border-t border-b border-gray-300 text-sm ${unit === "KG" ? "bg-sky-600 text-white" : "bg-white text-dark-gray disabled:cursor-not-allowed"}`}
                                         onClick={convertToKG}
                                         disabled={isReadOnly}
                                     >

@@ -99,9 +99,9 @@ function HistoricTable({ quotes, onPreviewQuote }) {
                                 Station
                                 {sortConfig.key === 'icao_aeropuerto' ? (sortConfig.direction === 'ascending' ? ' \u25B4' : ' \u25BE') : null}
                             </th>
-                             <th className="px-6 py-3 cursor-pointer" scope="col" onClick={() => requestSort('modelo_aeronave')}>
+                             <th className="px-6 py-3 cursor-pointer" scope="col" onClick={() => requestSort('icao_aeronave')}>
                                 Aircraft
-                                {sortConfig.key === 'modelo_aeronave' ? (sortConfig.direction === 'ascending' ? ' \u25B4' : ' \u25BE') : null}
+                                {sortConfig.key === 'icao_aeronave' ? (sortConfig.direction === 'ascending' ? ' \u25B4' : ' \u25BE') : null}
                             </th>
                             <th className="px-6 py-3 cursor-pointer" scope="col" onClick={() => requestSort('matricula_aeronave')}>
                                 Registration
@@ -138,7 +138,7 @@ function HistoricTable({ quotes, onPreviewQuote }) {
                                     <td className="px-6 py-4">{formatDate(quote.fecha_creacion, 'fecha_creacion')}</td>
                                     <td className="px-6 py-4">{quote.nombre_cat_operacion}</td>
                                     <td className="px-6 py-4">{quote.icao_aeropuerto}</td>
-                                    <td className="px-6 py-4">{quote.modelo_aeronave}</td>
+                                    <td className="px-6 py-4">{quote.icao_aeronave}</td>
                                     <td className="px-6 py-4">{quote.matricula_aeronave}</td>
                                     <td className="px-6 py-4">{formatOperationDate(quote)}</td>
                                     <td className="px-6 py-4">{quote.nombre_cliente}</td>

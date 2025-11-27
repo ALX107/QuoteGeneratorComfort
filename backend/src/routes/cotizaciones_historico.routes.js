@@ -1,11 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const { getCotizacionesHistorico, getCotizacionById } = require('../controllers/cotizaciones_historico.controller');
+const cotizacionesController = require('../controllers/cotizaciones_historico.controller');
 
-//Listar todas las cotizaciones en histórico
-router.get('/listar/cotizaciones/historico', getCotizacionesHistorico);
+// Ruta para listar todas las cotizaciones
+router.get('/listar/cotizaciones', cotizacionesController.getCotizacionesHistorico);
 
 // Obtener una cotización por ID
-router.get('/cotizacion/:id', getCotizacionById);
+router.get('/cotizacion/:id', cotizacionesController.getCotizacionById);
+
+// Crear una nueva cotización
+router.post('/cotizaciones', cotizacionesController.createQuote);
 
 module.exports = router;

@@ -11,7 +11,6 @@ const fbosRoutes = require('./routes/fbos.routes');
 const serviciosRoutes = require('./routes/servicios.routes');
 const aeronavesModelosRoutes = require('./routes/aeronaves_modelos.routes');
 const clientesAeronavesRoutes = require('./routes/clientes_aeronaves.routes');
-const cotizacionesRoutes = require('./routes/cotizaciones.routes');
 const cotizacionesHistoricoRoutes = require('./routes/cotizaciones_historico.routes');
 const usuariosRoutes = require('./routes/usuarios.routes');
 
@@ -36,7 +35,6 @@ app.use('/api', fbosRoutes);
 app.use('/api', serviciosRoutes);
 app.use('/api', aeronavesModelosRoutes);
 app.use('/api', clientesAeronavesRoutes);
-app.use('/api', cotizacionesRoutes);
 app.use('/api', cotizacionesHistoricoRoutes);
 app.use('/api', usuariosRoutes);
 

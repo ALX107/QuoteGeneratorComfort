@@ -359,6 +359,9 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
      const confirmAndSaveQuote = async () => {
         if (quoteFormRef.current) {
             // Map frontend 'items' to backend 'servicios' structure
+
+            const rawData = quoteFormRef.current.getFormData();
+
             const servicios = items.map(item => {
                 const cost = (item.quantity || 0) * (item.priceUSD || 0);
                 const s_cargo = cost * (item.scPercentage || 0);
@@ -379,11 +382,66 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
             });
 
             const quoteData = {
-                ...quoteFormRef.current.getFormData(),
-                exchangeRate: exchangeRate, // Pass the exchange rate
-                servicios: servicios, // Use the correct key 'servicios'
-            };
+                        
+                        date: rawData.date,
+                        exchangeRate: rawData.exchangeRate,
+                        quotedBy: rawData.quotedBy,
+                        isCaaMember: rawData.isCaaMember,
+                        attn: rawData.attn,
+                        eta: rawData.eta,
+                        etd: rawData.etd,
+                        crewFrom: rawData.crewFrom,
+                        paxFrom: rawData.paxFrom,
+                        crewTo: rawData.crewTo,
+                        paxTo: rawData.paxTo,
+                        mtow: rawData.mtow, 
+                        mtow_unit: rawData.mtow_unit,        
+                                    
+                        // Cliente
+                        customer: { 
+                            id: rawData.customer,       // ID o null
+                            label: rawData.customerName // Nombre real o texto manual
+                        },
 
+                        // Aeronave / Matrícula
+                        aircraftModel: { 
+                            id: rawData.aircraftModel, // ID de la matrícula (id_cliente_aeronave)
+                            label: rawData.aircraftRegistrationValue, // Texto de la matrícula (ej. "XA-ABC")
+                            modelo: rawData.aircraftModelName // AÑADIDO: El texto del modelo (ej. "G650")
+                        },
+
+                        // Tipo de Vuelo
+                        flightType: { 
+                            id: rawData.flightType, 
+                            label: rawData.flightTypeName 
+                        },
+
+                        // Estación
+                        station: {
+                            id: rawData.station,
+                            label: rawData.stationName
+                        },
+
+                        // FBO (Opcional)
+                        fbo: rawData.fbo || rawData.fboName
+                            ? { id: rawData.fbo, label: rawData.fboName }
+                            : null,
+
+                        // Origen (Opcional)
+                        from: rawData.from || rawData.fromName // Si hay ID o Texto
+                            ? { id: rawData.from, label: rawData.fromName }
+                            : null,
+
+                        // Destino (Opcional)
+                        to: rawData.to || rawData.toName
+                            ? { id: rawData.to, label: rawData.toName }
+                            : null,
+
+                        // --- SERVICIOS ---
+                        servicios: servicios
+                    };
+
+                    console.log("Payload enviado al Backend:", quoteData); 
             try {
                 const response = await axios.post('http://localhost:3000/api/cotizaciones', quoteData);
                 console.log('Quote saved successfully:', response.data);

@@ -2,11 +2,10 @@
 -- El orden es fundamental: se eliminan primero las tablas dependientes.
 
 -- Nivel 3: Tablas que dependen de otras tablas principales.
-DROP TABLE IF EXISTS cotizacion_conceptos;
-DROP TABLE IF EXISTS cotizaciones_historico;
+DROP TABLE IF EXISTS cotizacion_conceptos CASCADE;
 
 -- Nivel 2: Tablas que son referenciadas por el nivel 3.
-DROP TABLE IF EXISTS cotizaciones;
+DROP TABLE IF EXISTS cotizaciones_historico CASCADE;
 DROP TABLE IF EXISTS precios_conceptos;
 
 -- Nivel 1: Tablas que son referenciadas por el nivel 2.
