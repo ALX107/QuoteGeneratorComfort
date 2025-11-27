@@ -109,43 +109,16 @@ CREATE TABLE precios_conceptos(
     nombre_local_concepto VARCHAR(255) NOT NULL,
     costo_concepto DECIMAL(12, 2) NOT NULL,
     divisa VARCHAR(3) NOT NULL,
-    -- El precio puede ser general o específico para un aeropuerto o FBO.
-    id_concepto_std BIGINT NOT NULL,
+    id_cat_concepto BIGINT NOT NULL,
     id_aeropuerto BIGINT,
     id_fbo BIGINT,
 
-    CONSTRAINT fk_precios_concepto FOREIGN KEY (id_concepto_std) REFERENCES conceptos_default(id_concepto_std),
+    CONSTRAINT fk_cat_concepto FOREIGN KEY (id_cat_concepto) REFERENCES categorias_conceptos(id_cat_concepto),
     CONSTRAINT fk_precios_aeropuerto FOREIGN KEY (id_aeropuerto) REFERENCES aeropuertos(id_aeropuerto),
     CONSTRAINT fk_precios_fbo FOREIGN KEY (id_fbo) REFERENCES fbos(id_fbo)
 );
 
-
 -- ========= TABLAS DEPENDIENTES (Nivel 3) =========
-
--- Tabla de enlace para registrar los conceptos (servicios) incluidos en cada cotización.
-CREATE TABLE cotizacion_conceptos (
-    id_cotizacion_concepto BIGSERIAL PRIMARY KEY,
-    id_cotizacion BIGINT NOT NULL,
-    -- Podría ser un concepto de precio fijo o uno ad-hoc.
-    id_precio_concepto BIGINT,
-    
-    nombre_servicio VARCHAR(255) NOT NULL,
-    cantidad INT NOT NULL,
-    costo_mxn DECIMAL(12, 2) NOT NULL,
-    costo_usd DECIMAL(12, 2) NOT NULL,
-    
-    -- Porcentajes aplicados
-    sc_porcentaje DECIMAL(5, 2) NOT NULL, -- Ej: 15.00 para 15%
-    vat_porcentaje DECIMAL(5, 2) NOT NULL,
-
-    -- Campos calculados (pueden ser calculados en la aplicación o aquí)
-    s_cargo DECIMAL(12, 2) NOT NULL,
-    vat DECIMAL(12, 2) NOT NULL,
-    total_usd DECIMAL(15, 2) NOT NULL,
-
-    CONSTRAINT fk_conceptos_cotizacion FOREIGN KEY (id_cotizacion) REFERENCES cotizaciones_historico(id_cotizacion) ON DELETE CASCADE,
-    CONSTRAINT fk_conceptos_precio FOREIGN KEY (id_precio_concepto) REFERENCES precios_conceptos(id_precio_concepto)
-);
 
 -- Tabla para almacenar el historial de cambios y versiones de las cotizaciones.
 CREATE TABLE cotizaciones_historico (
@@ -204,6 +177,32 @@ CREATE TABLE cotizaciones_historico (
     -- incluso si la cotización original se elimina, pero mantenemos el ID para la relación lógica.
       CONSTRAINT chk_tipo_accion CHECK (tipo_accion IN ('CREADA', 'ACTUALIZADA', 'REVERTIDA', 'CANCELADA'))
 );
+
+-- Tabla de enlace para registrar los conceptos (servicios) incluidos en cada cotización.
+CREATE TABLE cotizacion_conceptos (
+    id_cotizacion_concepto BIGSERIAL PRIMARY KEY,
+    id_cotizacion BIGINT NOT NULL,
+    -- Podría ser un concepto de precio fijo o uno ad-hoc.
+    id_precio_concepto BIGINT,
+    
+    nombre_servicio VARCHAR(255) NOT NULL,
+    cantidad INT NOT NULL,
+    costo_mxn DECIMAL(12, 2) NOT NULL,
+    costo_usd DECIMAL(12, 2) NOT NULL,
+    
+    -- Porcentajes aplicados
+    sc_porcentaje DECIMAL(5, 2) NOT NULL, -- Ej: 15.00 para 15%
+    vat_porcentaje DECIMAL(5, 2) NOT NULL,
+
+    -- Campos calculados (pueden ser calculados en la aplicación o aquí)
+    s_cargo DECIMAL(12, 2) NOT NULL,
+    vat DECIMAL(12, 2) NOT NULL,
+    total_usd DECIMAL(15, 2) NOT NULL,
+
+    CONSTRAINT fk_conceptos_cotizacion FOREIGN KEY (id_cotizacion) REFERENCES cotizaciones_historico(id_cotizacion) ON DELETE CASCADE,
+    CONSTRAINT fk_conceptos_precio FOREIGN KEY (id_precio_concepto) REFERENCES precios_conceptos(id_precio_concepto)
+);
+
 
 -- ========= TABLA DE USUARIOS PARA LOGIN =========
 CREATE TABLE usuarios (

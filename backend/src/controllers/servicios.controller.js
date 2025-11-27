@@ -14,11 +14,9 @@ const getServiciosByAeropuertoOrFbo = async (req, res) => {
                 pc.nombre_local_concepto,
                 pc.costo_concepto,
                 pc.divisa,
-                cs.nombre_concepto_default,
-                cc.nombre_cat_concepto
+                cs.id_cat_concepto
             FROM precios_conceptos pc
-            JOIN conceptos_default cs ON pc.id_concepto_std = cs.id_concepto_std
-            JOIN categorias_conceptos cc ON cs.id_categoria_concepto = cc.id_cat_concepto
+            JOIN categorias_conceptos cs ON pc.id_cat_concepto = cs.id_cat_concepto
             WHERE pc.id_fbo = $1
         `;
 
