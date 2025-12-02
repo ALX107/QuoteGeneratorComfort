@@ -18,7 +18,10 @@ function HistoricHeader({
     selectedYear,
     setSelectedYear,
     selectedCustomer,
-    setSelectedCustomer
+    setSelectedCustomer,
+    onJoinQuotes,
+    selectedQuoteIds = [],
+    isJoining = false
 }) {
     return (
         <header className="flex items-center justify-between bg-blue-dark shadow-md rounded-lg px-8 py-4 mb-6 border border-black">
@@ -27,11 +30,12 @@ function HistoricHeader({
                 <button onClick={() => onNavigateNewQuote('cotizacion')} className="btn-glass flex items-center space-x-2">
                     New
                 </button>
-                <button className="btn-glass flex items-center space-x-2">
-                    Join
-                </button>
-                <button className="btn-glass flex items-center space-x-2">
-                    Separate
+                <button 
+                    className="btn-glass flex items-center space-x-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                    onClick={onJoinQuotes}
+                    disabled={selectedQuoteIds.length < 2 || isJoining}
+                >
+                    {isJoining ? 'Joining...' : 'Join'}
                 </button>
                 <button className="btn-glass flex items-center space-x-2">
                     Export to Excel

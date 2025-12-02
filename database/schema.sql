@@ -165,7 +165,7 @@ CREATE TABLE cotizaciones_historico (
     total_s_cargo DECIMAL(15, 2),
     total_vat DECIMAL(15, 2),
     total_final DECIMAL(15, 2),
-    total_en_palabras VARCHAR(500),
+    total_en_palabras VARCHAR(350),
 
     -- Metadatos del historial
     fecha_modificacion TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,

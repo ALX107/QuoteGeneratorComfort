@@ -10,12 +10,18 @@ export default function HistoricoCotizaciones({ onNavigateNewQuote, onPreviewQuo
     const [selectedYear, setSelectedYear] = useState('');
     const [selectedCustomer, setSelectedCustomer] = useState('');
     const [selectedModel, setSelectedModel] = useState('');
+    const [selectedQuoteIds, setSelectedQuoteIds] = useState([]);
+    const [isJoining, setIsJoining] = useState(false);
 
-    useEffect(() => {
+    const fetchQuotes = () => {
         fetch('http://localhost:3000/api/listar/cotizaciones')
             .then(response => response.json())
             .then(data => setQuotes(data))
             .catch(error => console.error('Error fetching quotes:', error));
+    };
+
+    useEffect(() => {
+        fetchQuotes();
     }, []);
 
     const handleSearch = (event) => {
@@ -70,6 +76,51 @@ export default function HistoricoCotizaciones({ onNavigateNewQuote, onPreviewQuo
         );
     });
 
+    const handleToggleQuote = (quoteId) => {
+        setSelectedQuoteIds(prev => {
+            if (prev.includes(quoteId)) {
+                return prev.filter(id => id !== quoteId);
+            } else {
+                return [...prev, quoteId];
+            }
+        });
+    };
+
+    const handleJoinQuotes = async () => {
+        if (selectedQuoteIds.length < 2) {
+            alert('Por favor selecciona al menos 2 cotizaciones para unir.');
+            return;
+        }
+
+        setIsJoining(true);
+        try {
+            const response = await fetch('http://localhost:3000/api/cotizaciones/join', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ ids: selectedQuoteIds }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Error al unir las cotizaciones');
+            }
+
+            // Recargar las cotizaciones para mostrar la nueva cotización unida
+            await fetchQuotes();
+            // Limpiar selección
+            setSelectedQuoteIds([]);
+            alert('Cotizaciones unidas exitosamente.');
+        } catch (error) {
+            console.error('Error joining quotes:', error);
+            alert(error.message || 'Error al unir las cotizaciones. Por favor verifica que todas las cotizaciones seleccionadas tengan el mismo cliente y la misma matrícula de aeronave.');
+        } finally {
+            setIsJoining(false);
+        }
+    };
+
     return (
         <div className="bg-blue-dark p-8">
             <div className="bg-white rounded-lg shadow-lg p-6">
@@ -92,8 +143,16 @@ export default function HistoricoCotizaciones({ onNavigateNewQuote, onPreviewQuo
                     setSelectedYear={setSelectedYear}
                     selectedCustomer={selectedCustomer}
                     setSelectedCustomer={setSelectedCustomer}
+                    onJoinQuotes={handleJoinQuotes}
+                    selectedQuoteIds={selectedQuoteIds}
+                    isJoining={isJoining}
                 />
-                <HistoricTable quotes={filteredQuotes} onPreviewQuote={onPreviewQuote} />
+                <HistoricTable 
+                    quotes={filteredQuotes} 
+                    onPreviewQuote={onPreviewQuote}
+                    selectedQuoteIds={selectedQuoteIds}
+                    onToggleQuote={handleToggleQuote}
+                />
             </div>
         </div>
     );

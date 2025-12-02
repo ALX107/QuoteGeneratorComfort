@@ -11,4 +11,7 @@ router.get('/cotizacion/:id', cotizacionesController.getCotizacionById);
 // Crear una nueva cotización
 router.post('/cotizaciones', cotizacionesController.createQuote);
 
+// Unir varias cotizaciones en una nueva
+router.post('/cotizaciones/join', cotizacionesController.joinQuotes);
+
 module.exports = router;

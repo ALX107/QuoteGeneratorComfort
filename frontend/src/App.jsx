@@ -55,8 +55,9 @@ export default function App() {
         switch (currentPage) {
             case 'cotizacion':
                 return <CotizacionNueva onNavigateToHistorico={handleNavigateToHistorico} previewingQuote={previewingQuote} onCloneQuote={handleCloneQuote} />;
-            case 'catalogos':
+           /* case 'catalogos':
                 return <Catalogos />;
+            */
             case 'historico':
                 return <HistoricoCotizaciones onNavigateNewQuote={handleNavigateNewQuote} onPreviewQuote={handlePreviewQuote} />;
             default:
@@ -81,7 +82,7 @@ export default function App() {
                                     src={RAFLogoBlanco}
                                     className="h-10 w-auto object-contain"
                                 />
-                                <h1 className="text-xl font-bold text-white">Quote Generator RAF International Ground Support</h1>
+                                <h1 className="text-s font-bold text-slate-200">Welcome Max DEC 02/2025 UTC: 16:56 | LC: 11:20</h1>
                             </div>
                         </div>
                         <div className="flex items-center space-x-8">
@@ -94,6 +95,7 @@ export default function App() {
                             >
                                 Historical
                             </button>
+                            {/*
                             <button
                                 onClick={() => setCurrentPage('catalogos')}
                                 className={`px-3 py-2 rounded-md text-sm font-medium ${currentPage === 'catalogos'
@@ -103,6 +105,7 @@ export default function App() {
                             >
                                 Catalogs
                             </button>
+                            */}
                             <button
                                 onClick={handleNavigateNewQuote}
                                 className={`px-3 py-2 rounded-md text-sm font-medium ${currentPage === 'cotizacion'

@@ -168,6 +168,13 @@ const QuotePDFDocument = ({ formData, items, totals }) => (
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Quote Details</Text>
+        {formData?.totalEnPalabras && formData.totalEnPalabras.startsWith('JOIN OF:') && (
+          <View style={{ marginBottom: 10, padding: 8, backgroundColor: '#FFF3CD', borderLeftWidth: 4, borderLeftColor: '#FFC107' }}>
+            <Text style={{ fontSize: 10, color: '#856404', fontWeight: 'bold' }}>
+              {formData.totalEnPalabras}
+            </Text>
+          </View>
+        )}
         <View style={styles.grid}>
           <InfoField label="Customer" value={formData?.customerName} />
           <InfoField label="Date" value={formData?.date} />

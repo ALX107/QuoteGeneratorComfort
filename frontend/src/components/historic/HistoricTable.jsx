@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-function HistoricTable({ quotes, onPreviewQuote }) {
+function HistoricTable({ quotes, onPreviewQuote, selectedQuoteIds = [], onToggleQuote }) {
     const [sortConfig, setSortConfig] = useState({ key: 'numero_referencia', direction: 'descending' });
 
     const sortedQuotes = React.useMemo(() => {
@@ -47,7 +47,7 @@ function HistoricTable({ quotes, onPreviewQuote }) {
         if (isNaN(date)) return 'Invalid Date';
         // Si es la columna de fecha de creación ('Date'), muestra también la hora.
         if (fieldName === 'fecha_creacion') {
-             return date.toLocaleString(undefined, {
+            return date.toLocaleString(undefined, {
                 year: 'numeric', month: '2-digit', day: '2-digit',
                 hour: '2-digit', minute: '2-digit'
             });
@@ -73,6 +73,22 @@ function HistoricTable({ quotes, onPreviewQuote }) {
         return 'N/A';
     };
 
+    const isJoinedQuote = (quote) => {
+        return quote.total_en_palabras && quote.total_en_palabras.startsWith('JOIN OF:');
+    };
+
+    const getJoinedStations = (quote) => {
+        if (!isJoinedQuote(quote)) {
+            return null;
+        }
+        // El formato es: "JOIN OF: 123/25, 130/25 | STATIONS: MMTO, MMUN, etc"
+        const stationsMatch = quote.total_en_palabras.match(/STATIONS:\s*(.+)/);
+        if (stationsMatch && stationsMatch[1]) {
+            return stationsMatch[1].trim();
+        }
+        return null;
+    };
+
     return (
         <div className="mt-6 bg-white rounded-lg shadow">
             <div className="p-4 border-b border-gray-200">
@@ -82,7 +98,7 @@ function HistoricTable({ quotes, onPreviewQuote }) {
                 <table className="w-full text-sm text-center text-gray-500">
                     <thead className="text-xs text-black font-semibold uppercase bg-gray-100">
                         <tr>
-                            <th className="px-6 py-3" scope="col">J/S</th>
+                            <th className="px-6 py-3" scope="col">J</th>
                             <th className="px-6 py-3 cursor-pointer" scope="col" onClick={() => requestSort('numero_referencia')}>
                                 #Quote
                                 {sortConfig.key === 'numero_referencia' ? (sortConfig.direction === 'ascending' ? ' \u25B4' : ' \u25BE') : null}
@@ -99,7 +115,7 @@ function HistoricTable({ quotes, onPreviewQuote }) {
                                 Station
                                 {sortConfig.key === 'icao_aeropuerto' ? (sortConfig.direction === 'ascending' ? ' \u25B4' : ' \u25BE') : null}
                             </th>
-                             <th className="px-6 py-3 cursor-pointer" scope="col" onClick={() => requestSort('icao_aeronave')}>
+                            <th className="px-6 py-3 cursor-pointer" scope="col" onClick={() => requestSort('icao_aeronave')}>
                                 Aircraft
                                 {sortConfig.key === 'icao_aeronave' ? (sortConfig.direction === 'ascending' ? ' \u25B4' : ' \u25BE') : null}
                             </th>
@@ -123,39 +139,53 @@ function HistoricTable({ quotes, onPreviewQuote }) {
                                 Ex Rate
                                 {sortConfig.key === 'exchange_rate' ? (sortConfig.direction === 'ascending' ? ' \u25B4' : ' \u25BE') : null}
                             </th>
-                            <th className="px-6 py-3" scope="col">Preview</th>
-                            <th className="px-6 py-3" scope="col">Delete</th>
+                            <th className="px-2 py-3" scope="col">View</th>
+                            <th className="px-2 py-3" scope="col">Delete</th>
                         </tr>
                     </thead>
                     <tbody>
                         {sortedQuotes && sortedQuotes.length > 0 ? (
-                            sortedQuotes.map((quote) => (
-                                <tr key={quote.id_cotizacion} className="bg-white border-b hover:bg-gray-50">
-                                    <td className='px-6 py-4'>
-                                        <input type="checkbox" className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
-                                    </td>
-                                    <td className="px-6 py-4">{quote.numero_referencia}</td>
-                                    <td className="px-6 py-4">{formatDate(quote.fecha_creacion, 'fecha_creacion')}</td>
-                                    <td className="px-6 py-4">{quote.nombre_cat_operacion}</td>
-                                    <td className="px-6 py-4">{quote.icao_aeropuerto}</td>
-                                    <td className="px-6 py-4">{quote.icao_aeronave}</td>
-                                    <td className="px-6 py-4">{quote.matricula_aeronave}</td>
-                                    <td className="px-6 py-4">{formatOperationDate(quote)}</td>
-                                    <td className="px-6 py-4">{quote.nombre_cliente}</td>
-                                    <td className="px-6 py-4">{`${parseFloat(quote.total_final || 0).toFixed(2)}`}</td>
-                                    <td className="px-6 py-4">{parseFloat(quote.exchange_rate || 0).toFixed(4)}</td>
-                                    <td className="px-6 py-4">
-                                        <button onClick={() => onPreviewQuote(quote)} className="text-cyan-600 hover:text-cyan-900 cursor-pointer block mx-auto">
-                                            <span className="material-icons">visibility</span>
-                                        </button>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <button className="btn-trashcan block mx-auto">
-                                            <span className="material-icons">delete</span>
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))
+                            sortedQuotes.map((quote) => {
+                                const isJoined = isJoinedQuote(quote);
+                                const joinedStations = getJoinedStations(quote);
+                                const displayStation = isJoined && joinedStations ? joinedStations : quote.icao_aeropuerto;
+
+                                return (
+                                    <tr
+                                        key={quote.id_cotizacion}
+                                        className={`border-b ${isJoined ? 'bg-blue-50 hover:bg-blue-100' : 'bg-white hover:bg-gray-50'}`}
+                                    >
+                                        <td className='px-6 py-4'>
+                                            <input
+                                                type="checkbox"
+                                                className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                                checked={selectedQuoteIds.includes(quote.id_cotizacion)}
+                                                onChange={() => onToggleQuote && onToggleQuote(quote.id_cotizacion)}
+                                            />
+                                        </td>
+                                        <td className="px-6 py-4">{quote.numero_referencia}</td>
+                                        <td className="px-6 py-4">{formatDate(quote.fecha_creacion, 'fecha_creacion')}</td>
+                                        <td className="px-6 py-4">{quote.nombre_cat_operacion}</td>
+                                        <td className="px-6 py-4 font-medium">{displayStation}</td>
+                                        <td className="px-6 py-4">{quote.icao_aeronave}</td>
+                                        <td className="px-6 py-4">{quote.matricula_aeronave}</td>
+                                        <td className="px-6 py-4">{formatOperationDate(quote)}</td>
+                                        <td className="px-6 py-4">{quote.nombre_cliente}</td>
+                                        <td className="px-6 py-4">{`${parseFloat(quote.total_final || 0).toFixed(2)}`}</td>
+                                        <td className="px-6 py-4">{parseFloat(quote.exchange_rate || 0).toFixed(4)}</td>
+                                        <td className="px-6 py-4">
+                                            <button onClick={() => onPreviewQuote(quote)} className="text-cyan-600 hover:text-cyan-900 cursor-pointer block mx-auto">
+                                                <span className="material-icons">visibility</span>
+                                            </button>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <button className="btn-trashcan block mx-auto">
+                                                <span className="material-icons">delete</span>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                );
+                            })
                         ) : (
                             <tr>
                                 <td colSpan="12" className="text-center py-4">No quotes found.</td>

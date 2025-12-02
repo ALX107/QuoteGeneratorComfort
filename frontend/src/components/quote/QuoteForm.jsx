@@ -474,7 +474,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
 
     const handleFboChange = (event) => {
         const selectedFboName = event.target.value;
-        const selectedFbo = allFbos.find(
+        const selectedFbo = filteredFbos.find(
             (f) => f.nombre_fbo === selectedFboName
         );
 

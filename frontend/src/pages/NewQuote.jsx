@@ -6,7 +6,7 @@ import QuoteTable from '../components/quote/QuoteTable';
 import QuoteTotal from '../components/quote/QuoteTotal';
 import AddServiceModal from '../components/modals/AddServiceModal';
 import PDFPreviewModal from '../components/modals/PDFPreviewModal';
-import ConfirmationModal, { ExclamationTriangleIcon, InboxArrowDownIcon} from '../components/modals/ConfirmationModal';
+import ConfirmationModal, { ExclamationTriangleIcon, InboxArrowDownIcon } from '../components/modals/ConfirmationModal';
 import axios from 'axios';
 
 function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
@@ -27,9 +27,10 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
     const [isReadOnly, setIsReadOnly] = useState(!!previewingQuote);
 
     const [onNewQuoteBlocked, setOnNewQuoteBlocked] = useState(true);
-    
+
     const [quoteDataForPreview, setQuoteDataForPreview] = useState(null);
     const [isFormReady, setIsFormReady] = useState(false);
+    const [totalEnPalabras, setTotalEnPalabras] = useState(null);
 
     const quoteId = previewingQuote ? previewingQuote.id_cotizacion : null;
 
@@ -66,24 +67,76 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
             axios.get(`http://localhost:3000/api/cotizacion/${quoteId}`)
                 .then(response => {
                     const quoteData = response.data;
-                    setQuoteDataForPreview(quoteData); // 1. Guarda los datos de la cotización en el estado
-                    setItems(quoteData.servicios.map(servicio => ({
-                        description: servicio.nombre_servicio,
+                    setTotalEnPalabras(quoteData.total_en_palabras || null); // Guarda el campo de unión si existe
 
+                    // Verificar si es una cotización unida
+                    const isJoinedQuote = quoteData.total_en_palabras && quoteData.total_en_palabras.startsWith('JOIN OF:');
+
+                    // Mapear servicios a items
+                    const mappedItems = quoteData.servicios.map(servicio => ({
+                        description: servicio.nombre_servicio,
                         quantity: servicio.cantidad,
                         priceMXN: servicio.costo_mxn,
                         priceUSD: servicio.costo_usd,
                         scPercentage: servicio.sc_porcentaje,
                         vatPercentage: servicio.vat_porcentaje,
-                        anchorCurrency: 'MXN', // Assuming MXN is the default anchor
+                        anchorCurrency: 'MXN',
                         total: servicio.total_usd,
-                    })));
-                    //Usa el tipo de cambio guardado en la cotización
+                    }));
+                    setItems(mappedItems);
                     setExchangeRate(quoteData.exchange_rate);
+
+                    // Si es una cotización unida, abrir directamente el PDF
+                    if (isJoinedQuote) {
+                        // Construir formData desde los datos de la cotización
+                        const formDataForPdf = {
+                            customerName: quoteData.cliente || '',
+                            date: quoteData.fecha_cotizacion ? new Date(quoteData.fecha_cotizacion).toISOString().split('T')[0] : '',
+                            flightTypeName: quoteData.cat_operacion || '',
+                            quotedBy: quoteData.nombre_responsable || '',
+                            aircraftModelName: quoteData.modelo_aeronave || '',
+                            aircraftRegistrationValue: quoteData.matricula_aeronave || '',
+                            stationName: quoteData.aeropuerto || '',
+                            fboName: quoteData.fbo || '',
+                            totalEnPalabras: quoteData.total_en_palabras || null,
+                        };
+
+                        // Calcular totales
+                        const calculatedTotals = mappedItems.reduce((acc, item) => {
+                            const quantity = parseFloat(item.quantity) || 0;
+                            const priceUSD = parseFloat(item.priceUSD) || 0;
+                            const scPercentage = parseFloat(item.scPercentage) || 0;
+                            const vatPercentage = parseFloat(item.vatPercentage) || 0;
+
+                            const cost = quantity * priceUSD;
+                            const sCharge = cost * scPercentage;
+                            const vat = cost * vatPercentage;
+
+                            acc.cost += cost;
+                            acc.sCharge += sCharge;
+                            acc.vat += vat;
+                            acc.total += cost + sCharge + vat;
+                            return acc;
+                        }, { cost: 0, sCharge: 0, vat: 0, total: 0 });
+
+                        // Abrir PDF directamente
+                        const fullPdfData = {
+                            formData: formDataForPdf,
+                            items: mappedItems,
+                            totals: calculatedTotals,
+                        };
+
+                        setPdfData(fullPdfData);
+                        setIsPdfPreviewOpen(true);
+                        setOnNewQuoteBlocked(false);
+                    } else {
+                        // Si no es una unión, comportamiento normal: mostrar formulario
+                        setQuoteDataForPreview(quoteData);
+                        setOnNewQuoteBlocked(false);
+                    }
                 })
-                .then(() => setOnNewQuoteBlocked(false))
                 .catch(error => console.error('Error fetching quote details:', error));
-        // Si es una cotización clonada
+            // Si es una cotización clonada
         } else if (previewingQuote?.isClone) {
             setIsReadOnly(false); // El formulario debe ser editable
             setOnNewQuoteBlocked(true); // Bloqueamos el PDF hasta que se guarde
@@ -93,12 +146,13 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
             setIsFormReady(false); // Reseteamos para forzar la sincronización
 
 
-        //Si es nueva cotización
+            //Si es nueva cotización
         } else {
             // Limpia todo y busca el tipo de cambio
             setIsReadOnly(false); // Asegura que el formulario esté editable para una nueva cotización
             setOnNewQuoteBlocked(true);
             setQuoteDataForPreview(null); // Limpia los datos de preview
+            setTotalEnPalabras(null); // Limpia el campo de unión
             setIsFormReady(false); // Resetea el estado de "listo"
 
             if (quoteFormRef.current) {
@@ -175,28 +229,28 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
             });
             setItems(newItems);
         }
-            
+
     }, [quoteId, defaultConceptos, exchangeRate]);
 
-        useEffect(() => {
+    useEffect(() => {
         const newTotals = items.reduce((acc, item) => {
             // Aseguramos que todos los valores sean numéricos, con 0 como fallback.
             const quantity = parseFloat(item.quantity) || 0;
             const priceUSD = parseFloat(item.priceUSD) || 0;
             const scPercentage = parseFloat(item.scPercentage) || 0;
             const vatPercentage = parseFloat(item.vatPercentage) || 0;
-            
+
             const cost = quantity * priceUSD;
             const sCharge = cost * scPercentage;
             const vat = cost * vatPercentage;
-            
+
             acc.cost += cost;
             acc.sCharge += sCharge;
             acc.vat += vat;
             acc.total += cost + sCharge + vat; // Recalculamos el total aquí para mayor seguridad
             return acc;
         }, { cost: 0, sCharge: 0, vat: 0, total: 0 });
-    
+
         setTotals(newTotals);
     }, [items]);
 
@@ -300,7 +354,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
 
         const newItems = [...items];
         const item = newItems[index];
-        
+
 
         item[field] = value;
 
@@ -356,7 +410,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
     };
 
 
-     const confirmAndSaveQuote = async () => {
+    const confirmAndSaveQuote = async () => {
         if (quoteFormRef.current) {
             // Map frontend 'items' to backend 'servicios' structure
 
@@ -366,7 +420,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                 const cost = (item.quantity || 0) * (item.priceUSD || 0);
                 const s_cargo = cost * (item.scPercentage || 0);
                 const vat = cost * (item.vatPercentage || 0);
-                
+
 
                 return {
                     nombre_servicio: item.description,
@@ -382,66 +436,66 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
             });
 
             const quoteData = {
-                        
-                        date: rawData.date,
-                        exchangeRate: rawData.exchangeRate,
-                        quotedBy: rawData.quotedBy,
-                        isCaaMember: rawData.isCaaMember,
-                        attn: rawData.attn,
-                        eta: rawData.eta,
-                        etd: rawData.etd,
-                        crewFrom: rawData.crewFrom,
-                        paxFrom: rawData.paxFrom,
-                        crewTo: rawData.crewTo,
-                        paxTo: rawData.paxTo,
-                        mtow: rawData.mtow, 
-                        mtow_unit: rawData.mtow_unit,        
-                                    
-                        // Cliente
-                        customer: { 
-                            id: rawData.customer,       // ID o null
-                            label: rawData.customerName // Nombre real o texto manual
-                        },
 
-                        // Aeronave / Matrícula
-                        aircraftModel: { 
-                            id: rawData.aircraftModel, // ID de la matrícula (id_cliente_aeronave)
-                            label: rawData.aircraftRegistrationValue, // Texto de la matrícula (ej. "XA-ABC")
-                            modelo: rawData.aircraftModelName // AÑADIDO: El texto del modelo (ej. "G650")
-                        },
+                date: rawData.date,
+                exchangeRate: rawData.exchangeRate,
+                quotedBy: rawData.quotedBy,
+                isCaaMember: rawData.isCaaMember,
+                attn: rawData.attn,
+                eta: rawData.eta,
+                etd: rawData.etd,
+                crewFrom: rawData.crewFrom,
+                paxFrom: rawData.paxFrom,
+                crewTo: rawData.crewTo,
+                paxTo: rawData.paxTo,
+                mtow: rawData.mtow,
+                mtow_unit: rawData.mtow_unit,
 
-                        // Tipo de Vuelo
-                        flightType: { 
-                            id: rawData.flightType, 
-                            label: rawData.flightTypeName 
-                        },
+                // Cliente
+                customer: {
+                    id: rawData.customer,       // ID o null
+                    label: rawData.customerName // Nombre real o texto manual
+                },
 
-                        // Estación
-                        station: {
-                            id: rawData.station,
-                            label: rawData.stationName
-                        },
+                // Aeronave / Matrícula
+                aircraftModel: {
+                    id: rawData.aircraftModel, // ID de la matrícula (id_cliente_aeronave)
+                    label: rawData.aircraftRegistrationValue, // Texto de la matrícula (ej. "XA-ABC")
+                    modelo: rawData.aircraftModelName // AÑADIDO: El texto del modelo (ej. "G650")
+                },
 
-                        // FBO (Opcional)
-                        fbo: rawData.fbo || rawData.fboName
-                            ? { id: rawData.fbo, label: rawData.fboName }
-                            : null,
+                // Tipo de Vuelo
+                flightType: {
+                    id: rawData.flightType,
+                    label: rawData.flightTypeName
+                },
 
-                        // Origen (Opcional)
-                        from: rawData.from || rawData.fromName // Si hay ID o Texto
-                            ? { id: rawData.from, label: rawData.fromName }
-                            : null,
+                // Estación
+                station: {
+                    id: rawData.station,
+                    label: rawData.stationName
+                },
 
-                        // Destino (Opcional)
-                        to: rawData.to || rawData.toName
-                            ? { id: rawData.to, label: rawData.toName }
-                            : null,
+                // FBO (Opcional)
+                fbo: rawData.fbo || rawData.fboName
+                    ? { id: rawData.fbo, label: rawData.fboName }
+                    : null,
 
-                        // --- SERVICIOS ---
-                        servicios: servicios
-                    };
+                // Origen (Opcional)
+                from: rawData.from || rawData.fromName // Si hay ID o Texto
+                    ? { id: rawData.from, label: rawData.fromName }
+                    : null,
 
-                    console.log("Payload enviado al Backend:", quoteData); 
+                // Destino (Opcional)
+                to: rawData.to || rawData.toName
+                    ? { id: rawData.to, label: rawData.toName }
+                    : null,
+
+                // --- SERVICIOS ---
+                servicios: servicios
+            };
+
+            console.log("Payload enviado al Backend:", quoteData);
             try {
                 const response = await axios.post('http://localhost:3000/api/cotizaciones', quoteData);
                 console.log('Quote saved successfully:', response.data);
@@ -463,7 +517,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
     const handleSaveAsNew = () => {
         if (quoteFormRef.current) {
             quoteFormRef.current.clearQuoteNumberOnly();
-            
+
             // Obtener el usuario logueado actual para reemplazar quotedBy
             const token = localStorage.getItem('token');
             let loggedInUser = '';
@@ -475,12 +529,12 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                     console.error("Error decoding token:", error);
                 }
             }
-            
+
             // Asegurarse de que QuoteForm tenga el usuario actual antes de pasar los datos
             quoteFormRef.current.setQuotedByValue(loggedInUser);
-            
+
             const currentFormData = quoteFormRef.current.getAllFormData();
-            
+
             onCloneQuote({
                 ...currentFormData,
                 quotedBy: loggedInUser, // Sobrescribe con el usuario logueado actual
@@ -497,7 +551,10 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
         if (quoteFormRef.current) {
             const formData = quoteFormRef.current.getFormData();
             const fullPdfData = {
-                formData: formData,
+                formData: {
+                    ...formData,
+                    totalEnPalabras: totalEnPalabras, // Incluir el campo de unión si existe
+                },
                 items: items,
                 totals: totals,
 
@@ -525,11 +582,11 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
         <div className="bg-blue-dark p-8">
             <div className="bg-gray-50 min-h-screen rounded-lg shadow-lg p-6">
                 <QuoteHeader onClearQuote={handleClearQuote}
-                             onSaveQuote={handleSaveQuote} 
-                             onExportToPdf={handlePreviewPdf}
-                             isReadOnly={isReadOnly}   
-                             onNewQuoteBlocked={onNewQuoteBlocked}
-                             onSaveAsNew={handleSaveAsNew}                         
+                    onSaveQuote={handleSaveQuote}
+                    onExportToPdf={handlePreviewPdf}
+                    isReadOnly={isReadOnly}
+                    onNewQuoteBlocked={onNewQuoteBlocked}
+                    onSaveAsNew={handleSaveAsNew}
                 />
                 <main className="max-w-7xl mx-auto mt-4 ">
                     <QuoteForm
@@ -542,10 +599,10 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                         isReadOnly={isReadOnly}
                         onDataLoaded={() => setIsFormReady(true)}
                     />
-                    <QuoteTable items={items} 
-                                onRemoveItem={handleRemoveItem} 
-                                onUpdateItem={handleUpdateItem}
-                                isReadOnly={isReadOnly} 
+                    <QuoteTable items={items}
+                        onRemoveItem={handleRemoveItem}
+                        onUpdateItem={handleUpdateItem}
+                        isReadOnly={isReadOnly}
                     />
                     <QuoteTotal totals={totals} />
                 </main>
@@ -556,26 +613,26 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                     initialSelectedServices={initialSelectedServices}
                     allServices={allServices.map(s => ({ ...s, id: s.id_precio_concepto || s.id_concepto_std, name: s.nombre_local_concepto, description: s.nombre_cat_concepto }))}
                 />
-                 <ConfirmationModal
+                <ConfirmationModal
                     isOpen={isClearQuoteModalOpen}
                     onClose={() => setIsClearQuoteModalOpen(false)}
                     onConfirm={handleClerQuote}
                     title="Clear Quote"
-                    icon={ExclamationTriangleIcon} 
+                    icon={ExclamationTriangleIcon}
                     iconBgColorClass="bg-red-100"
-                    iconColorClass="text-red-600"  
+                    iconColorClass="text-red-600"
                 >
                     <p className="text-base text-gray-700"> ¿Are you sure you want to clear this quote?</p>
                 </ConfirmationModal>
 
-                 <ConfirmationModal
+                <ConfirmationModal
                     isOpen={isSaveQuoteModalOpen}
                     onClose={() => setIsSaveQuoteModalOpen(false)}
                     onConfirm={confirmAndSaveQuote}
                     title="Save Quote"
-                    icon={InboxArrowDownIcon} 
+                    icon={InboxArrowDownIcon}
                     iconBgColorClass="bg-blue-100"
-                    iconColorClass="text-blue-600" 
+                    iconColorClass="text-blue-600"
                 >
                     <p className="text-base text-gray-700">Do you want to save this quote?</p>
                 </ConfirmationModal>
@@ -584,8 +641,11 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                     isOpen={isPdfPreviewOpen}
                     onClose={() => {
                         setIsPdfPreviewOpen(false);
-                        // Si estamos en modo preview (quoteId existe), los botones deben volver a habilitarse.
-                        if (quoteId) {
+                        // Si es una cotización unida, regresar al histórico
+                        if (totalEnPalabras && totalEnPalabras.startsWith('JOIN OF:')) {
+                            onNavigateToHistorico();
+                        } else if (quoteId) {
+                            // Si estamos en modo preview normal, los botones deben volver a habilitarse.
                             setOnNewQuoteBlocked(false);
                         }
                     }}
