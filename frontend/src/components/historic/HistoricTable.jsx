@@ -112,7 +112,7 @@ function HistoricTable({
                                 {sortConfig.key === 'fecha_creacion' ? (sortConfig.direction === 'ascending' ? ' \u25B4' : ' \u25BE') : null}
                             </th>
                             <th className="px-6 py-3 cursor-pointer" scope="col" onClick={() => requestSort('nombre_cat_operacion')}>
-                                Type of Quote
+                                Category
                                 {sortConfig.key === 'nombre_cat_operacion' ? (sortConfig.direction === 'ascending' ? ' \u25B4' : ' \u25BE') : null}
                             </th>
                             <th className="px-6 py-3 cursor-pointer" scope="col" onClick={() => requestSort('icao_aeropuerto')}>
@@ -162,7 +162,7 @@ function HistoricTable({
                                         <td className='px-6 py-4'>
                                             <input
                                                 type="checkbox"
-                                                className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                                className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
                                                 checked={selectedQuoteIds.includes(quote.id_cotizacion)}
                                                 onChange={() => onToggleQuote && onToggleQuote(quote.id_cotizacion)}
                                             />

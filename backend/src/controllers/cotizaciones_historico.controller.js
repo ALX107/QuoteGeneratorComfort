@@ -227,10 +227,9 @@ const createQuote = async (req, res) => {
   }
 };
 
-const getCotizacionesHistorico = async (req, res) => {
+const getCotizacionesByStatus = async (status, res) => {
   try {
-    // Esta consulta une el histórico con otras 4 tablas para obtener datos legibles.
-    const query = `
+    const queryText = `
     SELECT
       ch.id_cotizacion,
       ch.numero_referencia,
@@ -245,24 +244,26 @@ const getCotizacionesHistorico = async (req, res) => {
       ch.cat_operacion AS nombre_cat_operacion,
       ch.aeropuerto AS icao_aeropuerto,
       ch.matricula_aeronave,
+      ch.total_en_palabras,
       COALESCE(am.icao_aeronave, ch.modelo_aeronave) AS icao_aeronave
     FROM
       "cotizaciones_historico" AS ch
     LEFT JOIN 
       "aeronaves_modelos" AS am ON ch.id_modelo_aeronave = am.id_modelo_aeronave
     WHERE
-      ch.estatus = 'ACTIVA'
+      ch.estatus = $1
     ORDER BY
       ch.id_cotizacion DESC
     `;
-
-    const result = await pool.query(query);
+    const result = await pool.query(queryText, [status]);
     res.json(result.rows);
   } catch (err) {
-    console.error('Error al obtener el histórico de cotizaciones:', err);
-    res.status(500).json({ error: 'Error interno del servidor al obtener cotizaciones.' });
+    console.error(`Error al obtener cotizaciones con estado ${status}:`, err);
+    res.status(500).json({ error: `Error interno del servidor al obtener cotizaciones con estado ${status}.` });
   }
 };
+
+const getCotizacionesHistorico = (req, res) => getCotizacionesByStatus('ACTIVA', res);
 
 const getCotizacionById = async (req, res) => {
   const { id } = req.params;
@@ -314,39 +315,7 @@ const deleteQuote = async (req, res) => {
   }
 };
 
-const getCotizacionesEliminadas = async (req, res) => {
-  try {
-    const query = `
-    SELECT
-      ch.id_cotizacion,
-      ch.numero_referencia,
-      ch.fecha_modificacion AS fecha_creacion,
-      ch.fecha_llegada,
-      ch.estatus,
-      ch.fecha_salida,
-      ch.total_final,
-      ch.exchange_rate,
-      ch.cliente AS nombre_cliente,
-      ch.cat_operacion AS nombre_cat_operacion,
-      ch.aeropuerto AS icao_aeropuerto,
-      ch.matricula_aeronave,
-      COALESCE(am.icao_aeronave, ch.modelo_aeronave) AS icao_aeronave
-    FROM
-      "cotizaciones_historico" AS ch
-    LEFT JOIN 
-      "aeronaves_modelos" AS am ON ch.id_modelo_aeronave = am.id_modelo_aeronave
-    WHERE
-      ch.estatus = 'INACTIVA'
-    ORDER BY
-      ch.id_cotizacion DESC
-    `;
-    const result = await pool.query(query);
-    res.json(result.rows);
-  } catch (err) {
-    console.error('Error al obtener las cotizaciones eliminadas:', err);
-    res.status(500).json({ error: 'Error interno del servidor al obtener cotizaciones eliminadas.' });
-  }
-};
+const getCotizacionesEliminadas = (req, res) => getCotizacionesByStatus('INACTIVA', res);
 
 /**
  * Une varias cotizaciones existentes en una nueva cotización agregada.
@@ -701,4 +670,7 @@ module.exports = {
   createQuote,
   getCotizacionesHistorico,
   getCotizacionById,
+  joinQuotes,
+  deleteQuote, 
+  getCotizacionesEliminadas 
 };

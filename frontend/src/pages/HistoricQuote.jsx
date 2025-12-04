@@ -18,7 +18,6 @@ export default function HistoricoCotizaciones({ onNavigateNewQuote, onPreviewQuo
     const [quoteToDelete, setQuoteToDelete] = useState(null);
 
     const fetchQuotes = () => {
-    const fetchQuotes = () => {
         fetch('http://localhost:3000/api/listar/cotizaciones')
             .then(response => response.json())
             .then(data => setQuotes(data))
