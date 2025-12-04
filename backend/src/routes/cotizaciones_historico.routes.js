@@ -14,4 +14,11 @@ router.post('/cotizaciones', cotizacionesController.createQuote);
 // Unir varias cotizaciones en una nueva
 router.post('/cotizaciones/join', cotizacionesController.joinQuotes);
 
+//Eliminar una cotización (marcar como inactiva)
+router.put('/eliminar/cotizacion/:id', cotizacionesController.deleteQuote);
+
+// Ruta para listar todas las cotizaciones eliminadas
+router.get('/listar/cotizaciones-eliminadas', cotizacionesController.getCotizacionesEliminadas);
+
+
 module.exports = router;

@@ -168,7 +168,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
             const aircraft = clientesAeronaves.find(a => a.id_cliente_aeronave === quote.id_cliente_aeronave);
                 if (aircraft) {
                     const model = allaeronavesModelos.find(m => m.id_modelo_aeronave === aircraft.id_modelo_aeronave);
-                    setModelValue(model ? model.nombre_aeronave : '');
+                    setModelValue(model ? model.icao_aeronave : '');
                     setRegistrationValue(aircraft.matricula_aeronave || (quote.matricula_aeronave || ''));
                     // FIX: Priorizar el MTOW guardado en la cotización (snapshot).
                     // Si no existe, usar el del catálogo como fallback.
@@ -220,7 +220,9 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
             // Esto asegura que siempre encontremos el ID si la matrícula existe, previniendo el envío de `null`.
             const selectedRegistration = clientesAeronaves.find(reg => reg.matricula_aeronave === registrationValue);
 
-            const selectedAircraftModel = filteredAeronavesModelos.find(model => model.nombre_aeronave === modelValue);
+            // FIX: Buscar en la lista completa de modelos para asegurar que encontramos el ID
+            // incluso si el cliente es nuevo y la lista filtrada está mostrando todos los modelos.
+            const selectedAircraftModel = allaeronavesModelos.find(model => model.icao_aeronave === modelValue);
             const fromAirport = aeropuertos.find(a => a.icao_aeropuerto === fromStation);
             const toAirport = aeropuertos.find(a => a.icao_aeropuerto === toStation);
             const stationAirport = aeropuertos.find(a => a.id_aeropuerto === selectedAirportId);
@@ -259,11 +261,12 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
             // ESTO ES LO QUE TE FALTABA PARA EVITAR "label: undefined"
             customerValue: customerValue,       
             registrationValue: registrationValue,
+            aircraftModelId: selectedAircraftModel ? selectedAircraftModel.id_modelo_aeronave : null, // ID del modelo
 
             // New fields for PDF
             customerName: selectedCustomer ? selectedCustomer.nombre_cliente : customerValue,
             flightTypeName: flightType,
-            aircraftModelName: modelValue,
+            aircraftModelName: selectedAircraftModel ? selectedAircraftModel.icao_aeronave : modelValue,
             aircraftRegistrationValue: registrationValue, // The string value
             stationName: stationAirport ? stationAirport.icao_aeropuerto : selectStation,
             fromName: fromAirport ? fromAirport.nombre_aeropuerto : fromStation,
@@ -555,11 +558,12 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
 
         //(Flow 1: Cliente -> Modelo -> Matrícula) Se dispara al seleccionar un modelo. Filtra la lista de matrículas.
         const handleModelChange = (event) => {
-            const selectedModelName = event.target.value;
-            setModelValue(selectedModelName);
+            
+            const selectedIcaoModel = event.target.value;
+            setModelValue(selectedIcaoModel);
 
             // Verificamos si la matrícula que está escrita actualmente existe en la base de datos
-            const isKnownRegistration = clientesAeronaves.some(
+            const isKnownRegistration = filteredRegistrations.some(
                 reg => reg.matricula_aeronave === registrationValue
             );
 
@@ -570,7 +574,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
             setMtowValue(''); // Reset MTOW on model change
         
             const selectedModel = filteredAeronavesModelos.find(
-                (model) => model.nombre_aeronave === selectedModelName
+                (model) => model.icao_aeronave === selectedIcaoModel
             );
         
             if (selectedModel) {
@@ -591,7 +595,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                         setFilteredRegistrations(modelRegistrations);
                     }
     
-                } else if (!selectedModelName) {
+                } else if (!selectedIcaoModel) {
                     // Si el usuario borra el campo modelo, reseteamos la lista de matrículas
 
                     if (selectedCustomer) {
@@ -663,7 +667,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
 
                         if (model) {
                             // Autocompletar Modelo y MTOW
-                            setModelValue(model.nombre_aeronave);
+                            setModelValue(model.icao_aeronave);
                             
                             if (model.mtow_aeronave) {
                                 setMtowValue(model.mtow_aeronave);
@@ -895,7 +899,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                  <datalist id="aircraft-model-list">
                                     {/* Mapear los modelos filtrados por CLIENTE */}
                                     {filteredAeronavesModelos.map((model) => (
-                                        <option key={model.id_modelo_aeronave} value={model.nombre_aeronave} />
+                                        <option key={model.id_modelo_aeronave} value={model.icao_aeronave} />
                                      ))}
                                 </datalist>
                                 
@@ -924,7 +928,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                 <div className="flex">
                                     <button
                                         type="button"
-                                        className={`px-3 py-2 border-t border-b border-gray-300 text-sm ${unit === "KG" ? "bg-sky-600 text-white" : "bg-white text-dark-gray disabled:cursor-not-allowed"}`}
+                                        className={`px-3 py-2 border-t border-b border-gray-300 text-sm ${unit === "KG" ? "bg-sky-600 text-white" : "bg-white text-dark-gray disabled:cursor-not-allowed cursor-pointer"}`}
                                         onClick={convertToKG}
                                         disabled={isReadOnly}
                                     >
@@ -932,7 +936,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                     </button>
                                     <button
                                         type="button"
-                                        className={`px-3 py-2 border border-gray-300 text-sm rounded-r-md ${unit === "LB" ? "bg-sky-600 text-white" : "bg-white text-dark-gray disabled:cursor-not-allowed"}`}
+                                        className={`px-3 py-2 border border-gray-300 text-sm rounded-r-md ${unit === "LB" ? "bg-sky-600 text-white" : "bg-white text-dark-gray disabled:cursor-not-allowed cursor-pointer"}`}
                                         onClick={convertToLB}
                                         disabled={isReadOnly}
                                     >

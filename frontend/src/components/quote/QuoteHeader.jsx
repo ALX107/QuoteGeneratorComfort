@@ -12,7 +12,7 @@ function QuoteHeader({ onClearQuote, onSaveQuote, onSaveAsNew, onExportToPdf, is
                     Save Quote
                 </button>
                 <button className="btn-glass disabled:opacity-60 disabled:cursor-not-allowed"
-                        disabled={!isReadOnly} // Solo activo en modo lectura (preview)
+                        disabled={onNewQuoteBlocked} // Solo activo en modo lectura (preview)
                         onClick={onSaveAsNew}>
                     Save as New
                 </button>

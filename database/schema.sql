@@ -153,6 +153,7 @@ CREATE TABLE cotizaciones_historico (
     cliente VARCHAR(255) NOT NULL,
     cat_operacion VARCHAR(100) NOT NULL,
     matricula_aeronave VARCHAR(100) NOT NULL,
+    id_modelo_aeronave BIGINT,
     modelo_aeronave VARCHAR(100), 
     mtow DECIMAL(10, 2), 
     mtow_unit VARCHAR(5),                   
@@ -171,6 +172,7 @@ CREATE TABLE cotizaciones_historico (
     fecha_modificacion TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     usuario_modificacion VARCHAR(255), -- Quién hizo el cambio
     tipo_accion VARCHAR(50) NOT NULL, -- 'CREADA', 'ACTUALIZADA', 'REVERTIDA', etc.
+    estatus VARCHAR(10) NOT NULL DEFAULT 'ACTIVA', -- 'ACTIVA', 'CANCELADA', etc.
     version INT NOT NULL, -- Un número de versión que se incrementa
     
     -- No se necesita una FK directa a cotizaciones para permitir que el historial persista

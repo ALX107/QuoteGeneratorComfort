@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import HistoricHeader from '../components/historic/HistoricHeader';
 import HistoricTable from '../components/historic/HistoricTable';
+import ConfirmationModal, { ExclamationTriangleIcon } from '../components/modals/ConfirmationModal';
 
-export default function HistoricoCotizaciones({ onNavigateNewQuote, onPreviewQuote }) {
+export default function HistoricoCotizaciones({ onNavigateNewQuote, onPreviewQuote, onNavigateToDeleted }) {
     const [quotes, setQuotes] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedAirport, setSelectedAirport] = useState('');
@@ -13,6 +14,10 @@ export default function HistoricoCotizaciones({ onNavigateNewQuote, onPreviewQuo
     const [selectedQuoteIds, setSelectedQuoteIds] = useState([]);
     const [isJoining, setIsJoining] = useState(false);
 
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [quoteToDelete, setQuoteToDelete] = useState(null);
+
+    const fetchQuotes = () => {
     const fetchQuotes = () => {
         fetch('http://localhost:3000/api/listar/cotizaciones')
             .then(response => response.json())
@@ -34,7 +39,38 @@ export default function HistoricoCotizaciones({ onNavigateNewQuote, onPreviewQuo
     const years = [...new Set(quotes.map(quote => new Date(quote.fecha_creacion).getFullYear()))].filter(Boolean).sort((a, b) => b - a);
     const customers = [...new Set(quotes.map(quote => quote.nombre_cliente))].filter(Boolean).sort();
     const models = [...new Set(quotes.map(quote => quote.icao_aeronave))].filter(Boolean).sort();
-    
+
+    // Esta función ahora solo abre el modal de confirmación
+    const handleDeleteQuote = (id) => {
+        const quoteFound = quotes.find(q => q.id_cotizacion === id);
+        setQuoteToDelete(quoteFound); // Guardamos el objeto completo de la cotización
+        setIsDeleteModalOpen(true);
+    };
+
+    // Esta nueva función contiene la lógica para eliminar, se ejecuta al confirmar en el modal
+    const confirmDeleteQuote = async () => {
+        if (!quoteToDelete) return;
+        
+        const idToDelete = quoteToDelete.id_cotizacion; // Obtenemos el ID del objeto guardado
+
+        try {
+            const response = await fetch(`http://localhost:3000/api/eliminar/cotizacion/${idToDelete}`, {
+                method: 'PUT',
+            });
+
+            if (response.ok) {
+                fetchQuotes();
+            } else {
+                console.error('Failed to delete quote:', await response.text());
+            }
+        } catch (error) {
+            console.error('Error deleting quote:', error);
+        } finally {
+            setIsDeleteModalOpen(false);
+            setQuoteToDelete(null);
+        }
+    };
+
     const filteredQuotes = quotes.filter(quote => {
         const searchTermLower = searchTerm.toLowerCase();
         // FIX: Usar 'fecha_creacion' para filtrar por año.
@@ -126,6 +162,7 @@ export default function HistoricoCotizaciones({ onNavigateNewQuote, onPreviewQuo
             <div className="bg-white rounded-lg shadow-lg p-6">
                 <HistoricHeader
                     onNavigateNewQuote={onNavigateNewQuote}
+                    onNavigateToDeleted={onNavigateToDeleted} // Pasamos la nueva función de navegación
                     searchTerm={searchTerm}
                     handleSearch={handleSearch}
                     airports={airports}
@@ -149,11 +186,31 @@ export default function HistoricoCotizaciones({ onNavigateNewQuote, onPreviewQuo
                 />
                 <HistoricTable 
                     quotes={filteredQuotes} 
-                    onPreviewQuote={onPreviewQuote}
+                    onPreviewQuote={onPreviewQuote} onDeleteQuote={handleDeleteQuote}
                     selectedQuoteIds={selectedQuoteIds}
                     onToggleQuote={handleToggleQuote}
                 />
+                
+                <ConfirmationModal
+                    isOpen={isDeleteModalOpen}
+                    onClose={() => setIsDeleteModalOpen(false)}
+                    onConfirm={confirmDeleteQuote}
+                    title="Delete Quote"
+                    icon={ExclamationTriangleIcon}
+                    iconBgColorClass="bg-red-100"
+                    iconColorClass="text-red-600"
+                >
+                    <div className="mt-2">
+                        <p className="text-lg text-gray-500">
+                            Are you sure you want to delete quote
+                            <span className="font-bold text-gray-900"> {quoteToDelete?.numero_referencia || 'selected'}</span>?
+                        </p>
+                        <p className="text-base text-gray-500 mt-1 text-center">
+                            This action cannot be undone.
+                        </p>
+                    </div>
+                </ConfirmationModal>
             </div>
         </div>
     );
-}
+} 

@@ -24,6 +24,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
     const [allServices, setAllServices] = useState([]);
     const [defaultConceptos, setDefaultConceptos] = useState([]);
 
+    // isReadOnly será true si se está previsualizando CUALQUIER cotización existente.
     const [isReadOnly, setIsReadOnly] = useState(!!previewingQuote);
 
     const [onNewQuoteBlocked, setOnNewQuoteBlocked] = useState(true);
@@ -63,7 +64,11 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
     useEffect(() => {
         //Si es una cotización existente, cargar sus datos (Previewing Quote)
         if (quoteId) {
-            setIsReadOnly(true); // Bloquea el formulario al previsualizar
+            // Para CUALQUIER cotización existente, el formulario es de solo lectura.
+            setIsReadOnly(true);
+            // Los botones de Exportar/Clonar se habilitan para activas, se deshabilitan para inactivas.
+            setOnNewQuoteBlocked(previewingQuote?.estatus === 'INACTIVA');
+
             axios.get(`http://localhost:3000/api/cotizacion/${quoteId}`)
                 .then(response => {
                     const quoteData = response.data;
@@ -457,12 +462,13 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                     label: rawData.customerName // Nombre real o texto manual
                 },
 
-                // Aeronave / Matrícula
-                aircraftModel: {
-                    id: rawData.aircraftModel, // ID de la matrícula (id_cliente_aeronave)
-                    label: rawData.aircraftRegistrationValue, // Texto de la matrícula (ej. "XA-ABC")
-                    modelo: rawData.aircraftModelName // AÑADIDO: El texto del modelo (ej. "G650")
-                },
+                        // Aeronave / Matrícula
+                        aircraftModel: { 
+                            id: rawData.aircraftModel, // ID de la matrícula (id_cliente_aeronave)
+                            label: rawData.aircraftRegistrationValue, // Texto de la matrícula (ej. "XA-ABC")
+                            id_modelo_aeronave: rawData.aircraftModelId, // ID del modelo de aeronave (id_modelo_aeronave)
+                            modelo: rawData.aircraftModelName // AÑADIDO: El texto del modelo (ej. "G650")
+                        },
 
                 // Tipo de Vuelo
                 flightType: {

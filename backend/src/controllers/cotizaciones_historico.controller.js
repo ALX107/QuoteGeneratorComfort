@@ -73,8 +73,9 @@ const createQuote = async (req, res) => {
 
     const datosAeropuertoDestino = procesarCampo(to, false);
 
-    const modeloSnapshot = aircraftModel?.modelo || req.body.aircraftModelName || null;
-
+    const idModeloAeronaveSnapshot = aircraftModel?.id_modelo_aeronave || null;
+    const modeloSnapshot = aircraftModel?.modelo || null;
+ 
     const mtowSnapshot = mtow || null;
 
     const mtowUnitSnapshot = mtow_unit || null;
@@ -86,37 +87,40 @@ const createQuote = async (req, res) => {
         nombre_solicitante, es_miembro_caa, exchange_rate,
         fecha_llegada, tripulacion_llegada, pasajeros_llegada,
         fecha_salida, tripulacion_salida, pasajeros_salida,
-        tipo_accion, version,
+        tipo_accion, estatus, version,
 
         -- Campos de relación y snapshot
         id_cliente, cliente, 
         id_cat_operacion, cat_operacion,
-        id_cliente_aeronave, matricula_aeronave, 
+        id_cliente_aeronave, id_modelo_aeronave, matricula_aeronave, 
         modelo_aeronave, mtow, mtow_unit,
         id_aeropuerto, aeropuerto,
         id_fbo, fbo,
         aeropuerto_origen_id, aeropuerto_origen,
         aeropuerto_destino_id, aeropuerto_destino
       ) 
-      VALUES (nextval('cotizacion_id_seq'), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31)
+      VALUES (nextval('cotizacion_id_seq'), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33)
       RETURNING id_historico, id_cotizacion, numero_referencia;
     `;
 
     // El número de referencia ahora es temporal. Se asignará el secuencial al final.
     const tempRef = `PENDIENTE-${Date.now()}`;
     const tipo_accion = 'CREADA';
+    const estatus = 'ACTIVA';
     const version = 1;
 
     const cotizacionValues = [
       tempRef, date, quotedBy, attn, isCaaMember, exchangeRate,
       eta, crewFrom, paxFrom,
       etd, crewTo, paxTo,
-      tipo_accion, version,
+      tipo_accion, estatus, version,
       // Asignando ID y Snapshot para cada campo. El orden debe coincidir con la consulta INSERT.
 
-      datosCliente.id, datosCliente.texto,     // $15, $16
-      datosOperacion.id, datosOperacion.texto,   // $17, $18
-      datosAeronave.id, datosAeronave.texto,    // Matrícula (ID y Texto)
+      datosCliente.id,     datosCliente.texto,     // $15, $16
+      datosOperacion.id,   datosOperacion.texto,   // $17, $18
+      datosAeronave.id,                           // id_cliente_aeronave (si existe)
+      idModeloAeronaveSnapshot,                   // id_modelo_aeronave (si se seleccionó un modelo)
+      datosAeronave.texto,                        // Matrícula (Texto)
       modeloSnapshot,                             // Modelo (Texto)
       mtowSnapshot,                               // MTOW
       mtowUnitSnapshot,                           // MTOW Unit
@@ -232,6 +236,7 @@ const getCotizacionesHistorico = async (req, res) => {
       ch.numero_referencia,
       ch.fecha_modificacion AS fecha_creacion,
       ch.fecha_llegada,
+      ch.estatus,
       ch.fecha_salida,
       ch.total_final,
       ch.exchange_rate,
@@ -240,15 +245,13 @@ const getCotizacionesHistorico = async (req, res) => {
       ch.cat_operacion AS nombre_cat_operacion,
       ch.aeropuerto AS icao_aeropuerto,
       ch.matricula_aeronave,
-      ch.total_en_palabras,
-      -- FIX: Usar COALESCE para mostrar el ICAO si existe, o el texto manual si no.
-      -- Si am.icao_aeronave es NULL (porque el JOIN falló o el campo es nulo),
-      -- se mostrará el valor de ch.modelo_aeronave (el snapshot).
       COALESCE(am.icao_aeronave, ch.modelo_aeronave) AS icao_aeronave
     FROM
       "cotizaciones_historico" AS ch
-    LEFT JOIN "clientes_aeronaves" AS ca ON ch.id_cliente_aeronave = ca.id_cliente_aeronave
-    LEFT JOIN "aeronaves_modelos" AS am ON ca.id_modelo_aeronave = am.id_modelo_aeronave
+    LEFT JOIN 
+      "aeronaves_modelos" AS am ON ch.id_modelo_aeronave = am.id_modelo_aeronave
+    WHERE
+      ch.estatus = 'ACTIVA'
     ORDER BY
       ch.id_cotizacion DESC
     `;
@@ -281,6 +284,67 @@ const getCotizacionById = async (req, res) => {
   } catch (err) {
     console.error('Error fetching quote by id:', err);
     res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+const deleteQuote = async (req, res) => {
+  // 1. Obtener un cliente del pool de conexiones
+  const client = await pool.connect();
+  const { id } = req.params;
+
+  try {
+    const updateQuery = `
+      UPDATE "cotizaciones_historico"
+      SET estatus = 'INACTIVA'
+      WHERE id_cotizacion = $1;
+    `;
+    const result = await client.query(updateQuery, [id]);
+
+    // 3. Verificar si se afectó alguna fila
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Cotización no encontrada' });
+    }
+    res.json({ message: 'Cotización marcada como INACTIVA exitosamente.' });
+  } catch (err) {
+    console.error('Error al eliminar la cotización:', err);
+    res.status(500).json({ error: 'Error interno del servidor al eliminar la cotización.' });
+  } finally {
+    // 5. Liberar el cliente en cualquier caso (éxito o error)
+    client.release();
+  }
+};
+
+const getCotizacionesEliminadas = async (req, res) => {
+  try {
+    const query = `
+    SELECT
+      ch.id_cotizacion,
+      ch.numero_referencia,
+      ch.fecha_modificacion AS fecha_creacion,
+      ch.fecha_llegada,
+      ch.estatus,
+      ch.fecha_salida,
+      ch.total_final,
+      ch.exchange_rate,
+      ch.cliente AS nombre_cliente,
+      ch.cat_operacion AS nombre_cat_operacion,
+      ch.aeropuerto AS icao_aeropuerto,
+      ch.matricula_aeronave,
+      COALESCE(am.icao_aeronave, ch.modelo_aeronave) AS icao_aeronave
+    FROM
+      "cotizaciones_historico" AS ch
+    LEFT JOIN 
+      "aeronaves_modelos" AS am ON ch.id_modelo_aeronave = am.id_modelo_aeronave
+    WHERE
+      ch.estatus = 'INACTIVA'
+    ORDER BY
+      ch.id_cotizacion DESC
+    `;
+    const result = await pool.query(query);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error al obtener las cotizaciones eliminadas:', err);
+    res.status(500).json({ error: 'Error interno del servidor al obtener cotizaciones eliminadas.' });
   }
 };
 
@@ -637,5 +701,4 @@ module.exports = {
   createQuote,
   getCotizacionesHistorico,
   getCotizacionById,
-  joinQuotes,
 };

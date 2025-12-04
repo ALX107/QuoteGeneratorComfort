@@ -10,13 +10,13 @@ DROP TABLE IF EXISTS precios_conceptos;
 
 -- Nivel 1: Tablas que son referenciadas por el nivel 2.
 DROP TABLE IF EXISTS servicios_cliente_especiales;
-DROP TABLE IF EXISTS clientes_aeronaves;
-DROP TABLE IF EXISTS fbos;
+DROP TABLE IF EXISTS clientes_aeronaves CASCADE;
+DROP TABLE IF EXISTS fbos CASCADE;
 DROP TABLE IF EXISTS conceptos_default;
 
 -- Nivel 0: Tablas independientes (no dependen de ninguna otra).
-DROP TABLE IF EXISTS clientes;
+DROP TABLE IF EXISTS clientes CASCADE;
 DROP TABLE IF EXISTS aeronaves_modelos;
-DROP TABLE IF EXISTS aeropuertos;
-DROP TABLE IF EXISTS categorias_operaciones;
-DROP TABLE IF EXISTS categorias_conceptos;
+DROP TABLE IF EXISTS aeropuertos CASCADE;
+DROP TABLE IF EXISTS categorias_operaciones CASCADE;
+DROP TABLE IF EXISTS categorias_conceptos CASCADE;

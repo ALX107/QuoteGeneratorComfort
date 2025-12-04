@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
 
-function HistoricTable({ quotes, onPreviewQuote, selectedQuoteIds = [], onToggleQuote }) {
+function HistoricTable({ 
+    quotes, 
+    onPreviewQuote, selectedQuoteIds = [], onToggleQuote, 
+    onDeleteQuote, 
+    showPreview = true, 
+    showDelete = true 
+}) {
     const [sortConfig, setSortConfig] = useState({ key: 'numero_referencia', direction: 'descending' });
 
     const sortedQuotes = React.useMemo(() => {
@@ -91,9 +97,7 @@ function HistoricTable({ quotes, onPreviewQuote, selectedQuoteIds = [], onToggle
 
     return (
         <div className="mt-6 bg-white rounded-lg shadow">
-            <div className="p-4 border-b border-gray-200">
-                <h2 className="text-lg font-semibold text-gray-900">Historical Quotes</h2>
-            </div>
+            
             <div className="overflow-x-auto">
                 <table className="w-full text-sm text-center text-gray-500">
                     <thead className="text-xs text-black font-semibold uppercase bg-gray-100">
@@ -139,8 +143,8 @@ function HistoricTable({ quotes, onPreviewQuote, selectedQuoteIds = [], onToggle
                                 Ex Rate
                                 {sortConfig.key === 'exchange_rate' ? (sortConfig.direction === 'ascending' ? ' \u25B4' : ' \u25BE') : null}
                             </th>
-                            <th className="px-2 py-3" scope="col">View</th>
-                            <th className="px-2 py-3" scope="col">Delete</th>
+                            {showPreview && <th className="px-2 py-3" scope="col">View</th>}
+                            {showDelete && <th className="px-2 py-3" scope="col">Delete</th>}
                         </tr>
                     </thead>
                     <tbody>
@@ -172,17 +176,21 @@ function HistoricTable({ quotes, onPreviewQuote, selectedQuoteIds = [], onToggle
                                         <td className="px-6 py-4">{formatOperationDate(quote)}</td>
                                         <td className="px-6 py-4">{quote.nombre_cliente}</td>
                                         <td className="px-6 py-4">{`${parseFloat(quote.total_final || 0).toFixed(2)}`}</td>
-                                        <td className="px-6 py-4">{parseFloat(quote.exchange_rate || 0).toFixed(4)}</td>
-                                        <td className="px-6 py-4">
-                                            <button onClick={() => onPreviewQuote(quote)} className="text-cyan-600 hover:text-cyan-900 cursor-pointer block mx-auto">
-                                                <span className="material-icons">visibility</span>
-                                            </button>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <button className="btn-trashcan block mx-auto">
-                                                <span className="material-icons">delete</span>
-                                            </button>
-                                        </td>
+                                        <td className="px-6 py-4">{parseFloat(quote.exchange_rate || 0).toFixed(4)}</td>                                    
+                                    {showPreview && (
+                                            <td className="px-6 py-4">
+                                                <button onClick={() => onPreviewQuote(quote)} className="text-cyan-600 hover:text-cyan-900 cursor-pointer block mx-auto">
+                                                    <span className="material-icons">visibility</span>
+                                                </button>
+                                            </td>
+                                    )}
+                                    {showDelete && (
+                                            <td className="px-6 py-4">
+                                                <button onClick={() => onDeleteQuote(quote.id_cotizacion)} className="btn-trashcan block mx-auto">
+                                                    <span className="material-icons">delete</span>
+                                                </button>
+                                            </td>
+                                    )}
                                     </tr>
                                 );
                             })

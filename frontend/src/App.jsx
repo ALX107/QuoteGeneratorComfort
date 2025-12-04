@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import CotizacionNueva from './pages/NewQuote.jsx';
 import Catalogos from './pages/Catalogos.jsx';
 import HistoricoCotizaciones from './pages/HistoricQuote.jsx';
+import DeletedQuotes from './pages/DeletedQuotes.jsx';
 import Login from './pages/Login.jsx';
 import '../index.css';
 import RAFLogoBlanco from './assets/RafLogoBlanco.png';
@@ -51,17 +52,26 @@ export default function App() {
         setCurrentPage('cotizacion');
     };
 
+    const handleNavigateToDeleted = () => {
+        setCurrentPage('historico-eliminadas');
+    };
+
+    const handleNavigateToActive = () => {
+        setCurrentPage('historico');
+    };
+
     const renderPage = () => {
         switch (currentPage) {
             case 'cotizacion':
                 return <CotizacionNueva onNavigateToHistorico={handleNavigateToHistorico} previewingQuote={previewingQuote} onCloneQuote={handleCloneQuote} />;
-           /* case 'catalogos':
+            case 'catalogos':
                 return <Catalogos />;
-            */
+            case 'historico-eliminadas':
+                return <DeletedQuotes onNavigateToActive={handleNavigateToActive} onPreviewQuote={handlePreviewQuote} />;
             case 'historico':
-                return <HistoricoCotizaciones onNavigateNewQuote={handleNavigateNewQuote} onPreviewQuote={handlePreviewQuote} />;
+                return <HistoricoCotizaciones onNavigateNewQuote={handleNavigateNewQuote} onPreviewQuote={handlePreviewQuote} onNavigateToDeleted={handleNavigateToDeleted} />;
             default:
-                return <HistoricoCotizaciones onNavigateNewQuote={handleNavigateNewQuote} onPreviewQuote={handlePreviewQuote} />;
+                return <HistoricoCotizaciones onNavigateNewQuote={handleNavigateNewQuote} onPreviewQuote={handlePreviewQuote} onNavigateToDeleted={handleNavigateToDeleted} />;
         }
     };
 

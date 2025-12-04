@@ -15,6 +15,8 @@ function ConfirmationModal({
   iconBgColorClass = "bg-red-100",
   iconColorClass = "text-red-600" 
 
+  
+
 }) {
   return (
     <Transition.Root show={isOpen} as={Fragment}>
@@ -55,7 +57,7 @@ function ConfirmationModal({
                     </div>
 
                     <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
-                      <Dialog.Title as="h3" className="text-lg font-semibold leading-6 text-gray-900">
+                      <Dialog.Title as="h3" className="text-xl font-semibold leading-6 text-gray-900">
                         {title}
                       </Dialog.Title>
                       
@@ -81,7 +83,7 @@ function ConfirmationModal({
                    <button
                     type="button"
                     onClick={onConfirm}
-                    className="btn-confirm w-full sm:w-25" 
+                    className="btn-confirm w-full sm:w-25 font-serif" 
                   >
                     Confirm
                   </button>
