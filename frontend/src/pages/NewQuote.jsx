@@ -458,6 +458,11 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
 
     const confirmAndSaveQuote = async () => {
         if (quoteFormRef.current) {
+            const isValid = quoteFormRef.current.validate(exchangeRate); // Pass current exchangeRate
+            if (!isValid) {
+                setIsSaveQuoteModalOpen(false);
+                return;
+            }
             // Map frontend 'items' to backend 'servicios' structure
 
             const rawData = quoteFormRef.current.getFormData();
@@ -558,8 +563,13 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
     };
 
     const handleSaveQuote = () => {
-        setIsSaveQuoteModalOpen(true);
-    }
+        if (quoteFormRef.current) {
+            const isValid = quoteFormRef.current.validate(exchangeRate); // Pass current exchangeRate
+            if (isValid) {
+                setIsSaveQuoteModalOpen(true);
+            }
+        }
+    };
 
     const handleSaveAsNew = () => {
         if (quoteFormRef.current) {
@@ -596,6 +606,11 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
     const handlePreviewPdf = () => {
         setOnNewQuoteBlocked(true);
         if (quoteFormRef.current) {
+            const isValid = quoteFormRef.current.validate(exchangeRate); // Pass current exchangeRate
+            if (!isValid) {
+                setOnNewQuoteBlocked(false); // Re-enable button if validation fails
+                return;
+            }
             const formData = quoteFormRef.current.getFormData();
             const fullPdfData = {
                 formData: {

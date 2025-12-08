@@ -170,9 +170,9 @@ function HistoricTable({
                                         <td className="px-6 py-4">{quote.numero_referencia}</td>
                                         <td className="px-6 py-4">{formatDate(quote.fecha_creacion, 'fecha_creacion')}</td>
                                         <td className="px-6 py-4">{quote.nombre_cat_operacion}</td>
-                                        <td className="px-6 py-4 font-medium">{displayStation}</td>
-                                        <td className="px-6 py-4">{quote.icao_aeronave}</td>
-                                        <td className="px-6 py-4">{quote.matricula_aeronave}</td>
+                                        <td className="px-6 py-4 font-medium">{displayStation || '—'}</td>
+                                        <td className="px-6 py-4">{quote.icao_aeronave || '—'}</td>
+                                        <td className="px-6 py-4">{quote.matricula_aeronave || '—'}</td>
                                         <td className="px-6 py-4">{formatOperationDate(quote)}</td>
                                         <td className="px-6 py-4">{quote.nombre_cliente}</td>
                                         <td className="px-6 py-4">{`${parseFloat(quote.total_final || 0).toFixed(2)}`}</td>

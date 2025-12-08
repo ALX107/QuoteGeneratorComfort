@@ -36,6 +36,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
     const [fboValue, setFboValue] = useState('');
     const [quoteNumber, setQuoteNumber] = useState(null);
 
+    const [errors, setErrors] = useState({});
 
 
     const [categoriasOperaciones, setCategoriasOperaciones] = useState([]);
@@ -60,6 +61,24 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
 
     useImperativeHandle(ref, () => {
 
+    const validate = (currentExchangeRate) => { // Accept exchangeRate as an argument
+        const newErrors = {};
+        if (!customerValue.trim()) {
+            newErrors.customer = "This field is required";
+        }
+        if (!flightType.trim()) {
+            newErrors.flightType = "This field is required";
+        }
+        if (!selectStation.trim()) {
+            newErrors.station = "This field is required";
+        }
+        if (!currentExchangeRate || parseFloat(currentExchangeRate) <= 0) { // Use the argument
+            newErrors.exchangeRate = "This field is required";
+        }
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
     return {
 
         clearQuoteNumberOnly() {
@@ -69,6 +88,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
         setQuotedByValue(userName) {
             setQuotedBy(userName);
         },
+        validate,
         
         clearAllFields() {
             setQuoteNumber(null);
@@ -84,6 +104,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
             setFilteredFbos([]);
             setNoEta(false); 
             setNoEtd(false); 
+            setErrors({});
             
             const today = new Date();
             const formattedDate = today.toISOString().split('T')[0];
@@ -343,6 +364,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
             unit,
             isCaaMember,
             noEta,
+            errors,
             noEtd,
             selectedAirportId,
             selectedFboId,
@@ -753,7 +775,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                         handleCustomerChange(e);
                                     }}
                                     className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm disabled:cursor-not-allowed"
-                                    disabled={isReadOnly}
+                                    disabled={isReadOnly} style={errors.customer ? { borderColor: 'red' } : {}}
                                />
                                 <datalist id="customer-list">
                                     {clientes.map((cliente) => (
@@ -764,6 +786,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                     <span className="material-icons text-gray-400"></span>
                                 </span>
                             </div>
+                            {errors.customer && <p className="text-red-500 text-xs mt-1">{errors.customer}</p>}
                         </div>
 
                         <div>
@@ -777,7 +800,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                     id="flight-type"
                                     name="flight-type"
                                     className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm disabled:cursor-not-allowed"
-                                    disabled={isReadOnly}
+                                    disabled={isReadOnly} style={errors.flightType ? { borderColor: 'red' } : {}}
                                
                                     value={flightType}
                                     onChange={(e) => setFlightType(e.target.value)}
@@ -792,6 +815,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                     <span className="material-icons text-gray-400"></span>
                                 </span>
                             </div>
+                            {errors.flightType && <p className="text-red-500 text-xs mt-1">{errors.flightType}</p>}
                         </div>
 
                         <div>
@@ -998,7 +1022,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                         }}
 
                                         className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm disabled:cursor-not-allowed"
-                                        disabled={isReadOnly}
+                                        disabled={isReadOnly} style={errors.station ? { borderColor: 'red' } : {}}
                                         
 
                                    />
@@ -1012,6 +1036,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                         <span className="material-icons text-gray-400"></span>
                                     </span>
                                 </div>
+                                {errors.station && <p className="text-red-500 text-xs mt-1">{errors.station}</p>}
                             </div>
 
                             {/* ATA */}
@@ -1245,11 +1270,12 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                     <input className="mt-1 w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 py-2 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm disabled:cursor-not-allowed" 
                                            id="exchange-rate" 
                                            type="number" 
-                                           min="0" onKeyDown={(e) => { if (e.key === '-') { e.preventDefault(); } }}
+                                           min="0" onKeyDown={(e) => { if (e.key === '-' || e.key === '+') { e.preventDefault(); } }}
                                            value={exchangeRate}
                                            onChange={(e) => onExchangeRateChange(e.target.value)} 
-                                           disabled={isReadOnly}/>
+                                           disabled={isReadOnly} style={errors.exchangeRate ? { borderColor: 'red' } : {}}/>
 
+                                        {errors.exchangeRate && <p className="text-red-500 text-xs mt-1">{errors.exchangeRate}</p>}
                                         <a
                                         href="https://dof.gob.mx/indicadores.php#gsc.tab=0"
                                         target="_blank"

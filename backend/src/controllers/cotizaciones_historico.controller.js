@@ -59,8 +59,8 @@ const createQuote = async (req, res) => {
     // Tipo de Vuelo (Texto obligatorio, ID usualmente obligatorio pero lo manejamos flexible)
     const datosOperacion = procesarCampo(flightType, true, 'Tipo de Vuelo');
 
-    // Aeronave (Texto obligatorio - Matrícula)
-    const datosAeronave = procesarCampo(aircraftModel, true, 'Matrícula/Modelo');
+    // Aeronave (Opcional - Matrícula)
+    const datosAeronave = procesarCampo(aircraftModel, false, 'Matrícula/Modelo');
 
     // Estación (Texto obligatorio)
     const datosAeropuerto = procesarCampo(station, true, 'Aeropuerto');
@@ -110,9 +110,9 @@ const createQuote = async (req, res) => {
     const version = 1;
 
     const cotizacionValues = [
-      tempRef, date, quotedBy, attn, isCaaMember, exchangeRate,
-      eta, crewFrom, paxFrom,
-      etd, crewTo, paxTo,
+      tempRef, date, quotedBy, attn || null, isCaaMember, exchangeRate,
+      eta, crewFrom || null, paxFrom || null,
+      etd, crewTo || null, paxTo || null,
       tipo_accion, estatus, version,
       // Asignando ID y Snapshot para cada campo. El orden debe coincidir con la consulta INSERT.
 
@@ -120,7 +120,7 @@ const createQuote = async (req, res) => {
       datosOperacion.id,   datosOperacion.texto,   // $17, $18
       datosAeronave.id,                           // id_cliente_aeronave (si existe)
       idModeloAeronaveSnapshot,                   // id_modelo_aeronave (si se seleccionó un modelo)
-      datosAeronave.texto,                        // Matrícula (Texto)
+      datosAeronave.texto,                        // Matrícula (Texto) - Ahora puede ser null
       modeloSnapshot,                             // Modelo (Texto)
       mtowSnapshot,                               // MTOW
       mtowUnitSnapshot,                           // MTOW Unit

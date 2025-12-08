@@ -152,15 +152,15 @@ CREATE TABLE cotizaciones_historico (
     -- Campos SNAPSHOT (la "foto" de los datos al momento de cotizar)
     cliente VARCHAR(255) NOT NULL,
     cat_operacion VARCHAR(100) NOT NULL,
-    matricula_aeronave VARCHAR(100) NOT NULL,
+    matricula_aeronave VARCHAR(500),
     id_modelo_aeronave BIGINT,
     modelo_aeronave VARCHAR(100), 
     mtow DECIMAL(10, 2), 
     mtow_unit VARCHAR(5),                   
     aeropuerto VARCHAR(100) NOT NULL,
     fbo VARCHAR(100),
-    aeropuerto_origen VARCHAR(100),
-    aeropuerto_destino VARCHAR(100),
+    aeropuerto_origen VARCHAR(50),
+    aeropuerto_destino VARCHAR(50),
 
     total_costo DECIMAL(15, 2),
     total_s_cargo DECIMAL(15, 2),
