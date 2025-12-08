@@ -374,12 +374,52 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
     };
 
     const fetchServices = async (id_aeropuerto, id_fbo) => {
+        // 1. Filter out old services before fetching new ones.
+        // Keep items that are manually added (empty description) or are default concepts.
+        const currentServiceNames = new Set(allServices.map(s => s.nombre_local_concepto));
+        const defaultConceptNames = new Set(defaultConceptos.map(c => c.nombre_concepto_default));
+
+        setItems(prevItems => prevItems.filter(item => {
+            // Keep if it's a new empty row, a default concept, or not a service from the previous list.
+            return item.description === '' || defaultConceptNames.has(item.description) || !currentServiceNames.has(item.description);
+        }));
+
         if (id_fbo) {
             try {
                 const response = await axios.get('http://localhost:3000/api/servicios', {
                     params: { id_fbo }, // Send only id_fbo
                 });
                 setAllServices(response.data);
+
+                // **CORRECTED LOGIC: Remove old FBO-specific services AND update prices**
+                const newServicesMap = new Map(response.data.map(s => [s.nombre_local_concepto, s]));
+                const defaultConceptNames = new Set(defaultConceptos.map(c => c.nombre_concepto_default));
+                const previousFboServiceNames = new Set(allServices.map(s => s.nombre_local_concepto));
+
+                setItems(prevItems => {
+                    // 1. Filter out services that are no longer valid
+                    const filteredItems = prevItems.filter(item => {
+                        const isFromPreviousFbo = previousFboServiceNames.has(item.description);
+                        const isDefault = defaultConceptNames.has(item.description);
+                        // Remove if it was from the previous FBO list AND it's NOT a default concept.
+                        // Keep all other items (manual rows, default concepts, etc.)
+                        return !(isFromPreviousFbo && !isDefault);
+                    });
+
+                    // 2. Update prices for the remaining items
+                    return filteredItems.map(item => {
+                        const matchingNewService = newServicesMap.get(item.description);
+                        if (matchingNewService) {
+                            // A service with the same name exists for the new FBO, update its price.
+                            const newPriceMXN = matchingNewService.costo_concepto || 0;
+                            const newPriceUSD = exchangeRate ? +((newPriceMXN) / exchangeRate).toFixed(4) : 0;
+                            return { ...item, priceMXN: newPriceMXN, priceUSD: newPriceUSD, anchorCurrency: 'MXN' };
+                        }
+                        // If no match, it's a manual row or a default concept not priced by this FBO. Return as is.
+                        return item;
+                    });
+                });
+
             } catch (error) {
                 console.error('Error fetching FBO services:', error);
             }
@@ -392,6 +432,21 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                 divisa: 'MXN', // Assuming default is MXN
             }));
             setAllServices(formattedDefaultConceptos);
+             setAllServices(formattedDefaultConceptos);
+            // When an airport is selected but FBO is cleared, reset prices to default (0).
+            setItems(prevItems => prevItems.map(item => {
+                const isDefault = defaultConceptos.some(c => c.nombre_concepto_default === item.description);
+                if (isDefault) {
+                    // This is a default concept, reset its price to the default value (which is 0).
+                    const defaultConcept = defaultConceptos.find(c => c.nombre_concepto_default === item.description);
+                    const priceMXN = defaultConcept.costo_concepto_default || 0;
+                    const priceUSD = exchangeRate ? +((priceMXN) / exchangeRate).toFixed(4) : 0;
+                    return { ...item, priceMXN, priceUSD };
+                }
+                // If it's not a default concept (e.g., manual row), keep it as is.
+                return item;
+            }));
+
         } else {
             // When nothing is selected, also show default concepts
             const formattedDefaultConceptos = defaultConceptos.map(c => ({

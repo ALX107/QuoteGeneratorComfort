@@ -485,12 +485,14 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
 
         if (selectedAirport) {
             setSelectedAirportId(selectedAirport.id_aeropuerto);
-            setSelectedFboId(null); // Reset FBO when airport changes
+            setFboValue(''); // Clear FBO input text
+            setSelectedFboId(null); // Reset FBO ID
             const fbosForAirport = allFbos.filter(fbo => fbo.id_aeropuerto === selectedAirport.id_aeropuerto);
             setFilteredFbos(fbosForAirport);
             onSelectionChange(selectedAirport.id_aeropuerto, null);
         } else {
             setSelectedAirportId(null);
+            setFboValue(''); // Also clear FBO input when airport is cleared
             setSelectedFboId(null);
             setFilteredFbos([]);
             onSelectionChange(null, null);

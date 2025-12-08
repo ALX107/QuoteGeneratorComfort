@@ -72,9 +72,9 @@ function QuoteTable({ items, onRemoveItem, onUpdateItem, isReadOnly, globalNoSc,
                             <th className="px-4 py-3" scope="col">Price (MXN)</th>
                             <th className="px-4 py-3" scope="col">Price (USD)</th>
                             <th className="px-4 py-3" scope="col">Cost (USD)</th>
-                            <th className="px-4 py-3" scope="col">Sc%</th>
+                            <th className="px-10 py-3" scope="col">Sc%</th>
                             <th className="px-4 py-3" scope="col">S. Charge</th>
-                            <th className="px-4 py-3" scope="col">VAT%</th>
+                            <th className="px-10 py-3" scope="col">VAT%</th>
                             <th className="px-4 py-3" scope="col">VAT</th>
                             <th className="px-4 py-3" scope="col">Total</th>
                             <th className="px-4 py-3" scope="col">Delete</th>
