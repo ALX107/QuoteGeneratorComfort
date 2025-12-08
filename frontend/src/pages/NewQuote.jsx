@@ -33,6 +33,9 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
     const [isFormReady, setIsFormReady] = useState(false);
     const [totalEnPalabras, setTotalEnPalabras] = useState(null);
 
+    const [globalNoSc, setGlobalNoSc] = useState(false);
+    const [globalNoVat, setGlobalNoVat] = useState(false);
+
     const quoteId = previewingQuote ? previewingQuote.id_cotizacion : null;
 
     const [totals, setTotals] = useState({
@@ -87,6 +90,8 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                         vatPercentage: servicio.vat_porcentaje,
                         anchorCurrency: 'MXN',
                         total: servicio.total_usd,
+                        noSc: parseFloat(servicio.sc_porcentaje) === 0,
+                        noVat: parseFloat(servicio.vat_porcentaje) === 0,
                     }));
                     setItems(mappedItems);
                     setExchangeRate(quoteData.exchange_rate);
@@ -128,6 +133,8 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                                     vatPercentage: servicio.vat_porcentaje,
                                     anchorCurrency: 'MXN',
                                     total: servicio.total_usd,
+                                    noSc: parseFloat(servicio.sc_porcentaje) === 0,
+                                    noVat: parseFloat(servicio.vat_porcentaje) === 0,
                                 }));
 
                                 return {
@@ -191,6 +198,11 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
             setQuoteDataForPreview(previewingQuote); // Preparamos los datos para rellenar el formulario.
             setIsFormReady(false); // Reseteamos para forzar la sincronización
 
+            // Check if all items have 0% to set the global checkboxes
+            const allNoSc = previewingQuote.items?.every(item => item.scPercentage === 0);
+            const allNoVat = previewingQuote.items?.every(item => item.vatPercentage === 0);
+            setGlobalNoSc(allNoSc);
+            setGlobalNoVat(allNoVat);
 
             //Si es nueva cotización
         } else {
@@ -200,6 +212,8 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
             setQuoteDataForPreview(null); // Limpia los datos de preview
             setTotalEnPalabras(null); // Limpia el campo de unión
             setIsFormReady(false); // Resetea el estado de "listo"
+            setGlobalNoSc(false);
+            setGlobalNoVat(false);
 
             if (quoteFormRef.current) {
                 if (!previewingQuote?.isClone) quoteFormRef.current.clearAllFields();
@@ -253,7 +267,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                 // Ahora estamos seguros de que 'exchangeRate' es un número válido.
                 const priceUSD = +((priceMXN) / exchangeRate).toFixed(4);
                 const quantity = 1;
-                const scPercentage = 0.10;
+                const scPercentage = 0.08; // Default 8%
                 const vatPercentage = 0.16;
 
                 const cost = quantity * priceUSD;
@@ -265,9 +279,11 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                     description: concepto.nombre_concepto_default,
                     quantity,
                     priceMXN,
-                    priceUSD,
+            priceUSD: parseFloat(priceUSD.toFixed(2)), // Round to 2 decimals
                     scPercentage,
                     vatPercentage,
+            noSc: scPercentage === 0,
+            noVat: vatPercentage === 0,
                     anchorCurrency: 'MXN',
                     total,
                 };
@@ -331,6 +347,32 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
         }
     }, [exchangeRate]);
 
+    // Effect for Global "No SC" Checkbox
+    useEffect(() => {
+        setItems(prevItems =>
+            prevItems.map(item => ({
+                ...item,
+                scPercentage: globalNoSc ? 0 : 0.08,
+                noSc: globalNoSc,
+            }))
+        );
+    }, [globalNoSc]);
+
+    // Effect for Global "No VAT" Checkbox
+    useEffect(() => {
+        setItems(prevItems =>
+            prevItems.map(item => ({
+                ...item,
+                vatPercentage: globalNoVat ? 0 : 0.16,
+                noVat: globalNoVat,
+            }))
+        );
+    }, [globalNoVat]);
+
+    const handleGlobalCheckboxChange = (setter, value) => {
+        setter(value);
+    };
+
     const fetchServices = async (id_aeropuerto, id_fbo) => {
         if (id_fbo) {
             try {
@@ -368,8 +410,10 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
             quantity: 1,
             priceMXN: 0,
             priceUSD: 0,
-            scPercentage: 0.10, // Default 10%
-            vatPercentage: 0.16, // Default 16%
+            scPercentage: globalNoSc ? 0 : 0.08, // Respect global state
+            vatPercentage: globalNoVat ? 0 : 0.16, // Respect global state
+            noSc: globalNoSc,
+            noVat: globalNoVat,
             anchorCurrency: 'MXN', // Default anchor
             total: 0,
         };
@@ -401,6 +445,13 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
         const newItems = [...items];
         const item = newItems[index];
 
+        // If a user manually changes a percentage, uncheck the global checkbox
+        if (field === 'scPercentage' && globalNoSc) {
+            setGlobalNoSc(false);
+        }
+        if (field === 'vatPercentage' && globalNoVat) {
+            setGlobalNoVat(false);
+        }
 
         item[field] = value;
 
@@ -429,8 +480,8 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
             const priceMXN = service.costo_concepto || 0;
             const priceUSD = +((priceMXN) / exchangeRate).toFixed(4);
             const quantity = 1;
-            const scPercentage = 0.10;
-            const vatPercentage = 0.10;
+            const scPercentage = globalNoSc ? 0 : 0.08; // Respect global state
+            const vatPercentage = globalNoVat ? 0 : 0.16; // Respect global state
 
             const cost = quantity * priceUSD;
             const serviceCharge = cost * scPercentage;
@@ -444,6 +495,8 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                 priceUSD,
                 scPercentage,
                 vatPercentage,
+                noSc: globalNoSc,
+                noVat: globalNoVat,
                 anchorCurrency: 'MXN',
                 total,
             };
@@ -480,6 +533,8 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                     costo_usd: item.priceUSD,
                     sc_porcentaje: item.scPercentage,
                     vat_porcentaje: item.vatPercentage,
+                    noSc: item.noSc,
+                    noVat: item.noVat,
                     s_cargo: s_cargo,
                     vat: vat,
                     total_usd: item.total,
@@ -660,11 +715,17 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                         onExchangeRateChange={(value) => setExchangeRate(parseFloat(value) || 0)}
                         isReadOnly={isReadOnly}
                         onDataLoaded={() => setIsFormReady(true)}
+                        globalNoSc={globalNoSc}
+                        globalNoVat={globalNoVat}
+                        onGlobalNoScChange={(e) => handleGlobalCheckboxChange(setGlobalNoSc, e.target.checked)}
+                        onGlobalNoVatChange={(e) => handleGlobalCheckboxChange(setGlobalNoVat, e.target.checked)}
                     />
                     <QuoteTable items={items}
                         onRemoveItem={handleRemoveItem}
                         onUpdateItem={handleUpdateItem}
                         isReadOnly={isReadOnly}
+                        globalNoSc={globalNoSc}
+                        globalNoVat={globalNoVat}
                     />
                     <QuoteTotal totals={totals} />
                 </main>

@@ -1,7 +1,7 @@
 import React from 'react';
 
-function QuoteTable({ items, onRemoveItem, onUpdateItem, isReadOnly }) {
-
+function QuoteTable({ items, onRemoveItem, onUpdateItem, isReadOnly, globalNoSc, globalNoVat }) {
+    
     const handleUpdate = (index, field, value) => {
         const numericFields = ['quantity', 'priceMXN', 'priceUSD'];
         if (numericFields.includes(field)) {
@@ -40,6 +40,19 @@ function QuoteTable({ items, onRemoveItem, onUpdateItem, isReadOnly }) {
             }
 
             onUpdateItem(index, field, value);
+        } else if (field === 'scPercentage' || field === 'vatPercentage') {
+            // Handle percentage fields
+            if (!/^[0-9]*\.?[0-9]*$/.test(value)) {
+                return; // Reject invalid format
+            }
+            if (value === '' || value === '.') {
+                onUpdateItem(index, field, 0); // Pass 0 if empty
+                return;
+            }
+            const numericValue = parseFloat(value);
+            if (numericValue > 100) return; // Max 100%
+
+            onUpdateItem(index, field, numericValue / 100);
         } else {
             onUpdateItem(index, field, value);
         }
@@ -130,36 +143,39 @@ function QuoteTable({ items, onRemoveItem, onUpdateItem, isReadOnly }) {
                                         {((item.quantity || 0) * (item.priceUSD || 0)).toFixed(2)}
                                     </td>
                                     <td className="px-4 py-2">
-                                        <select
+                                        <input
+                                            type="text"
+                                            inputMode="decimal"
                                             id="scPercentage"
                                             name="scPercentage"
-                                            value={item.scPercentage}
-                                            onChange={(e) => handleUpdate(index, 'scPercentage', parseFloat(e.target.value))}
-                                            disabled={isReadOnly}
-                                            className="w-20 bg-gray-50 border border-gray-300 rounded-md p-1 text-center focus:ring-sky-500 focus:border-sky-500 disabled:cursor-not-allowed"
-                                        
-                                        >
-                                            <option value="0.10">10%</option>
-                                            <option value="0.12">12%</option>
-                                            <option value="0.15">15%</option>
-                                            <option value="0.18">18%</option>
-                                        </select>
+                                            value={
+                                                item.scPercentage !== undefined
+                                                    ? parseFloat((item.scPercentage * 100).toPrecision(12)).toString()
+                                                    : ''
+                                            }
+                                            onChange={(e) => handleUpdate(index, 'scPercentage', e.target.value)}
+                                            disabled={isReadOnly || globalNoSc}
+                                            className="w-20 bg-gray-50 border border-gray-300 rounded-md p-1 text-center focus:ring-sky-500 focus:border-sky-500 disabled:cursor-not-allowed disabled:bg-gray-200"
+                                        />
                                     </td>
                                      <td className="px-4 py-2 font-medium text-gray-900">
                                         {((item.priceUSD || 0) * (item.quantity || 0) * (item.scPercentage || 0)).toFixed(2)}
                                     </td>
                                      <td className="px-4 py-2">
-                                        <select
+                                        <input
+                                            type="text"
+                                            inputMode="decimal"
                                             id="vatPercentage"
                                             name="vatPercentage"
-                                            value={item.vatPercentage}
-                                            onChange={(e) => handleUpdate(index, 'vatPercentage', parseFloat(e.target.value))}
-                                            disabled={isReadOnly}
-                                            className="w-20 bg-gray-50 border border-gray-300 rounded-md p-1 text-center focus:ring-sky-500 focus:border-sky-500 disabled:cursor-not-allowed"
-                                        
-                                        >
-                                            <option value="0.16">16%</option>
-                                        </select>
+                                            value={
+                                                item.vatPercentage !== undefined
+                                                    ? parseFloat((item.vatPercentage * 100).toPrecision(12)).toString()
+                                                    : ''
+                                            }
+                                            onChange={(e) => handleUpdate(index, 'vatPercentage', e.target.value)}
+                                            disabled={isReadOnly || globalNoVat}
+                                            className="w-20 bg-gray-50 border border-gray-300 rounded-md p-1 text-center focus:ring-sky-500 focus:border-sky-500 disabled:cursor-not-allowed disabled:bg-gray-200"
+                                        />
                                     </td>
                                     <td className="px-4 py-2 font-medium text-gray-900">
                                         {((item.priceUSD || 0) * (item.quantity || 0) * (item.vatPercentage || 0)).toFixed(2)}

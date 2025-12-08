@@ -5,7 +5,7 @@ import { jwtDecode } from 'jwt-decode';
 import Calculator from '../features/Calculator.jsx';
 
 
-const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange, exchangeRate, onExchangeRateChange, isReadOnly, onDataLoaded }, ref) => {
+const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange, exchangeRate, onExchangeRateChange, isReadOnly, onDataLoaded, globalNoSc, globalNoVat, onGlobalNoScChange, onGlobalNoVatChange }, ref) => {
     const [clientes, setClientes] = useState([]);
     const [aeropuertos, setAeropuertos] = useState([]);
     const [clientesAeronaves, setClientesAeronaves] = useState([]); 
@@ -1306,7 +1306,31 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                 >
                     + Add Empty Row
                 </button>
-                <Calculator isReadOnly={isReadOnly} />
+                 <Calculator isReadOnly={isReadOnly} />
+                {/* Global "No SC" Checkbox */}
+                <div className="flex items-center">
+                    <input
+                        type="checkbox"
+                        id="global-no-sc"
+                        checked={globalNoSc}
+                        onChange={onGlobalNoScChange}
+                        disabled={isReadOnly}
+                        className="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded disabled:cursor-not-allowed"
+                    />
+                    <label htmlFor="global-no-sc" className="ml-2 text-sm font-medium text-dark-gray">No S.C. (All)</label>
+                </div>
+                {/* Global "No VAT" Checkbox */}
+                <div className="flex items-center">
+                    <input
+                        type="checkbox"
+                        id="global-no-vat"
+                        checked={globalNoVat}
+                        onChange={onGlobalNoVatChange}
+                        disabled={isReadOnly}
+                        className="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded disabled:cursor-not-allowed"
+                    />
+                    <label htmlFor="global-no-vat" className="ml-2 text-sm font-medium text-dark-gray">No VAT (All)</label>
+                </div>
             </div>
         </main>
     );

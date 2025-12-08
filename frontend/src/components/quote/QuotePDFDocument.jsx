@@ -11,6 +11,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     backgroundColor: '#FFFFFF',
     padding: 30,
+    paddingBottom: 0, 
   },
   header: {
     flexDirection: 'row',
@@ -217,11 +218,12 @@ const styles = StyleSheet.create({
     marginBottom: 3,
     fontStyle: 'italic',
   },
+  mainContent: {
+    flexGrow: 1, 
+  },
   footer: {
-    position: 'absolute',
-    bottom: 30,
-    left: 30,
-    right: 30,
+    marginTop: 'auto', 
+    paddingBottom: 30, 
     borderTopWidth: 1,
     borderTopColor: '#C19A6B',
     paddingTop: 10,
@@ -284,89 +286,166 @@ const InfoField = ({ label, value }) => (
 // Create Document Component
 const QuotePDFDocument = ({ formData, items, totals, legs }) => {
   const isJoinedQuote = legs && legs.length > 0;
+  const allItems = isJoinedQuote ? legs.flatMap(leg => leg.items) : items;
+  const hasNoSc = allItems.some(item => item.noSc);
+  const hasNoVat = allItems.some(item => item.noVat);
 
   return (
     <Document>
       <Page size="LETTER" style={styles.page}>
-        <View style={styles.header}>
-          <Image style={styles.logo} src={RAFLogo} />
-          <View style={styles.headerInfo}>
-            <Text style={styles.slogan}>"The art of ground handling in Mexico"</Text>
-            <Text style={styles.title}>Quotation</Text>
-            <Text style={styles.subtitle}>Quoted by: {formData?.quotedBy.toUpperCase()}</Text>
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Quote Details</Text>
-
-          {formData?.totalEnPalabras && formData.totalEnPalabras.startsWith('JOIN OF:') && (
-            <View style={{ marginBottom: 10, padding: 8, backgroundColor: '#FFF3CD', borderLeftWidth: 4, borderLeftColor: '#FFC107' }}>
-              <Text style={{ fontSize: 8, color: '#856404', fontWeight: 'bold' }}>
-                {formData.totalEnPalabras}
-              </Text>
+        <View style={styles.mainContent}>
+          <View style={styles.header}>
+            <Image style={styles.logo} src={RAFLogo} />
+            <View style={styles.headerInfo}>
+              <Text style={styles.slogan}>"The art of ground handling in Mexico"</Text>
+              <Text style={styles.title}>Quotation</Text>
+              <Text style={styles.subtitle}>Quoted by: {formData?.quotedBy.toUpperCase()}</Text>
             </View>
-          )}
-
-          <View style={styles.grid}>
-            <InfoField label="Customer" value={formData?.customerName} />
-            <InfoField label="Date" value={formData?.date} />
-            <InfoField label="Flight Type" value={formData?.flightTypeName} />
-            <InfoField label="Aircraft Model" value={formData?.aircraftModelName} />
-            <InfoField label="Aircraft Registration" value={formData?.aircraftRegistrationValue} />
           </View>
-        </View>
 
-        {isJoinedQuote ? (
-          // Mostrar una sección por cada pierna
-          legs.map((leg, legIndex) => (
-            <View key={legIndex} style={styles.section}>
-              {/* Station Info Box para esta pierna */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Quote Details</Text>
+
+            {formData?.totalEnPalabras && formData.totalEnPalabras.startsWith('JOIN OF:') && (
+              <View style={{ marginBottom: 10, padding: 8, backgroundColor: '#FFF3CD', borderLeftWidth: 4, borderLeftColor: '#FFC107' }}>
+                <Text style={{ fontSize: 8, color: '#856404', fontWeight: 'bold' }}>
+                  {formData.totalEnPalabras}
+                </Text>
+              </View>
+            )}
+
+            <View style={styles.grid}>
+              <InfoField label="Customer" value={formData?.customerName} />
+              <InfoField label="Date" value={formData?.date} />
+              <InfoField label="Flight Type" value={formData?.flightTypeName} />
+              <InfoField label="Aircraft Model" value={formData?.aircraftModelName} />
+              <InfoField label="Aircraft Registration" value={formData?.aircraftRegistrationValue} />
+            </View>
+          </View>
+
+          {isJoinedQuote ? (
+            // Mostrar una sección por cada pierna
+            legs.map((leg, legIndex) => (
+              <View key={legIndex} style={styles.section}>
+                {/* Station Info Box para esta pierna */}
+                <View style={styles.infoBox}>
+                  <Text style={styles.infoBoxTitle}>STATION: {leg.station || 'N/A'}</Text>
+                  <View style={styles.flightInfoContainer}>
+                    <View style={styles.flightInfoColumn}>
+                      <Text style={styles.flightInfoTitle}>Arrival</Text>
+                      <View style={styles.flightInfoRow}>
+                        <Text style={styles.flightInfoLabel}>ATA:</Text>
+                        <Text style={styles.flightInfoValue}>{leg.eta || 'N/A'}</Text>
+                      </View>
+                      <View style={styles.flightInfoRow}>
+                        <Text style={styles.flightInfoLabel}>From:</Text>
+                        <Text style={styles.flightInfoValue}>{leg.fromName || leg.fromIcao || leg.from || 'N/A'}</Text>
+                      </View>
+                      <View style={styles.flightInfoRow}>
+                        <Text style={styles.flightInfoLabel}>Crew:</Text>
+                        <Text style={styles.flightInfoValue}>{leg.crewFrom || 'N/A'}</Text>
+                      </View>
+                      <View style={styles.flightInfoRow}>
+                        <Text style={styles.flightInfoLabel}>PAX:</Text>
+                        <Text style={styles.flightInfoValue}>{leg.paxFrom || 'N/A'}</Text>
+                      </View>
+                    </View>
+                    <View style={styles.flightInfoColumn}>
+                      <Text style={styles.flightInfoTitle}>Departure</Text>
+                      <View style={styles.flightInfoRow}>
+                        <Text style={styles.flightInfoLabel}>ATD:</Text>
+                        <Text style={styles.flightInfoValue}>{leg.etd || 'N/A'}</Text>
+                      </View>
+                      <View style={styles.flightInfoRow}>
+                        <Text style={styles.flightInfoLabel}>To:</Text>
+                        <Text style={styles.flightInfoValue}>{leg.toName || leg.toIcao || leg.to || 'N/A'}</Text>
+                      </View>
+                      <View style={styles.flightInfoRow}>
+                        <Text style={styles.flightInfoLabel}>Crew:</Text>
+                        <Text style={styles.flightInfoValue}>{leg.crewTo || 'N/A'}</Text>
+                      </View>
+                      <View style={styles.flightInfoRow}>
+                        <Text style={styles.flightInfoLabel}>PAX:</Text>
+                        <Text style={styles.flightInfoValue}>{leg.paxTo || 'N/A'}</Text>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+
+                {/* Tabla de servicios para esta pierna */}
+                <View style={styles.table}>
+                  {/* Table Header */}
+                  <View style={styles.tableRow}>
+                    <View style={[styles.tableColHeader, { width: '35%', textAlign: 'left' }]}><Text style={styles.tableHeader}>Description</Text></View>
+                    <View style={[styles.tableColHeader, { width: '7%' }]}><Text style={styles.tableHeader}>#</Text></View>
+                    <View style={[styles.tableColHeader, { width: '12%' }]}><Text style={styles.tableHeader}>Unit Price</Text></View>
+                    <View style={[styles.tableColHeader, { width: '12%' }]}><Text style={styles.tableHeader}>Before VAT</Text></View>
+                    <View style={[styles.tableColHeader, { width: '11%' }]}><Text style={styles.tableHeader}>Admin Fee</Text></View>
+                    <View style={[styles.tableColHeader, { width: '11%' }]}><Text style={styles.tableHeader}>VAT</Text></View>
+                    <View style={[styles.tableColHeader, { width: '12%' }]}><Text style={styles.tableHeader}>TOTAL COST</Text></View>
+                  </View>
+                  {/* Table Body */}
+                  {leg.items.map((item, index) => (
+                    <View key={index} style={styles.tableRow}>
+                      <View style={[styles.tableCol, { width: '35%', textAlign: 'left' }]}><Text style={styles.tableCell}>{item.description}</Text></View>
+                      <View style={[styles.tableCol, { width: '7%' }]}><Text style={styles.tableCell}>{(parseFloat(item.quantity) || 0)}</Text></View>
+                      <View style={[styles.tableCol, { width: '12%' }]}><Text style={styles.tableCell}>{(parseFloat(item.priceUSD) || 0).toFixed(2)}</Text></View>
+                      <View style={[styles.tableCol, { width: '12%' }]}><Text style={styles.tableCell}>{((parseFloat(item.quantity) || 0) * (parseFloat(item.priceUSD) || 0)).toFixed(2)}</Text></View>
+                      <View style={[styles.tableCol, { width: '11%' }]}><Text style={styles.tableCell}>{((parseFloat(item.priceUSD) || 0) * (parseFloat(item.quantity) || 0) * (parseFloat(item.scPercentage) || 0)).toFixed(2)}</Text></View>
+                      <View style={[styles.tableCol, { width: '11%' }]}><Text style={styles.tableCell}>{((parseFloat(item.priceUSD) || 0) * (parseFloat(item.quantity) || 0) * (parseFloat(item.vatPercentage) || 0)).toFixed(2)}</Text></View>
+                      <View style={[styles.tableCol, { width: '12%' }]}><Text style={styles.tableCell}>{(parseFloat(item.total) || 0).toFixed(2)}</Text></View>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            ))
+          ) : (
+            // Cotización normal (sin piernas)
+            <View style={styles.section}>
+              {/* Station Info Box */}
               <View style={styles.infoBox}>
-                <Text style={styles.infoBoxTitle}>STATION: {leg.station || 'N/A'}</Text>
+                <Text style={styles.infoBoxTitle}>STATION: {formData?.stationName || 'N/A'}</Text>
                 <View style={styles.flightInfoContainer}>
                   <View style={styles.flightInfoColumn}>
                     <Text style={styles.flightInfoTitle}>Arrival</Text>
                     <View style={styles.flightInfoRow}>
                       <Text style={styles.flightInfoLabel}>ATA:</Text>
-                      <Text style={styles.flightInfoValue}>{leg.eta || 'N/A'}</Text>
+                      <Text style={styles.flightInfoValue}>{formData?.eta || 'N/A'}</Text>
                     </View>
                     <View style={styles.flightInfoRow}>
                       <Text style={styles.flightInfoLabel}>From:</Text>
-                      <Text style={styles.flightInfoValue}>{leg.fromName || leg.fromIcao || leg.from || 'N/A'}</Text>
+                      <Text style={styles.flightInfoValue}>{formData?.fromName || 'N/A'}</Text>
                     </View>
                     <View style={styles.flightInfoRow}>
                       <Text style={styles.flightInfoLabel}>Crew:</Text>
-                      <Text style={styles.flightInfoValue}>{leg.crewFrom || 'N/A'}</Text>
+                      <Text style={styles.flightInfoValue}>{formData?.crewFrom || 'N/A'}</Text>
                     </View>
                     <View style={styles.flightInfoRow}>
                       <Text style={styles.flightInfoLabel}>PAX:</Text>
-                      <Text style={styles.flightInfoValue}>{leg.paxFrom || 'N/A'}</Text>
+                      <Text style={styles.flightInfoValue}>{formData?.paxFrom || 'N/A'}</Text>
                     </View>
                   </View>
                   <View style={styles.flightInfoColumn}>
                     <Text style={styles.flightInfoTitle}>Departure</Text>
                     <View style={styles.flightInfoRow}>
                       <Text style={styles.flightInfoLabel}>ATD:</Text>
-                      <Text style={styles.flightInfoValue}>{leg.etd || 'N/A'}</Text>
+                      <Text style={styles.flightInfoValue}>{formData?.etd || 'N/A'}</Text>
                     </View>
                     <View style={styles.flightInfoRow}>
                       <Text style={styles.flightInfoLabel}>To:</Text>
-                      <Text style={styles.flightInfoValue}>{leg.toName || leg.toIcao || leg.to || 'N/A'}</Text>
+                      <Text style={styles.flightInfoValue}>{formData?.toName || 'N/A'}</Text>
                     </View>
                     <View style={styles.flightInfoRow}>
                       <Text style={styles.flightInfoLabel}>Crew:</Text>
-                      <Text style={styles.flightInfoValue}>{leg.crewTo || 'N/A'}</Text>
+                      <Text style={styles.flightInfoValue}>{formData?.crewTo || 'N/A'}</Text>
                     </View>
                     <View style={styles.flightInfoRow}>
                       <Text style={styles.flightInfoLabel}>PAX:</Text>
-                      <Text style={styles.flightInfoValue}>{leg.paxTo || 'N/A'}</Text>
+                      <Text style={styles.flightInfoValue}>{formData?.paxTo || 'N/A'}</Text>
                     </View>
                   </View>
                 </View>
               </View>
-
-              {/* Tabla de servicios para esta pierna */}
               <View style={styles.table}>
                 {/* Table Header */}
                 <View style={styles.tableRow}>
@@ -379,7 +458,7 @@ const QuotePDFDocument = ({ formData, items, totals, legs }) => {
                   <View style={[styles.tableColHeader, { width: '12%' }]}><Text style={styles.tableHeader}>TOTAL COST</Text></View>
                 </View>
                 {/* Table Body */}
-                {leg.items.map((item, index) => (
+                {items.map((item, index) => (
                   <View key={index} style={styles.tableRow}>
                     <View style={[styles.tableCol, { width: '35%', textAlign: 'left' }]}><Text style={styles.tableCell}>{item.description}</Text></View>
                     <View style={[styles.tableCol, { width: '7%' }]}><Text style={styles.tableCell}>{(parseFloat(item.quantity) || 0)}</Text></View>
@@ -392,112 +471,46 @@ const QuotePDFDocument = ({ formData, items, totals, legs }) => {
                 ))}
               </View>
             </View>
-          ))
-        ) : (
-          // Cotización normal (sin piernas)
-          <View style={styles.section}>
-            {/* Station Info Box */}
-            <View style={styles.infoBox}>
-              <Text style={styles.infoBoxTitle}>STATION: {formData?.stationName || 'N/A'}</Text>
-              <View style={styles.flightInfoContainer}>
-                <View style={styles.flightInfoColumn}>
-                  <Text style={styles.flightInfoTitle}>Arrival</Text>
-                  <View style={styles.flightInfoRow}>
-                    <Text style={styles.flightInfoLabel}>ATA:</Text>
-                    <Text style={styles.flightInfoValue}>{formData?.eta || 'N/A'}</Text>
-                  </View>
-                  <View style={styles.flightInfoRow}>
-                    <Text style={styles.flightInfoLabel}>From:</Text>
-                    <Text style={styles.flightInfoValue}>{formData?.fromName || 'N/A'}</Text>
-                  </View>
-                  <View style={styles.flightInfoRow}>
-                    <Text style={styles.flightInfoLabel}>Crew:</Text>
-                    <Text style={styles.flightInfoValue}>{formData?.crewFrom || 'N/A'}</Text>
-                  </View>
-                  <View style={styles.flightInfoRow}>
-                    <Text style={styles.flightInfoLabel}>PAX:</Text>
-                    <Text style={styles.flightInfoValue}>{formData?.paxFrom || 'N/A'}</Text>
-                  </View>
-                </View>
-                <View style={styles.flightInfoColumn}>
-                  <Text style={styles.flightInfoTitle}>Departure</Text>
-                  <View style={styles.flightInfoRow}>
-                    <Text style={styles.flightInfoLabel}>ATD:</Text>
-                    <Text style={styles.flightInfoValue}>{formData?.etd || 'N/A'}</Text>
-                  </View>
-                  <View style={styles.flightInfoRow}>
-                    <Text style={styles.flightInfoLabel}>To:</Text>
-                    <Text style={styles.flightInfoValue}>{formData?.toName || 'N/A'}</Text>
-                  </View>
-                  <View style={styles.flightInfoRow}>
-                    <Text style={styles.flightInfoLabel}>Crew:</Text>
-                    <Text style={styles.flightInfoValue}>{formData?.crewTo || 'N/A'}</Text>
-                  </View>
-                  <View style={styles.flightInfoRow}>
-                    <Text style={styles.flightInfoLabel}>PAX:</Text>
-                    <Text style={styles.flightInfoValue}>{formData?.paxTo || 'N/A'}</Text>
-                  </View>
-                </View>
+          )}
+
+          {/* Exchange Rate */}
+          <View style={styles.exchangeRate}>
+            <Text style={styles.exchangeRateText}>EXCHANGE RATE ${formData?.exchangeRate} PESOS PER USD</Text>
+          </View>
+
+          {/* Totals - Solo un total al final para cotizaciones unidas */}
+          <View style={styles.totals}>
+            <View style={styles.totalsContainer}>
+              <View style={styles.totalRow}>
+                <Text style={styles.totalLabel}>Before VAT:</Text>
+                <Text style={styles.totalValue}>$ {totals.cost.toFixed(2)} USD</Text>
+              </View>
+              <View style={styles.totalRow}>
+                <Text style={styles.totalLabel}>Admin Fee:</Text>
+                <Text style={styles.totalValue}>$ {totals.sCharge.toFixed(2)} USD</Text>
+              </View>
+              <View style={styles.totalRow}>
+                <Text style={styles.totalLabel}>VAT:</Text>
+                <Text style={styles.totalValue}>$ {totals.vat.toFixed(2)} USD</Text>
+              </View>
+              <View style={[styles.totalRow, { marginTop: 5, paddingTop: 5, borderTopWidth: 1, borderTopColor: '#E0E0E0' }]}>
+                <Text style={[styles.totalLabel, styles.finalTotal]}>Total:</Text>
+                <Text style={[styles.totalValue, styles.finalTotal]}>$ {totals.total.toFixed(2)} USD</Text>
               </View>
             </View>
-            <View style={styles.table}>
-              {/* Table Header */}
-              <View style={styles.tableRow}>
-                <View style={[styles.tableColHeader, { width: '35%', textAlign: 'left' }]}><Text style={styles.tableHeader}>Description</Text></View>
-                <View style={[styles.tableColHeader, { width: '7%' }]}><Text style={styles.tableHeader}>#</Text></View>
-                <View style={[styles.tableColHeader, { width: '12%' }]}><Text style={styles.tableHeader}>Unit Price</Text></View>
-                <View style={[styles.tableColHeader, { width: '12%' }]}><Text style={styles.tableHeader}>Before VAT</Text></View>
-                <View style={[styles.tableColHeader, { width: '11%' }]}><Text style={styles.tableHeader}>Admin Fee</Text></View>
-                <View style={[styles.tableColHeader, { width: '11%' }]}><Text style={styles.tableHeader}>VAT</Text></View>
-                <View style={[styles.tableColHeader, { width: '12%' }]}><Text style={styles.tableHeader}>TOTAL COST</Text></View>
-              </View>
-              {/* Table Body */}
-              {items.map((item, index) => (
-                <View key={index} style={styles.tableRow}>
-                  <View style={[styles.tableCol, { width: '35%', textAlign: 'left' }]}><Text style={styles.tableCell}>{item.description}</Text></View>
-                  <View style={[styles.tableCol, { width: '7%' }]}><Text style={styles.tableCell}>{(parseFloat(item.quantity) || 0)}</Text></View>
-                  <View style={[styles.tableCol, { width: '12%' }]}><Text style={styles.tableCell}>{(parseFloat(item.priceUSD) || 0).toFixed(2)}</Text></View>
-                  <View style={[styles.tableCol, { width: '12%' }]}><Text style={styles.tableCell}>{((parseFloat(item.quantity) || 0) * (parseFloat(item.priceUSD) || 0)).toFixed(2)}</Text></View>
-                  <View style={[styles.tableCol, { width: '11%' }]}><Text style={styles.tableCell}>{((parseFloat(item.priceUSD) || 0) * (parseFloat(item.quantity) || 0) * (parseFloat(item.scPercentage) || 0)).toFixed(2)}</Text></View>
-                  <View style={[styles.tableCol, { width: '11%' }]}><Text style={styles.tableCell}>{((parseFloat(item.priceUSD) || 0) * (parseFloat(item.quantity) || 0) * (parseFloat(item.vatPercentage) || 0)).toFixed(2)}</Text></View>
-                  <View style={[styles.tableCol, { width: '12%' }]}><Text style={styles.tableCell}>{(parseFloat(item.total) || 0).toFixed(2)}</Text></View>
-                </View>
-              ))}
-            </View>
           </View>
-        )}
 
-        {/* Exchange Rate */}
-        <View style={styles.exchangeRate}>
-          <Text style={styles.exchangeRateText}>EXCHANGE RATE ${formData?.exchangeRate} PESOS PER USD</Text>
-        </View>
-
-        {/* Totals - Solo un total al final para cotizaciones unidas */}
-        <View style={styles.totals}>
-          <View style={styles.totalsContainer}>
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Before VAT:</Text>
-              <Text style={styles.totalValue}>$ {totals.cost.toFixed(2)} USD</Text>
-            </View>
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Admin Fee:</Text>
-              <Text style={styles.totalValue}>$ {totals.sCharge.toFixed(2)} USD</Text>
-            </View>
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>VAT:</Text>
-              <Text style={styles.totalValue}>$ {totals.vat.toFixed(2)} USD</Text>
-            </View>
-            <View style={[styles.totalRow, { marginTop: 5, paddingTop: 5, borderTopWidth: 1, borderTopColor: '#E0E0E0' }]}>
-              <Text style={[styles.totalLabel, styles.finalTotal]}>Total:</Text>
-              <Text style={[styles.totalValue, styles.finalTotal]}>$ {totals.total.toFixed(2)} USD</Text>
-            </View>
+          {/* Disclaimers */}
+          <View style={styles.disclaimers}>
+            <Text style={styles.disclaimerText}>* THIS QUOTE IS FOR INFORMATIONAL PURPOSES ONLY, AND MAY BE SUBJECT TO CHANGES WITHOUT PRIOR NOTICE.</Text>
+            {hasNoSc && (
+              <Text style={styles.disclaimerText}>* ADMIN FEE IS NOT CHARGED.</Text>
+            )}
+            {hasNoVat && (
+              <Text style={styles.disclaimerText}>* VALUE ADDED TAX (VAT) IS NOT CHARGED.</Text>
+            )}
+            <Text style={styles.disclaimerText}>* EXCLUDES CATERING, OVERTIME, TRANSPORTATION AND FUEL UPLIFT.</Text>
           </View>
-        </View>
-
-        {/* Disclaimers */}
-        <View style={styles.disclaimers}>
-          <Text style={styles.disclaimerText}>* THIS QUOTE IS FOR INFORMATIONAL PURPOSES ONLY, AND MAY BE SUBJECT TO CHANGES WITHOUT PRIOR NOTICE.</Text>
-          <Text style={styles.disclaimerText}>* EXCLUDES CATERING, OVERTIME, TRANSPORTATION AND FUEL UPLIFT</Text>
         </View>
 
         {/* Footer */}
@@ -521,6 +534,7 @@ const QuotePDFDocument = ({ formData, items, totals, legs }) => {
             </View>
           </View>
         </View>
+
       </Page>
     </Document>
   );
