@@ -152,6 +152,7 @@ function HistoricTable({
                             sortedQuotes.map((quote) => {
                                 const isJoined = isJoinedQuote(quote);
                                 const joinedStations = getJoinedStations(quote);
+                                const selectionOrder = selectedQuoteIds.indexOf(quote.id_cotizacion) + 1;
                                 const displayStation = isJoined && joinedStations ? joinedStations : quote.icao_aeropuerto;
 
                                 return (
@@ -159,13 +160,20 @@ function HistoricTable({
                                         key={quote.id_cotizacion}
                                         className={`border-b ${isJoined ? 'bg-blue-50 hover:bg-blue-100' : 'bg-white hover:bg-gray-50'}`}
                                     >
-                                        <td className='px-6 py-4'>
-                                            <input
-                                                type="checkbox"
-                                                className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
-                                                checked={selectedQuoteIds.includes(quote.id_cotizacion)}
-                                                onChange={() => onToggleQuote && onToggleQuote(quote.id_cotizacion)}
-                                            />
+                                        <td className='px-4 py-4'>
+                                            <div className="flex items-center justify-center space-x-2">
+                                                <input
+                                                    type="checkbox"
+                                                    className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+                                                    checked={selectionOrder > 0}
+                                                    onChange={() => onToggleQuote && onToggleQuote(quote.id_cotizacion)}
+                                                />
+                                                {selectionOrder > 0 && (
+                                                    <span className="text-xs font-bold text-blue-600 bg-blue-100 rounded-full h-5 w-5 flex items-center justify-center">
+                                                        {selectionOrder}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </td>
                                         <td className="px-6 py-4">{quote.numero_referencia}</td>
                                         <td className="px-6 py-4">{formatDate(quote.fecha_creacion, 'fecha_creacion')}</td>

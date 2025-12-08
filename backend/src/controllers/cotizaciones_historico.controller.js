@@ -410,13 +410,19 @@ const joinQuotes = async (req, res) => {
     // 1) Obtener cotizaciones base
     const quotesResult = await client.query(
       `
-        SELECT *
-        FROM "cotizaciones_historico"
-        WHERE id_cotizacion = ANY($1::bigint[])
-        ORDER BY id_cotizacion ASC
+      SELECT q.*
+      FROM "cotizaciones_historico" q
+      JOIN unnest($1::bigint[]) WITH ORDINALITY t(id, ord) ON q.id_cotizacion = t.id
+      WHERE q.id_cotizacion = ANY($1::bigint[])
+      ORDER BY t.ord;
       `,
       [uniqueIds],
     );
+    // La consulta anterior ahora usa `unnest` para convertir el array de IDs en una tabla temporal
+    // con un número de orden (`ord`). Luego, se une con la tabla de cotizaciones y se ordena
+    // por ese número de orden, garantizando que el resultado respete la secuencia de `uniqueIds`
+    // que envía el frontend.
+
 
     if (quotesResult.rows.length < 2) {
       await client.query('ROLLBACK');

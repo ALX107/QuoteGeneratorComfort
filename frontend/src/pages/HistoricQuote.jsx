@@ -112,13 +112,13 @@ export default function HistoricoCotizaciones({ onNavigateNewQuote, onPreviewQuo
     });
 
     const handleToggleQuote = (quoteId) => {
-        setSelectedQuoteIds(prev => {
-            if (prev.includes(quoteId)) {
-                return prev.filter(id => id !== quoteId);
-            } else {
-                return [...prev, quoteId];
-            }
-        });
+        // La función de actualización de estado ahora maneja la lógica de añadir o quitar.
+        // Si el ID ya está, lo filtra (quita). Si no está, lo añade al final.
+        // El orden del array `selectedQuoteIds` ahora representa el orden de selección.
+        setSelectedQuoteIds(prevIds =>
+            prevIds.includes(quoteId)
+                ? prevIds.filter(id => id !== quoteId)
+                : [...prevIds, quoteId]);
     };
 
     const handleJoinQuotes = async () => {

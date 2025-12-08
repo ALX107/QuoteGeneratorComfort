@@ -56,7 +56,9 @@ function HistoricHeader({
                             onClick={onJoinQuotes}
                             disabled={selectedQuoteIds.length < 2 || isJoining}
                         >
-                            {isJoining ? 'Joining...' : 'Join'}
+                            {isJoining 
+                                ? 'Joining...' 
+                                : `Join ${selectedQuoteIds.length > 1 ? `(${selectedQuoteIds.length})` : ''}`}
                         </button>
                     </>
                 )}
