@@ -49,7 +49,7 @@ CREATE TABLE categorias_conceptos (
 -- Tabla "universo" para los modelos de aeronaves.
 CREATE TABLE aeronaves_modelos (
     id_modelo_aeronave BIGSERIAL PRIMARY KEY,
-    icao_aeronave VARCHAR(4) UNIQUE NOT NULL,
+    icao_aeronave VARCHAR(10) UNIQUE NOT NULL,
     nombre_aeronave VARCHAR(100) NOT NULL,
     -- MTOW (Maximum Takeoff Weight) en toneladas.
     mtow_aeronave DECIMAL(10, 2) NOT NULL,

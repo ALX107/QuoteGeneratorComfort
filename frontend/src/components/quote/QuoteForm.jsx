@@ -269,9 +269,9 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
             aircraftModelName: selectedAircraftModel ? selectedAircraftModel.icao_aeronave : modelValue,
             aircraftRegistrationValue: registrationValue, // The string value
             stationName: stationAirport ? stationAirport.icao_aeropuerto : selectStation,
-            fromName: fromAirport ? fromAirport.nombre_aeropuerto : fromStation,
+            fromName: fromAirport ? fromAirport.icao_aeropuerto : fromStation,
             fboName: fbo ? fbo.nombre_fbo : fboValue,
-            toName: toAirport ? toAirport.nombre_aeropuerto : toStation,
+            toName: toAirport ? toAirport.icao_aeropuerto : toStation,
 
             }; 
           },

@@ -158,10 +158,7 @@ function QuoteTable({ items, onRemoveItem, onUpdateItem, isReadOnly }) {
                                             className="w-20 bg-gray-50 border border-gray-300 rounded-md p-1 text-center focus:ring-sky-500 focus:border-sky-500 disabled:cursor-not-allowed"
                                         
                                         >
-                                            <option value="0.10">10%</option>
-                                            <option value="0.12">12%</option>
-                                            <option value="0.15">15%</option>
-                                            <option value="0.18">18%</option>
+                                            <option value="0.16">16%</option>
                                         </select>
                                     </td>
                                     <td className="px-4 py-2 font-medium text-gray-900">

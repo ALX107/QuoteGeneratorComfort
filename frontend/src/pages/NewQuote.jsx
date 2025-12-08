@@ -103,8 +103,48 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                             aircraftRegistrationValue: quoteData.matricula_aeronave || '',
                             stationName: quoteData.aeropuerto || '',
                             fboName: quoteData.fbo || '',
+                            exchangeRate: quoteData.exchange_rate,
                             totalEnPalabras: quoteData.total_en_palabras || null,
+                            eta: quoteData.fecha_llegada ? new Date(quoteData.fecha_llegada).toISOString().split('T')[0] : null,
+                            etd: quoteData.fecha_salida ? new Date(quoteData.fecha_salida).toISOString().split('T')[0] : null,
+                            crewFrom: quoteData.tripulacion_llegada || '',
+                            paxFrom: quoteData.pasajeros_llegada || '',
+                            crewTo: quoteData.tripulacion_salida || '',
+                            paxTo: quoteData.pasajeros_salida || '',
+                            fromName: quoteData.aeropuerto_origen || '',
+                            toName: quoteData.aeropuerto_destino || '',
                         };
+
+                        // Procesar piernas si existen
+                        let legsData = null;
+                        if (quoteData.legs && quoteData.legs.length > 0) {
+                            legsData = quoteData.legs.map(leg => {
+                                const legItems = leg.servicios.map(servicio => ({
+                                    description: servicio.nombre_servicio,
+                                    quantity: servicio.cantidad,
+                                    priceMXN: servicio.costo_mxn,
+                                    priceUSD: servicio.costo_usd,
+                                    scPercentage: servicio.sc_porcentaje,
+                                    vatPercentage: servicio.vat_porcentaje,
+                                    anchorCurrency: 'MXN',
+                                    total: servicio.total_usd,
+                                }));
+
+                                return {
+                                    quoteNumber: leg.quoteNumber,
+                                    station: leg.station,
+                                    eta: leg.eta ? new Date(leg.eta).toISOString().split('T')[0] : null,
+                                    etd: leg.etd ? new Date(leg.etd).toISOString().split('T')[0] : null,
+                                    from: leg.from,
+                                    to: leg.to,
+                                    crewFrom: leg.crewFrom,
+                                    paxFrom: leg.paxFrom,
+                                    crewTo: leg.crewTo,
+                                    paxTo: leg.paxTo,
+                                    items: legItems
+                                };
+                            });
+                        }
 
                         // Calcular totales
                         const calculatedTotals = mappedItems.reduce((acc, item) => {
@@ -129,6 +169,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                             formData: formDataForPdf,
                             items: mappedItems,
                             totals: calculatedTotals,
+                            legs: legsData, // Datos agrupados por pierna
                         };
 
                         setPdfData(fullPdfData);
@@ -213,7 +254,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                 const priceUSD = +((priceMXN) / exchangeRate).toFixed(4);
                 const quantity = 1;
                 const scPercentage = 0.10;
-                const vatPercentage = 0.10;
+                const vatPercentage = 0.16;
 
                 const cost = quantity * priceUSD;
                 const serviceCharge = cost * scPercentage;
@@ -328,7 +369,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
             priceMXN: 0,
             priceUSD: 0,
             scPercentage: 0.10, // Default 10%
-            vatPercentage: 0.10, // Default 10%
+            vatPercentage: 0.16, // Default 16%
             anchorCurrency: 'MXN', // Default anchor
             total: 0,
         };

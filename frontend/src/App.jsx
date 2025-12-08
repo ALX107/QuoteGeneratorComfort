@@ -92,7 +92,7 @@ export default function App() {
                                     src={RAFLogoBlanco}
                                     className="h-10 w-auto object-contain"
                                 />
-                                <h1 className="text-s font-bold text-slate-200">Welcome Max DEC 02/2025 UTC: 16:56 | LC: 11:20</h1>
+                                <h1 className="text-s font-bold text-slate-200">Welcome Alex DEC 05/2025 UTC: 17:20  | LC: 12:20</h1>
                             </div>
                         </div>
                         <div className="flex items-center space-x-8">

@@ -275,13 +275,67 @@ const getCotizacionById = async (req, res) => {
       return res.status(404).json({ error: 'Quote not found' });
     }
 
-    const conceptsQuery = 'SELECT * FROM "cotizacion_conceptos" WHERE id_cotizacion = $1';
-    const conceptsResult = await pool.query(conceptsQuery, [id]); // Los conceptos se ligan por id_cotizacion
-
     const quote = quoteResult.rows[0];
-    const concepts = conceptsResult.rows;
+    const isJoinedQuote = quote.total_en_palabras && quote.total_en_palabras.startsWith('JOIN OF:');
 
-    res.json({ ...quote, servicios: concepts });
+    if (isJoinedQuote) {
+      // Para cotizaciones unidas, obtener las cotizaciones originales y agrupar servicios por pierna
+      const joinMatch = quote.total_en_palabras.match(/JOIN OF:\s*(.+?)(?:\s*\||$)/);
+      if (joinMatch && joinMatch[1]) {
+        const refNumbers = joinMatch[1].split(',').map(ref => ref.trim());
+        
+        // Obtener las cotizaciones originales por número de referencia
+        const originalQuotes = [];
+        for (const refNumber of refNumbers) {
+          const originalQuery = 'SELECT * FROM "cotizaciones_historico" WHERE numero_referencia = $1 ORDER BY id_historico DESC LIMIT 1';
+          const originalResult = await pool.query(originalQuery, [refNumber]);
+          if (originalResult.rows.length > 0) {
+            originalQuotes.push(originalResult.rows[0]);
+          }
+        }
+
+        // Obtener servicios de cada cotización original
+        const legs = [];
+        for (const originalQuote of originalQuotes) {
+          const legConceptsQuery = 'SELECT * FROM "cotizacion_conceptos" WHERE id_cotizacion = $1 ORDER BY id_cotizacion_concepto ASC';
+          const legConceptsResult = await pool.query(legConceptsQuery, [originalQuote.id_cotizacion]);
+          
+          legs.push({
+            quoteNumber: originalQuote.numero_referencia,
+            station: originalQuote.aeropuerto || 'N/A',
+            eta: originalQuote.fecha_llegada,
+            etd: originalQuote.fecha_salida,
+            from: originalQuote.aeropuerto_origen || 'N/A',
+            to: originalQuote.aeropuerto_destino || 'N/A',
+            crewFrom: originalQuote.tripulacion_llegada || '',
+            paxFrom: originalQuote.pasajeros_llegada || '',
+            crewTo: originalQuote.tripulacion_salida || '',
+            paxTo: originalQuote.pasajeros_salida || '',
+            servicios: legConceptsResult.rows
+          });
+        }
+
+        // Obtener todos los servicios de la cotización unida (para compatibilidad)
+        const conceptsQuery = 'SELECT * FROM "cotizacion_conceptos" WHERE id_cotizacion = $1';
+        const conceptsResult = await pool.query(conceptsQuery, [id]);
+        
+        res.json({ 
+          ...quote, 
+          servicios: conceptsResult.rows,
+          legs: legs // Nueva propiedad con datos agrupados por pierna
+        });
+      } else {
+        // Si no se puede parsear, devolver como cotización normal
+        const conceptsQuery = 'SELECT * FROM "cotizacion_conceptos" WHERE id_cotizacion = $1';
+        const conceptsResult = await pool.query(conceptsQuery, [id]);
+        res.json({ ...quote, servicios: conceptsResult.rows });
+      }
+    } else {
+      // Cotización normal
+      const conceptsQuery = 'SELECT * FROM "cotizacion_conceptos" WHERE id_cotizacion = $1';
+      const conceptsResult = await pool.query(conceptsQuery, [id]);
+      res.json({ ...quote, servicios: conceptsResult.rows });
+    }
   } catch (err) {
     console.error('Error fetching quote by id:', err);
     res.status(500).json({ error: 'Internal server error' });
@@ -373,6 +427,9 @@ const joinQuotes = async (req, res) => {
 
     const baseQuotes = quotesResult.rows;
     const firstQuote = baseQuotes[0];
+
+    // FIX: Find the first available and valid exchange rate from any of the joined quotes.
+    const exchangeRate = baseQuotes.find(q => q.exchange_rate && parseFloat(q.exchange_rate) > 0)?.exchange_rate || null;
 
     // 2) Validar que todas las cotizaciones tengan el mismo cliente y misma matrícula de aeronave
     const firstCliente = firstQuote.cliente || firstQuote.id_cliente;
@@ -515,7 +572,7 @@ const joinQuotes = async (req, res) => {
       new Date(),
       firstQuote.nombre_solicitante,
       firstQuote.nombre_responsable,
-      firstQuote.exchange_rate,
+      exchangeRate,
       firstQuote.es_miembro_caa,
       firstQuote.fecha_llegada,
       firstQuote.fecha_salida,
