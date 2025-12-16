@@ -885,7 +885,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                     checked={isCaaMember}
                                     onChange={(e) => setIsCaaMember(e.target.checked)}
                                     disabled={isReadOnly}
-                                    className='disabled:bg-gray-200 disabled:cursor-not-allowed'
+                                    className='disabled:bg-gray-200 disabled:cursor-not-allowed cursor-pointer'
                                 />
                                 <label htmlFor="caa-member" className="block text-sm font-medium text-dark-gray">
                                     <a>
@@ -1066,7 +1066,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                 <input id="eta-checkbox" 
                        name="eta-checkbox" 
                        type="checkbox" 
-                       className="focus:ring-sky-500 h-4 w-4 text-sky-600 border-gray-300 rounded disabled:bg-gray-200 disabled:cursor-not-allowed"
+                       className="focus:ring-sky-500 h-4 w-4 text-sky-600 border-gray-300 rounded disabled:bg-gray-200 disabled:cursor-not-allowed cursor-pointer"
                        checked={noEta}
                        onChange={handleNoEtaChange} 
                        disabled={isReadOnly}/>
@@ -1192,7 +1192,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                     <input id="etd-checkbox" 
                                            name="etd-checkbox" 
                                            type="checkbox" 
-                                           className="focus:ring-sky-500 h-4 w-4 text-sky-600 border-gray-300 rounded disabled:cursor-not-allowed"
+                                           className="focus:ring-sky-500 h-4 w-4 text-sky-600 border-gray-300 rounded disabled:cursor-not-allowed cursor-pointer"
                                            checked={noEtd}
                                            onChange={handleNoEtdChange} 
                                            disabled={isReadOnly} />
