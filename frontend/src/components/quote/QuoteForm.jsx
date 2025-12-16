@@ -159,7 +159,6 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
             setSelectStation(station ? station.icao_aeropuerto : (quote.aeropuerto || '')); 
             setSelectedAirportId(station ? station.id_aeropuerto : null);
             
-            // SOLUCIÓN: Establecer el valor de CAA directamente desde los datos de la cotización.
             setIsCaaMember(!!quote.es_miembro_caa);
 
             setNoEta(quote.fecha_llegada === null);
@@ -196,9 +195,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                     setMtowValue(quote.mtow || (model ? model.mtow_aeronave : ''));
                     setUnit(quote.mtow_unit || 'KG');
                 } else {
-                // CASO B: Manual / No existe en Catálogo (Usamos SNAPSHOT)
-               
-                
+                               
                 setRegistrationValue(quote.matricula_aeronave || ''); // Matrícula snapshot
                 
                 setModelValue(quote.modelo_aeronave || '');         // Modelo snapshot
@@ -250,6 +247,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
             const fbo = allFbos.find(f => f.id_fbo === selectedFboId);
 
             return {
+                quoteNumber: quoteNumber, // Ensure quoteNumber is always passed
                 // Existing fields for saving
                 customer: selectedCustomer ? selectedCustomer.id_cliente : null,
                 flightType: selectedFlightType ? selectedFlightType.id_cat_operacion : null,

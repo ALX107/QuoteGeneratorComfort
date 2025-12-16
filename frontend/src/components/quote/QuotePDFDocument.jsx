@@ -52,12 +52,21 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   sectionTitle: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: 'bold',
     backgroundColor: '#E8EAF6',
-    padding: 5,
-    marginBottom: 10,
+    padding: 4,
+    marginBottom: 8,
     color: '#1A237E',
+  },
+  detailsBox: {
+    border: '1px solid #E8EAF6',
+    borderRadius: 3,
+    padding: 6,
+    backgroundColor: '#FAFAFA',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
   },
   grid: {
     flexDirection: 'row',
@@ -65,7 +74,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   gridItem: {
-    width: '48%',
+    width: '32%',
     marginBottom: 4,
   },
   infoBox: {
@@ -114,12 +123,12 @@ const styles = StyleSheet.create({
     width: '70%',
   },
   label: {
-    fontSize: 8,
+    fontSize: 6,
     color: '#4A4A4A',
-    marginBottom: 2,
+    marginBottom: 1,
   },
   value: {
-    fontSize: 9,
+    fontSize: 7,
     color: '#000000',
   },
   table: {
@@ -205,28 +214,21 @@ const styles = StyleSheet.create({
     color: '#1A237E',
   },
   disclaimers: {
-    marginTop: 20,
-    marginBottom: 30,
-    paddingTop: 15,
-    borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
   },
   disclaimerText: {
-    fontSize: 6,
+    fontSize: 7,
     color: '#666',
     textAlign: 'center',
     marginBottom: 3,
-    fontStyle: 'italic',
+    fontStyle: 'italic', 
+    fontWeight: 'bold',
   },
   mainContent: {
-    flexGrow: 1, 
+    //flexGrow: 1,
   },
   footer: {
-    marginTop: 'auto', 
-    paddingBottom: 30, 
     borderTopWidth: 1,
     borderTopColor: '#C19A6B',
-    paddingTop: 10,
   },
   footerContent: {
     flexDirection: 'row',
@@ -279,7 +281,7 @@ const styles = StyleSheet.create({
 const InfoField = ({ label, value }) => (
   <View style={styles.gridItem}>
     <Text style={styles.label}>{label}</Text>
-    <Text style={styles.value}>{value || 'N/A'}</Text>
+    <Text style={styles.value}>{value !== null && value !== undefined ? value : 'N/A'}</Text>
   </View>
 );
 
@@ -306,20 +308,16 @@ const QuotePDFDocument = ({ formData, items, totals, legs }) => {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Quote Details</Text>
 
-            {formData?.totalEnPalabras && formData.totalEnPalabras.startsWith('JOIN OF:') && (
-              <View style={{ marginBottom: 10, padding: 8, backgroundColor: '#FFF3CD', borderLeftWidth: 4, borderLeftColor: '#FFC107' }}>
-                <Text style={{ fontSize: 8, color: '#856404', fontWeight: 'bold' }}>
-                  {formData.totalEnPalabras}
-                </Text>
-              </View>
-            )}
-
-            <View style={styles.grid}>
+            <View style={styles.detailsBox}>
               <InfoField label="Customer" value={formData?.customerName} />
               <InfoField label="Date" value={formData?.date} />
-              <InfoField label="Flight Type" value={formData?.flightTypeName} />
-              <InfoField label="Aircraft Model" value={formData?.aircraftModelName} />
-              <InfoField label="Aircraft Registration" value={formData?.aircraftRegistrationValue} />
+              <View style={styles.gridItem}>
+                <Text style={styles.label}>Quote:</Text>
+                <Text style={styles.value}>{formData?.quoteNumber ? `#${formData.quoteNumber}` : 'N/A'}</Text>
+              </View>
+              <InfoField label="Category" value={formData?.flightTypeName} />
+              <InfoField label="Reference" value={`${formData?.aircraftRegistrationValue || ''} / ${formData?.aircraftModelName || ''}`} />
+              <InfoField label="Attn." value={formData?.attn || ' '} />
             </View>
           </View>
 
@@ -514,7 +512,7 @@ const QuotePDFDocument = ({ formData, items, totals, legs }) => {
         </View>
 
         {/* Footer */}
-        <View style={styles.footer}>
+        <View style={styles.footer} fixed>
           <View style={styles.footerContent}>
             <View style={styles.footerLeft}>
               <Text style={styles.footerCompany}>Real Alfa Flight Aviation Services S.A de C.V</Text>

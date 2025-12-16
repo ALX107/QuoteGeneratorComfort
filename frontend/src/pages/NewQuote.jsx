@@ -100,6 +100,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                     if (isJoinedQuote) {
                         // Construir formData desde los datos de la cotización
                         const formDataForPdf = {
+                            quoteNumber: quoteData.numero_referencia || null, 
                             customerName: quoteData.cliente || '',
                             date: quoteData.fecha_cotizacion ? new Date(quoteData.fecha_cotizacion).toISOString().split('T')[0] : '',
                             flightTypeName: quoteData.cat_operacion || '',
