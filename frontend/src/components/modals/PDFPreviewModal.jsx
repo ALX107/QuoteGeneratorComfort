@@ -2,7 +2,9 @@ import React, { useEffect } from 'react';
 import { PDFViewer } from '@react-pdf/renderer';
 import QuotePDFDocument from '../quote/QuotePDFDocument';
 
-const PDFPreviewModal = ({ isOpen, onClose, pdfData }) => {
+const PDFPreviewModal = ({ isOpen, onClose, pdfData, DocumentComponent }) => {
+  const Doc = DocumentComponent || QuotePDFDocument;
+
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
@@ -72,7 +74,7 @@ const PDFPreviewModal = ({ isOpen, onClose, pdfData }) => {
         </button>
         {pdfData ? (
           <PDFViewer style={{ width: '100%', height: '100%' }}>
-            <QuotePDFDocument {...pdfData} />
+            <Doc {...pdfData} />
           </PDFViewer>
         ) : (
           <p>Loading...</p>

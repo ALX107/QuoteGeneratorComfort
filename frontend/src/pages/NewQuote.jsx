@@ -8,6 +8,9 @@ import AddServiceModal from '../components/modals/AddServiceModal';
 import PDFPreviewModal from '../components/modals/PDFPreviewModal';
 import ConfirmationModal, { ExclamationTriangleIcon, InboxArrowDownIcon } from '../components/modals/ConfirmationModal';
 import axios from 'axios';
+import QuotePDFDocument from '../components/quote/QuotePDFDocument';
+import QuotePDFClientDocument from '../components/quote/QuotePDFClientDocument';
+import PDFSelectionModal from '../components/modals/PDFSelectionModal';
 
 function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
     const [items, setItems] = useState([]);
@@ -20,7 +23,9 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
     const [isClearQuoteModalOpen, setIsClearQuoteModalOpen] = useState(false);
     const [isSaveQuoteModalOpen, setIsSaveQuoteModalOpen] = useState(false);
     const [isPdfPreviewOpen, setIsPdfPreviewOpen] = useState(false);
+    const [isPdfSelectionModalOpen, setIsPdfSelectionModalOpen] = useState(false);
     const [pdfData, setPdfData] = useState(null);
+    const [pdfDocumentComponent, setPdfDocumentComponent] = useState(null);
     const [allServices, setAllServices] = useState([]);
     const [defaultConceptos, setDefaultConceptos] = useState([]);
 
@@ -83,6 +88,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                     // Mapear servicios a items
                     const mappedItems = quoteData.servicios.map(servicio => ({
                         description: servicio.nombre_servicio,
+                        category: servicio.nombre_cat_concepto,
                         quantity: servicio.cantidad,
                         priceMXN: servicio.costo_mxn,
                         priceUSD: servicio.costo_usd,
@@ -127,6 +133,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                             legsData = quoteData.legs.map(leg => {
                                 const legItems = leg.servicios.map(servicio => ({
                                     description: servicio.nombre_servicio,
+                                    category: servicio.nombre_cat_concepto,
                                     quantity: servicio.cantidad,
                                     priceMXN: servicio.costo_mxn,
                                     priceUSD: servicio.costo_usd,
@@ -181,7 +188,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                         };
 
                         setPdfData(fullPdfData);
-                        setIsPdfPreviewOpen(true);
+                        setIsPdfSelectionModalOpen(true);
                         setOnNewQuoteBlocked(false);
                     } else {
                         // Si no es una unión, comportamiento normal: mostrar formulario
@@ -278,6 +285,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
 
                 return {
                     description: concepto.nombre_concepto_default,
+                    category: concepto.nombre_cat_concepto,
                     quantity,
                     priceMXN,
             priceUSD: parseFloat(priceUSD.toFixed(2)), // Round to 2 decimals
@@ -414,7 +422,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                             // A service with the same name exists for the new FBO, update its price.
                             const newPriceMXN = matchingNewService.costo_concepto || 0;
                             const newPriceUSD = exchangeRate ? +((newPriceMXN) / exchangeRate).toFixed(4) : 0;
-                            return { ...item, priceMXN: newPriceMXN, priceUSD: newPriceUSD, anchorCurrency: 'MXN' };
+                            return { ...item, priceMXN: newPriceMXN, priceUSD: newPriceUSD, anchorCurrency: 'MXN', category: matchingNewService.nombre_cat_concepto };
                         }
                         // If no match, it's a manual row or a default concept not priced by this FBO. Return as is.
                         return item;
@@ -433,7 +441,6 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                 divisa: 'MXN', // Assuming default is MXN
             }));
             setAllServices(formattedDefaultConceptos);
-             setAllServices(formattedDefaultConceptos);
             // When an airport is selected but FBO is cleared, reset prices to default (0).
             setItems(prevItems => prevItems.map(item => {
                 const isDefault = defaultConceptos.some(c => c.nombre_concepto_default === item.description);
@@ -463,6 +470,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
     const handleAddItem = () => {
         const newItem = {
             description: '',
+            category: '',
             quantity: 1,
             priceMXN: 0,
             priceUSD: 0,
@@ -546,6 +554,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
 
             return {
                 description: service.name,
+                category: service.description,
                 quantity,
                 priceMXN,
                 priceUSD,
@@ -734,8 +743,45 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
             };
 
             setPdfData(fullPdfData);
+            setPdfDocumentComponent(() => QuotePDFDocument);
             setIsPdfPreviewOpen(true);
         }
+    };
+
+    const handlePreviewClientPdf = () => {
+        setOnNewQuoteBlocked(true);
+        if (quoteFormRef.current) {
+            const isValid = quoteFormRef.current.validate(exchangeRate); // Pass current exchangeRate
+            if (!isValid) {
+                setOnNewQuoteBlocked(false); // Re-enable button if validation fails
+                return;
+            }
+            const formData = quoteFormRef.current.getFormData();
+            const fullPdfData = {
+                formData: {
+                    ...formData,
+                    totalEnPalabras: totalEnPalabras, // Incluir el campo de unión si existe
+                },
+                items: items,
+                totals: totals,
+            };
+
+            setPdfData(fullPdfData);
+            setPdfDocumentComponent(() => QuotePDFClientDocument);
+            setIsPdfPreviewOpen(true);
+        }
+    };
+
+    const handleSelectOpsPdf = () => {
+        setPdfDocumentComponent(() => QuotePDFDocument);
+        setIsPdfSelectionModalOpen(false);
+        setIsPdfPreviewOpen(true);
+    };
+
+    const handleSelectClientPdf = () => {
+        setPdfDocumentComponent(() => QuotePDFClientDocument);
+        setIsPdfSelectionModalOpen(false);
+        setIsPdfPreviewOpen(true);
     };
 
     const subtotal = items.reduce((acc, item) => acc + item.total, 0);
@@ -757,6 +803,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                 <QuoteHeader onClearQuote={handleClearQuote}
                     onSaveQuote={handleSaveQuote}
                     onExportToPdf={handlePreviewPdf}
+                    onExportToClientPdf={handlePreviewClientPdf}
                     isReadOnly={isReadOnly}
                     onNewQuoteBlocked={onNewQuoteBlocked}
                     onSaveAsNew={handleSaveAsNew}
@@ -829,6 +876,16 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                         }
                     }}
                     pdfData={pdfData}
+                    DocumentComponent={pdfDocumentComponent}
+                />
+                <PDFSelectionModal
+                    isOpen={isPdfSelectionModalOpen}
+                    onClose={() => {
+                        setIsPdfSelectionModalOpen(false);
+                        onNavigateToHistorico();
+                    }}
+                    onSelectOps={handleSelectOpsPdf}
+                    onSelectClient={handleSelectClientPdf}
                 />
             </div>
         </div>

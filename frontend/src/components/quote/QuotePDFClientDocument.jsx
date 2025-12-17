@@ -285,8 +285,58 @@ const InfoField = ({ label, value }) => (
   </View>
 );
 
+const CATEGORY_ORDER = [
+  'FBO Services',
+  'Airport Services General Aviation',
+  'Airport Services Commercial Aviation',
+  'Third-Party Services General Aviation',
+  'Taxes % Imigration Services FBO',
+  'Landing Permit FBO',
+  'Raf Coordination FBO',
+  'Fuel FBO',
+  'APIS FBO',
+  'Additional Services FBO',
+  'Default',
+  'Taxes % Imigration Services General Aviation',
+  'Landing Permit General Aviation',
+  'Raf Coordination General Aviation',
+  'Fuel General Aviation',
+  'APIS General Aviation',
+  'Additional Services General Aviation',
+  'Third-Party Services Commercial Aviation',
+  'Taxes % Imigration Services Commercial Aviation',
+  'Landing Permit Commercial Aviation',
+  'Raf Coordination Commercial Aviation',
+  'Fuel Commercial Aviation',
+  'APIS Commercial Aviation',
+  'Additional Services Commercial Aviation'
+];
+
+// Helper function to group items by category
+const groupItems = (items) => {
+  const groups = {};
+  items.forEach(item => {
+    // Si existe categoría, úsala (limpiando espacios). Si no, agrupa todo en "Additional Services".
+    // Esto asegura que los items manuales se sumen en una sola línea en lugar de separarse.
+    const key = (item.category && item.category.trim()) ? item.category.trim() : 'Additional Services';
+    if (!groups[key]) {
+      groups[key] = { description: key, quantity: 1, total: 0 };
+    }
+    groups[key].total += (parseFloat(item.total) || 0);
+  });
+  
+  return Object.values(groups).sort((a, b) => {
+    const indexA = CATEGORY_ORDER.indexOf(a.description);
+    const indexB = CATEGORY_ORDER.indexOf(b.description);
+    if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+    if (indexA !== -1) return -1;
+    if (indexB !== -1) return 1;
+    return a.description.localeCompare(b.description);
+  });
+};
+
 // Create Document Component
-const QuotePDFDocument = ({ formData, items, totals, legs }) => {
+const QuotePDFClientDocument = ({ formData, items, totals, legs }) => {
   const isJoinedQuote = legs && legs.length > 0;
   const allItems = isJoinedQuote ? legs.flatMap(leg => leg.items) : items;
   const hasNoSc = allItems.some(item => item.noSc);
@@ -374,24 +424,18 @@ const QuotePDFDocument = ({ formData, items, totals, legs }) => {
                 <View style={styles.table}>
                   {/* Table Header */}
                   <View style={styles.tableRow}>
-                    <View style={[styles.tableColHeader, { width: '35%', textAlign: 'left' }]}><Text style={styles.tableHeader}>Description</Text></View>
-                    <View style={[styles.tableColHeader, { width: '7%' }]}><Text style={styles.tableHeader}>#</Text></View>
-                    <View style={[styles.tableColHeader, { width: '12%' }]}><Text style={styles.tableHeader}>Unit Price</Text></View>
-                    <View style={[styles.tableColHeader, { width: '12%' }]}><Text style={styles.tableHeader}>Before VAT</Text></View>
-                    <View style={[styles.tableColHeader, { width: '11%' }]}><Text style={styles.tableHeader}>Admin Fee</Text></View>
-                    <View style={[styles.tableColHeader, { width: '11%' }]}><Text style={styles.tableHeader}>VAT</Text></View>
-                    <View style={[styles.tableColHeader, { width: '12%' }]}><Text style={styles.tableHeader}>TOTAL COST</Text></View>
+                    <View style={[styles.tableColHeader, { width: '55%', textAlign: 'left' }]}><Text style={styles.tableHeader}>Description</Text></View>
+                    <View style={[styles.tableColHeader, { width: '10%' }]}><Text style={styles.tableHeader}>#</Text></View>
+                    <View style={[styles.tableColHeader, { width: '15%' }]}><Text style={styles.tableHeader}>Unit Price</Text></View>
+                    <View style={[styles.tableColHeader, { width: '20%' }]}><Text style={styles.tableHeader}>Amount</Text></View>
                   </View>
                   {/* Table Body */}
-                  {leg.items.map((item, index) => (
+                  {groupItems(leg.items).map((item, index) => (
                     <View key={index} style={styles.tableRow}>
-                      <View style={[styles.tableCol, { width: '35%', textAlign: 'left' }]}><Text style={[styles.tableCell, { textAlign: 'left' }]}>{item.description}</Text></View>
-                      <View style={[styles.tableCol, { width: '7%', textAlign: 'center' }]}><Text style={[styles.tableCell, { textAlign: 'center' }]}>{(parseFloat(item.quantity) || 0)}</Text></View>
-                      <View style={[styles.tableCol, { width: '12%' }]}><Text style={styles.tableCell}>{(parseFloat(item.priceUSD) || 0).toFixed(2)}</Text></View>
-                      <View style={[styles.tableCol, { width: '12%' }]}><Text style={styles.tableCell}>{((parseFloat(item.quantity) || 0) * (parseFloat(item.priceUSD) || 0)).toFixed(2)}</Text></View>
-                      <View style={[styles.tableCol, { width: '11%' }]}><Text style={styles.tableCell}>{((parseFloat(item.priceUSD) || 0) * (parseFloat(item.quantity) || 0) * (parseFloat(item.scPercentage) || 0)).toFixed(2)}</Text></View>
-                      <View style={[styles.tableCol, { width: '11%' }]}><Text style={styles.tableCell}>{((parseFloat(item.priceUSD) || 0) * (parseFloat(item.quantity) || 0) * (parseFloat(item.vatPercentage) || 0)).toFixed(2)}</Text></View>
-                      <View style={[styles.tableCol, { width: '12%' }]}><Text style={styles.tableCell}>{(parseFloat(item.total) || 0).toFixed(2)}</Text></View>
+                      <View style={[styles.tableCol, { width: '55%', textAlign: 'left' }]}><Text style={[styles.tableCell, { textAlign: 'left' }]}>{item.description}</Text></View>
+                      <View style={[styles.tableCol, { width: '10%', textAlign: 'center' }]}><Text style={[styles.tableCell, { textAlign: 'center' }]}>1</Text></View>
+                      <View style={[styles.tableCol, { width: '15%' }]}><Text style={styles.tableCell}>{(item.total).toFixed(2)}</Text></View>
+                      <View style={[styles.tableCol, { width: '20%' }]}><Text style={styles.tableCell}>{(parseFloat(item.total) || 0).toFixed(2)}</Text></View>
                     </View>
                   ))}
                 </View>
@@ -447,24 +491,18 @@ const QuotePDFDocument = ({ formData, items, totals, legs }) => {
               <View style={styles.table}>
                 {/* Table Header */}
                 <View style={styles.tableRow}>
-                  <View style={[styles.tableColHeader, { width: '35%', textAlign: 'left' }]}><Text style={styles.tableHeader}>Description</Text></View>
-                  <View style={[styles.tableColHeader, { width: '7%' }]}><Text style={styles.tableHeader}>#</Text></View>
-                  <View style={[styles.tableColHeader, { width: '12%' }]}><Text style={styles.tableHeader}>Unit Price</Text></View>
-                  <View style={[styles.tableColHeader, { width: '12%' }]}><Text style={styles.tableHeader}>Before VAT</Text></View>
-                  <View style={[styles.tableColHeader, { width: '11%' }]}><Text style={styles.tableHeader}>Admin Fee</Text></View>
-                  <View style={[styles.tableColHeader, { width: '11%' }]}><Text style={styles.tableHeader}>VAT</Text></View>
-                  <View style={[styles.tableColHeader, { width: '12%' }]}><Text style={styles.tableHeader}>TOTAL COST</Text></View>
+                  <View style={[styles.tableColHeader, { width: '55%', textAlign: 'left' }]}><Text style={styles.tableHeader}>Description</Text></View>
+                  <View style={[styles.tableColHeader, { width: '10%' }]}><Text style={styles.tableHeader}>#</Text></View>
+                  <View style={[styles.tableColHeader, { width: '15%' }]}><Text style={styles.tableHeader}>Unit Price</Text></View>
+                  <View style={[styles.tableColHeader, { width: '20%' }]}><Text style={styles.tableHeader}>Amount</Text></View>
                 </View>
                 {/* Table Body */}
-                {items.map((item, index) => (
+                {groupItems(items).map((item, index) => (
                   <View key={index} style={styles.tableRow}>
-                    <View style={[styles.tableCol, { width: '35%', textAlign: 'left' }]}><Text style={[styles.tableCell, { textAlign: 'left' }]}>{item.description}</Text></View>
-                    <View style={[styles.tableCol, { width: '7%', textAlign: 'center' }]}><Text style={[styles.tableCell, { textAlign: 'center' }]}>{(parseFloat(item.quantity) || 0)}</Text></View>
-                    <View style={[styles.tableCol, { width: '12%' }]}><Text style={styles.tableCell}>{(parseFloat(item.priceUSD) || 0).toFixed(2)}</Text></View>
-                    <View style={[styles.tableCol, { width: '12%' }]}><Text style={styles.tableCell}>{((parseFloat(item.quantity) || 0) * (parseFloat(item.priceUSD) || 0)).toFixed(2)}</Text></View>
-                    <View style={[styles.tableCol, { width: '11%' }]}><Text style={styles.tableCell}>{((parseFloat(item.priceUSD) || 0) * (parseFloat(item.quantity) || 0) * (parseFloat(item.scPercentage) || 0)).toFixed(2)}</Text></View>
-                    <View style={[styles.tableCol, { width: '11%' }]}><Text style={styles.tableCell}>{((parseFloat(item.priceUSD) || 0) * (parseFloat(item.quantity) || 0) * (parseFloat(item.vatPercentage) || 0)).toFixed(2)}</Text></View>
-                    <View style={[styles.tableCol, { width: '12%' }]}><Text style={styles.tableCell}>{(parseFloat(item.total) || 0).toFixed(2)}</Text></View>
+                    <View style={[styles.tableCol, { width: '55%', textAlign: 'left' }]}><Text style={[styles.tableCell, { textAlign: 'left' }]}>{item.description}</Text></View>
+                    <View style={[styles.tableCol, { width: '10%', textAlign: 'center' }]}><Text style={[styles.tableCell, { textAlign: 'center' }]}>1</Text></View>
+                    <View style={[styles.tableCol, { width: '15%' }]}><Text style={styles.tableCell}>{(item.total).toFixed(2)}</Text></View>
+                    <View style={[styles.tableCol, { width: '20%' }]}><Text style={styles.tableCell}>{(parseFloat(item.total) || 0).toFixed(2)}</Text></View>
                   </View>
                 ))}
               </View>
@@ -538,4 +576,4 @@ const QuotePDFDocument = ({ formData, items, totals, legs }) => {
   );
 };
 
-export default QuotePDFDocument;
+export default QuotePDFClientDocument;

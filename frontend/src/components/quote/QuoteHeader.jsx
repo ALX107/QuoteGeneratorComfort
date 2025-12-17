@@ -1,7 +1,7 @@
 import RAFLogo from '../../assets/RafLogo.png';
 import RAFLogoBlanco from '../../assets/RafLogoBlanco.png';
 
-function QuoteHeader({ onClearQuote, onSaveQuote, onSaveAsNew, onExportToPdf, isReadOnly, onNewQuoteBlocked }) {
+function QuoteHeader({ onClearQuote, onSaveQuote, onSaveAsNew, onExportToPdf, onExportToClientPdf, isReadOnly, onNewQuoteBlocked }) {
     return (
         <header className="flex items-center justify-between bg-blue-dark shadow-md rounded-lg px-8 py-4 mb-6 border border-black">
             {/* Izquierda */}
@@ -19,7 +19,12 @@ function QuoteHeader({ onClearQuote, onSaveQuote, onSaveAsNew, onExportToPdf, is
                 <button className="btn-glass disabled:opacity-60 disabled:cursor-not-allowed" 
                         onClick={onExportToPdf}
                         disabled={onNewQuoteBlocked}>
-                    Export to PDF
+                    PDF OPS
+                </button>
+                <button className="btn-glass disabled:opacity-60 disabled:cursor-not-allowed" 
+                        onClick={onExportToClientPdf}
+                        disabled={onNewQuoteBlocked}>
+                    PDF Client
                 </button>
             </div>
 
