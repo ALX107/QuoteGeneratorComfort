@@ -11,7 +11,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     backgroundColor: '#FFFFFF',
     padding: 30,
-    paddingBottom: 0, 
+    paddingBottom: 90, 
   },
   header: {
     flexDirection: 'row',
@@ -19,21 +19,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderBottomWidth: 2,
     borderBottomColor: '#1A237E',
-    paddingBottom: 15,
-    marginBottom: 20,
+    paddingBottom: 5,
+    marginBottom: 5,
   },
   headerInfo: {
     textAlign: 'right',
   },
   logo: {
-    width: 100,
+    width: 70,
     height: 'auto',
   },
   slogan: {
     fontSize: 11,
     color: '#C19A6B',
     fontStyle: 'italic',
-    marginBottom: 4,
+    marginBottom: 1,
     letterSpacing: 0.5,
   },
   title: {
@@ -45,24 +45,24 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 9,
     color: '#4A4A4A',
-    marginTop: 4,
+    marginTop: 1,
     fontStyle: 'italic',
   },
   section: {
-    marginBottom: 15,
+    marginBottom: 5,
   },
   sectionTitle: {
     fontSize: 9,
     fontWeight: 'bold',
     backgroundColor: '#E8EAF6',
-    padding: 4,
-    marginBottom: 8,
+    padding: 2,
+    marginBottom: 2,
     color: '#1A237E',
   },
   detailsBox: {
     border: '1px solid #E8EAF6',
     borderRadius: 3,
-    padding: 6,
+    padding: 4,
     backgroundColor: '#FAFAFA',
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -75,14 +75,14 @@ const styles = StyleSheet.create({
   },
   gridItem: {
     width: '32%',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   infoBox: {
     backgroundColor: '#F5F5F5',
     border: '1px solid #C19A6B',
-    padding: 4,
+    padding: 2,
     borderRadius: 4,
-    marginBottom: 5,
+    marginBottom: 2,
     width: '100%',
   },
   infoBoxTitle: {
@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
     borderColor: '#DFE3E8',
     borderRightWidth: 0,
     borderBottomWidth: 0,
-    marginBottom: 10,
+    marginBottom: 5,
   },
   tableRow: {
     flexDirection: 'row',
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#DFE3E8',
     backgroundColor: '#F4F6F8',
-    padding: 4,
+    padding: 2,
     borderLeftWidth: 0,
     borderTopWidth: 0,
   },
@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
     borderStyle: 'solid',
     borderWidth: 1,
     borderColor: '#DFE3E8',
-    padding: 4,
+    padding: 2,
     borderLeftWidth: 0,
     borderTopWidth: 0,
   },
@@ -174,8 +174,8 @@ const styles = StyleSheet.create({
   exchangeRate: {
     flexDirection: 'row',
     justifyContent: 'flex-left',
-    marginBottom: 15,
-    marginTop: 5,
+    marginBottom: 5,
+    marginTop: 2,
     paddingRight: 10,
     fontWeight: 'bold',
   },
@@ -192,13 +192,13 @@ const styles = StyleSheet.create({
     width: '40%',
     borderTopWidth: 1,
     borderTopColor: '#E0E0E0',
-    paddingTop: 10,
-    marginBottom: 20,
+    paddingTop: 5,
+    marginBottom: 10,
   },
   totalRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   totalLabel: {
     fontSize: 11,
@@ -214,9 +214,11 @@ const styles = StyleSheet.create({
     color: '#1A237E',
   },
   disclaimers: {
+    marginBottom: 10,
+    marginTop: 'auto',
   },
   disclaimerText: {
-    fontSize: 7,
+    fontSize: 6,
     color: '#666',
     textAlign: 'center',
     marginBottom: 3,
@@ -224,9 +226,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   mainContent: {
-    //flexGrow: 1,
+    flex: 1,
   },
   footer: {
+    position: 'absolute',
+    bottom: 5,
+    left: 30,
+    right: 30,
     borderTopWidth: 1,
     borderTopColor: '#C19A6B',
   },
@@ -260,7 +266,7 @@ const styles = StyleSheet.create({
     width: 50,
   },
   footerCompany: {
-    fontSize: 10,
+    fontSize: 8,
     fontWeight: 'bold',
     color: '#1A237E',
     marginBottom: 2,
@@ -349,8 +355,8 @@ const QuotePDFClientDocument = ({ formData, items, totals, legs }) => {
           <View style={styles.header}>
             <Image style={styles.logo} src={RAFLogo} />
             <View style={styles.headerInfo}>
-              <Text style={styles.slogan}>"The art of ground handling in Mexico"</Text>
               <Text style={styles.title}>Quotation</Text>
+              <Text style={styles.slogan}>"The art of ground handling in Mexico"</Text>
               <Text style={styles.subtitle}>Quoted by: {formData?.quotedBy.toUpperCase()}</Text>
             </View>
           </View>
