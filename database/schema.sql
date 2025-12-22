@@ -85,6 +85,8 @@ CREATE TABLE conceptos_default (
     id_concepto_std BIGSERIAL PRIMARY KEY,
     nombre_concepto_default VARCHAR(255) NOT NULL,
     costo_concepto_default DECIMAL(12, 2) NOT NULL,
+    divisa_concepto_default VARCHAR(3) NOT NULL,
+    es_default boolean DEFAULT false,
     id_categoria_concepto BIGINT NOT NULL,
 
     CONSTRAINT fk_conceptos_categoria FOREIGN KEY (id_categoria_concepto) REFERENCES categorias_conceptos(id_cat_concepto)
@@ -94,11 +96,11 @@ CREATE TABLE conceptos_default (
 CREATE TABLE servicios_cliente_especiales (
     id_servicio_especial BIGSERIAL PRIMARY KEY, 
     id_cliente BIGINT NOT NULL, -- FK que referencia al cliente
-    nombre_servicio VARCHAR(255) NOT NULL,
+    id_concepto_std BIGINT, -- FK que referencia al concepto/servicio
     costo_servicio DECIMAL(12, 2) NOT NULL,
 
-    -- La constraint ahora apunta a la columna correcta
-    CONSTRAINT fk_servicios_cliente_especial_cliente FOREIGN KEY (id_cliente) REFERENCES clientes(id_cliente)
+    CONSTRAINT fk_servicios_cliente_especial_cliente FOREIGN KEY (id_cliente) REFERENCES clientes(id_cliente),
+    CONSTRAINT fk_servicios_cliente_especial_concepto FOREIGN KEY (id_concepto_std) REFERENCES conceptos_default(id_concepto_std)
 );
 
 -- ========= TABLAS DEPENDIENTES (Nivel 2) =========
@@ -106,16 +108,18 @@ CREATE TABLE servicios_cliente_especiales (
 -- Precios específicos para un concepto. Puede variar por aeropuerto o FBO.
 CREATE TABLE precios_conceptos(
     id_precio_concepto BIGSERIAL PRIMARY KEY,
-    nombre_local_concepto VARCHAR(255) NOT NULL,
-    costo_concepto DECIMAL(12, 2) NOT NULL,
+    tarifa_servicio DECIMAL(12, 2) NOT NULL,
     divisa VARCHAR(3) NOT NULL,
+    id_concepto_std BIGINT,
     id_cat_concepto BIGINT NOT NULL,
     id_aeropuerto BIGINT,
     id_fbo BIGINT,
 
+    CONSTRAINT fk_precio_concepto_std FOREIGN KEY (id_concepto_std) REFERENCES conceptos_default(id_concepto_std),
     CONSTRAINT fk_cat_concepto FOREIGN KEY (id_cat_concepto) REFERENCES categorias_conceptos(id_cat_concepto),
     CONSTRAINT fk_precios_aeropuerto FOREIGN KEY (id_aeropuerto) REFERENCES aeropuertos(id_aeropuerto),
     CONSTRAINT fk_precios_fbo FOREIGN KEY (id_fbo) REFERENCES fbos(id_fbo)
+
 );
 
 -- ========= TABLAS DEPENDIENTES (Nivel 3) =========

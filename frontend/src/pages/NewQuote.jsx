@@ -385,7 +385,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
     const fetchServices = async (id_aeropuerto, id_fbo) => {
         // 1. Filter out old services before fetching new ones.
         // Keep items that are manually added (empty description) or are default concepts.
-        const currentServiceNames = new Set(allServices.map(s => s.nombre_local_concepto));
+        const currentServiceNames = new Set(allServices.map(s => s.nombre_concepto_default));
         const defaultConceptNames = new Set(defaultConceptos.map(c => c.nombre_concepto_default));
 
         setItems(prevItems => prevItems.filter(item => {
@@ -401,9 +401,9 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                 setAllServices(response.data);
 
                 // **CORRECTED LOGIC: Remove old FBO-specific services AND update prices**
-                const newServicesMap = new Map(response.data.map(s => [s.nombre_local_concepto, s]));
+                const newServicesMap = new Map(response.data.map(s => [s.nombre_concepto_default, s]));
                 const defaultConceptNames = new Set(defaultConceptos.map(c => c.nombre_concepto_default));
-                const previousFboServiceNames = new Set(allServices.map(s => s.nombre_local_concepto));
+                const previousFboServiceNames = new Set(allServices.map(s => s.nombre_concepto_default));
 
                 setItems(prevItems => {
                     // 1. Filter out services that are no longer valid
@@ -416,17 +416,49 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                     });
 
                     // 2. Update prices for the remaining items
-                    return filteredItems.map(item => {
+                    const updatedItems = filteredItems.map(item => {
                         const matchingNewService = newServicesMap.get(item.description);
                         if (matchingNewService) {
                             // A service with the same name exists for the new FBO, update its price.
-                            const newPriceMXN = matchingNewService.costo_concepto || 0;
+                            const newPriceMXN = parseFloat(matchingNewService.tarifa_servicio) || 0;
                             const newPriceUSD = exchangeRate ? +((newPriceMXN) / exchangeRate).toFixed(4) : 0;
                             return { ...item, priceMXN: newPriceMXN, priceUSD: newPriceUSD, anchorCurrency: 'MXN', category: matchingNewService.nombre_cat_concepto };
                         }
                         // If no match, it's a manual row or a default concept not priced by this FBO. Return as is.
                         return item;
                     });
+
+                    // 3. Add new default services for this FBO (es_default = true)
+                    const currentDescriptions = new Set(updatedItems.map(i => i.description));
+                    const newDefaults = response.data.filter(s => s.es_default && !currentDescriptions.has(s.nombre_concepto_default));
+
+                    const newItemsToAdd = newDefaults.map(s => {
+                        const priceMXN = parseFloat(s.tarifa_servicio) || 0;
+                        const priceUSD = exchangeRate ? +((priceMXN) / exchangeRate).toFixed(4) : 0;
+                        const quantity = 1;
+                        const scPercentage = globalNoSc ? 0 : 0.08;
+                        const vatPercentage = globalNoVat ? 0 : 0.16;
+                        const cost = quantity * priceUSD;
+                        const serviceCharge = cost * scPercentage;
+                        const vat = cost * vatPercentage;
+                        const total = cost + serviceCharge + vat;
+
+                        return {
+                            description: s.nombre_concepto_default,
+                            category: s.nombre_cat_concepto,
+                            quantity,
+                            priceMXN,
+                            priceUSD,
+                            scPercentage,
+                            vatPercentage,
+                            noSc: globalNoSc,
+                            noVat: globalNoVat,
+                            anchorCurrency: 'MXN',
+                            total,
+                        };
+                    });
+
+                    return [...updatedItems, ...newItemsToAdd];
                 });
 
             } catch (error) {
@@ -436,8 +468,8 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
             // When a station is selected but not an FBO, show the default concepts
             const formattedDefaultConceptos = defaultConceptos.map(c => ({
                 ...c,
-                nombre_local_concepto: c.nombre_concepto_default, // Aligning the property name
-                costo_concepto: c.costo_concepto_default,
+                // nombre_concepto_default is already present
+                tarifa_servicio: c.costo_concepto_default,
                 divisa: 'MXN', // Assuming default is MXN
             }));
             setAllServices(formattedDefaultConceptos);
@@ -459,8 +491,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
             // When nothing is selected, also show default concepts
             const formattedDefaultConceptos = defaultConceptos.map(c => ({
                 ...c,
-                nombre_local_concepto: c.nombre_concepto_default,
-                costo_concepto: c.costo_concepto_default,
+                tarifa_servicio: c.costo_concepto_default,
                 divisa: 'MXN',
             }));
             setAllServices(formattedDefaultConceptos);
@@ -541,7 +572,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
         if (!exchangeRate) return;
 
         const newServiceItems = selectedServicesFromModal.map(service => {
-            const priceMXN = service.costo_concepto || 0;
+            const priceMXN = parseFloat(service.tarifa_servicio) || 0;
             const priceUSD = +((priceMXN) / exchangeRate).toFixed(4);
             const quantity = 1;
             const scPercentage = globalNoSc ? 0 : 0.08; // Respect global state
@@ -567,7 +598,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
             };
         });
 
-        const allServiceDescriptions = new Set(allServices.map(s => s.nombre_local_concepto));
+        const allServiceDescriptions = new Set(allServices.map(s => s.nombre_concepto_default));
         const nonServiceItems = items.filter(item => !allServiceDescriptions.has(item.description));
 
         setItems([...nonServiceItems, ...newServiceItems]);
@@ -790,10 +821,10 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
 
     // Find which of the current items are services to pass to the modal
     const initialSelectedServices = items
-        .filter(item => allServices.some(s => s.nombre_local_concepto === item.description))
+        .filter(item => allServices.some(s => s.nombre_concepto_default === item.description))
         .map(item => {
-            const service = allServices.find(s => s.nombre_local_concepto === item.description);
-            return { ...service, id: service.id_precio_concepto || service.id_concepto_std, name: service.nombre_local_concepto };
+            const service = allServices.find(s => s.nombre_concepto_default === item.description);
+            return { ...service, id: service.id_precio_concepto || service.id_concepto_std, name: service.nombre_concepto_default };
 
         });
 
@@ -837,7 +868,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                     onClose={() => setIsModalOpen(false)}
                     onSave={handleSaveServices}
                     initialSelectedServices={initialSelectedServices}
-                    allServices={allServices.map(s => ({ ...s, id: s.id_precio_concepto || s.id_concepto_std, name: s.nombre_local_concepto, description: s.nombre_cat_concepto }))}
+                    allServices={allServices.map(s => ({ ...s, id: s.id_precio_concepto || s.id_concepto_std, name: s.nombre_concepto_default, description: s.nombre_cat_concepto }))}
                 />
                 <ConfirmationModal
                     isOpen={isClearQuoteModalOpen}

@@ -11,12 +11,16 @@ const getServiciosByAeropuertoOrFbo = async (req, res) => {
         const query = `
             SELECT 
                 pc.id_precio_concepto,
-                pc.nombre_local_concepto,
-                pc.costo_concepto,
+                cd.nombre_concepto_default,
+                pc.tarifa_servicio,
                 pc.divisa,
-                cs.id_cat_concepto
+                pc.id_cat_concepto,
+                cc.nombre_cat_concepto,
+                cd.es_default,
+                cd.id_concepto_std
             FROM precios_conceptos pc
-            JOIN categorias_conceptos cs ON pc.id_cat_concepto = cs.id_cat_concepto
+            JOIN conceptos_default cd ON pc.id_concepto_std = cd.id_concepto_std
+            JOIN categorias_conceptos cc ON pc.id_cat_concepto = cc.id_cat_concepto
             WHERE pc.id_fbo = $1
         `;
 
@@ -30,7 +34,17 @@ const getServiciosByAeropuertoOrFbo = async (req, res) => {
 
 const getDefaultConceptos = async (req, res) => {
     try {
-        const result = await pool.query('SELECT id_concepto_std, nombre_concepto_default, costo_concepto_default FROM conceptos_default');
+        const query = `
+            SELECT 
+                cd.id_concepto_std, 
+                cd.nombre_concepto_default, 
+                cd.costo_concepto_default, 
+                cd.es_default,
+                cc.nombre_cat_concepto
+            FROM conceptos_default cd
+            JOIN categorias_conceptos cc ON cd.id_categoria_concepto = cc.id_cat_concepto
+        `;
+        const result = await pool.query(query);
         res.json(result.rows);
     } catch (error) {
         console.error('Error fetching default conceptos:', error);
