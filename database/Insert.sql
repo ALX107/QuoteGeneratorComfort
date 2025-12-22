@@ -19,6 +19,11 @@ INSERT INTO clientes (id_cliente, nombre_cliente, email_cliente, telefono_client
 (15, 'AEG', 'info@aegaviation.com', '+1-213-555-0202', '400 Skyway Ave', 'Los Angeles', 'California', 'USA', '90045', 'Sarah Mitchell'),
 (16, 'PRIME JET', 'sales@primejet.com', '+1-214-555-0303', '2200 Jetstream Rd', 'Dallas', 'Texas', 'USA', '75261', 'Robert Jenkins'),
 (17, 'PINACLE', 'support@pinacleaviation.com', '+1-404-555-0404', '980 Runway Park Dr', 'Atlanta', 'Georgia', 'USA', '30320', 'Emily Thompson');
+(13, 'MIDWEST AVIATION', 'operations@midwestav.com', '+1-312-555-0222', '300 Wacker Drive', 'Chicago', 'Illinois', 'USA', '60606', 'Alicia Florrick'),
+(14, 'REVA', 'contact@reva.com', '+1-305-555-0101', '150 Aviation Blvd', 'Miami', 'Florida', 'USA', '33142', 'Michael Carter'),
+(15, 'AEG', 'info@aegaviation.com', '+1-213-555-0202', '400 Skyway Ave', 'Los Angeles', 'California', 'USA', '90045', 'Sarah Mitchell'),
+(16, 'PRIME JET', 'sales@primejet.com', '+1-214-555-0303', '2200 Jetstream Rd', 'Dallas', 'Texas', 'USA', '75261', 'Robert Jenkins'),
+(17, 'PINACLE', 'support@pinacleaviation.com', '+1-404-555-0404', '980 Runway Park Dr', 'Atlanta', 'Georgia', 'USA', '30320', 'Emily Thompson');
 
 -- Aeropuertos (58 aeropuertos de México)
 INSERT INTO aeropuertos (id_aeropuerto, icao_aeropuerto, nombre_aeropuerto, ciudad_aeropuerto, estado_aeropuerto, pais_aeropuerto, clasificacion_aeropuerto, grupo_aeropuerto) VALUES
@@ -100,6 +105,28 @@ INSERT INTO categorias_operaciones (id_cat_operacion, nombre_cat_operacion) VALU
 -- Categorías de Conceptos (Servicios)
 INSERT INTO categorias_conceptos (id_cat_concepto, nombre_cat_concepto) VALUES
 (1, 'FBO Services'),
+(2, 'Taxes % Imigration Services FBO'),
+(3, 'Landing Permit FBO'),
+(4, 'RAF Coordination FBO'),
+(5, 'Fuel FBO'),
+(6, 'APIS FBO'),
+(7, 'Additional Services FBO'),
+(8, 'Airport Services General Aviation'),
+(9, 'Third-Party Services General Aviation'),
+(10, 'Taxes % Imigration Services General Aviation'),
+(11, 'Landing Permit General Aviation'),
+(12, 'RAF Coordination General Aviation'),
+(13, 'Fuel General Aviation'),
+(14, 'APIS General Aviation'),
+(15, 'Additional Services General Aviation'),
+(16, 'Airport Services Commercial Aviation'),
+(17, 'Third-Party Services Commercial Aviation'),
+(18, 'Taxes % Imigration Services Commercial Aviation'),
+(19, 'Landing Permit Commercial Aviation'),
+(20, 'RAF Coordination Commercial Aviation'),
+(21, 'Fuel Commercial Aviation'),
+(22, 'APIS Commercial Aviation'),
+(23, 'Additional Services Commercial Aviation');
 (2, 'Taxes % Imigration Services FBO'),
 (3, 'Landing Permit FBO'),
 (4, 'RAF Coordination FBO'),
@@ -500,6 +527,79 @@ INSERT INTO fbos (id_fbo, nombre_fbo, grupo_fbo, id_aeropuerto) VALUES
 (136, 'Aerotron FBO', 'GAP', 33);
 
 -- Conceptos Default (Servicios base)
+INSERT INTO conceptos_default (id_concepto_std, nombre_concepto_default, costo_concepto_default, divisa_concepto_default, es_default, id_categoria_concepto) VALUES
+(1, 'Landing Fee', 0.00,'MXN', true, 1),
+(2, 'Embarking / Disembarking', 0.00,'MXN', true, 1),
+(3, 'Parking Fee', 0.00, 'MXN',true, 1),
+(4, 'Overnight', 0.00,'MXN', true, 1),
+(5, 'TUA', 0.00,'MXN',true, 1),
+(6, 'Landing Permit Cost', 2281.00, 'MXN', true, 3),
+(7, 'Landing Permit Coordination', 0.00,'MXN', true,3),
+(8, 'RAF Coordination', 0.00,'USD', true, 4),
+(9, 'Agent Supervisory Fee', 0.00,'MXN', true, 4),
+
+(10, 'TUI', 0.00, 'MXN',false, 1),
+(11, 'Handling', 0.00,'MXN', false, 1),
+(12, 'Lav Service', 0.00, 'MXN',false, 1),
+(13, 'Dish Wash', 0.00,'MXN', false, 1),
+(14, 'Food Refrigeration', 0.00, 'MXN',false, 1),
+(15, 'Luggage Hauling', 0.00,'MXN', false, 1),
+(16, 'Catering', 0.00,'MXN', false, 1),
+(17, 'Transportation', 0.00, 'MXN',false, 1),
+(18, 'Airport Participation', 0.00, 'MXN',false, 1),
+
+(19, 'DNR', 861, 'MXN',false, 2),
+(20, 'DSM', 223, 'MXN',false, 2),
+(21, 'DSME/Arrival', 2707, 'MXN', false, 2),
+(22, 'DSME/Departure', 2707, 'MXN', false, 2),
+
+(23, 'Fuel Uplift', 0.00,'MXN', false, 5),
+(24, 'Dugaem', 0.00,'MXN', false, 5),
+(25, 'Fuel Supervision', 0.00,'MXN', false, 5),
+
+(26, 'APIS National', 50.00,'USD', false, 6),
+(27, 'APIS International', 50.00,'USD', false, 6),
+
+(28, 'Vehicle Access To Ramp', 0.00,'MXN', false, 7),
+(29, 'Extension Time', 0.00,'MXN', false, 7),
+(30, 'Anticipation Time', 0.00,'MXN', false, 7),
+(31, 'ICQ', 0.00,'MXN', false, 7),
+(32, 'VIP Service', 0.00,'MXN', false, 7),
+(33, 'Mexican Insurance', 0.00,'MXN', false, 7),
+
+(34, 'Landing Fee', 0.00,'MXN', true, 8),
+(35, 'Embarking / Disembarking', 0.00,'MXN', true, 8),
+(36, 'Parking Fee', 0.00, 'MXN',true, 8),
+(37, 'Overnight', 0.00,'MXN', true, 8),
+(38, 'TUA', 0.00,'MXN',true, 8),
+(39 ,'GAT', 0.00,'MXN', false, 8),
+
+(40, 'Lavatory Service', 0.00, 'MXN', false, 9),
+(41, 'Catering', 0.00,'MXN', false, 9),
+(42, 'Transportation', 0.00, 'MXN',false, 9),
+(43, 'GPU/APU', 0.00, 'MXN',false, 9),
+
+(44, 'Vehicle Access To Ramp', 0.00, 'MXN',false, 15),
+(45, 'Extension Time', 0.00, 'MXN',false, 15),
+(46, 'Anticipation Time', 0.00, 'MXN',false, 15),
+(47, 'VIP Service', 0.00, 'MXN',false, 15),
+(48, 'Mexican Insurance', 0.00, 'MXN',false, 15),
+
+(49, 'Landing Fee', 0.00, 'MXN',true, 16),
+(50, 'Embarking / Disembarking', 0.00, 'MXN',true, 16),
+(51, 'Parking Fee', 0.00, 'MXN',true, 16),
+(52, 'Overnight', 0.00, 'MXN',true, 16),
+(53, 'TUA', 0.00, 'MXN',true, 16),
+(54, 'Passenger Security', 0.00, 'MXN',false, 16),
+(55, 'Counters', 0.00, 'MXN',false, 16),
+(56, 'Jetway', 0.00, 'MXN',false, 16),
+(57, 'Shuttle', 0.00, 'MXN', false, 16),
+(58, 'Slots', 0.00,'MXN', false, 16),
+
+(59, 'Ground Support Equipment', 0.00, 'MXN',false, 17),
+(60, 'Security', 0.00, 'MXN',false, 17),
+(61, 'Catering', 0.00, 'MXN',false, 17),
+(62, 'Transportation', 0.00, 'MXN',false, 17);
 INSERT INTO conceptos_default (id_concepto_std, nombre_concepto_default, costo_concepto_default, divisa_concepto_default, es_default, id_categoria_concepto) VALUES
 (1, 'Landing Fee', 0.00,'MXN', true, 1),
 (2, 'Embarking / Disembarking', 0.00,'MXN', true, 1),

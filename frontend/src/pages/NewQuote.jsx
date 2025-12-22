@@ -275,7 +275,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                 // Ahora estamos seguros de que 'exchangeRate' es un número válido.
                 const priceUSD = +((priceMXN) / exchangeRate).toFixed(4);
                 const quantity = 1;
-                const scPercentage = 0.08; // Default 8%
+                const scPercentage = 0.18; // Default 8%
                 const vatPercentage = 0.16;
 
                 const cost = quantity * priceUSD;
@@ -361,7 +361,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
         setItems(prevItems =>
             prevItems.map(item => ({
                 ...item,
-                scPercentage: globalNoSc ? 0 : 0.08,
+                scPercentage: globalNoSc ? 0 : 0.18,
                 noSc: globalNoSc,
             }))
         );
@@ -505,7 +505,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
             quantity: 1,
             priceMXN: 0,
             priceUSD: 0,
-            scPercentage: globalNoSc ? 0 : 0.08, // Respect global state
+            scPercentage: globalNoSc ? 0 : 0.18, // Respect global state
             vatPercentage: globalNoVat ? 0 : 0.16, // Respect global state
             noSc: globalNoSc,
             noVat: globalNoVat,
@@ -575,7 +575,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
             const priceMXN = parseFloat(service.tarifa_servicio) || 0;
             const priceUSD = +((priceMXN) / exchangeRate).toFixed(4);
             const quantity = 1;
-            const scPercentage = globalNoSc ? 0 : 0.08; // Respect global state
+            const scPercentage = globalNoSc ? 0 : 0.18; // Respect global state
             const vatPercentage = globalNoVat ? 0 : 0.16; // Respect global state
 
             const cost = quantity * priceUSD;
