@@ -1,22 +1,30 @@
--- ========= SCRIPT PARA ELIMINAR COMPLETAMENTE LAS TABLAS (DROP) =========
--- El orden es fundamental: se eliminan primero las tablas dependientes.
+-- ========= SCRIPT DE LIMPIEZA DE DATOS =========
 
--- Nivel 3: Tablas que dependen de otras tablas principales.
-DROP TABLE IF EXISTS cotizacion_conceptos CASCADE;
+-- Deshabilitar restricciones y limpiar tablas masivamente.
+-- RESTART IDENTITY: Reinicia los contadores (SERIAL/BIGSERIAL) a 1.
+-- CASCADE: Borra los datos de tablas hijas que tengan FK a estas tablas.
 
--- Nivel 2: Tablas que son referenciadas por el nivel 3.
-DROP TABLE IF EXISTS cotizaciones_historico CASCADE;
-DROP TABLE IF EXISTS precios_conceptos;
+TRUNCATE TABLE 
+    cotizacion_conceptos,
+    cotizaciones_historico,
+    precios_conceptos,
+    servicios_cliente_especiales,
+    conceptos_default,
+    fbos,
+    clientes_aeronaves,
+    aeronaves_modelos,
+    categorias_conceptos,
+    categorias_operaciones,
+    aeropuertos,
+    clientes,
+    usuarios
+RESTART IDENTITY CASCADE;
 
--- Nivel 1: Tablas que son referenciadas por el nivel 2.
-DROP TABLE IF EXISTS servicios_cliente_especiales;
-DROP TABLE IF EXISTS clientes_aeronaves CASCADE;
-DROP TABLE IF EXISTS fbos CASCADE;
-DROP TABLE IF EXISTS conceptos_default;
+-- ========= REINICIO DE SECUENCIAS INDEPENDIENTES =========
 
--- Nivel 0: Tablas independientes (no dependen de ninguna otra).
-DROP TABLE IF EXISTS clientes CASCADE;
-DROP TABLE IF EXISTS aeronaves_modelos;
-DROP TABLE IF EXISTS aeropuertos CASCADE;
-DROP TABLE IF EXISTS categorias_operaciones CASCADE;
-DROP TABLE IF EXISTS categorias_conceptos CASCADE;
+-- Como creaste una secuencia manual que no está atada directamente 
+-- a una columna SERIAL (cotizacion_id_seq), hay que reiniciarla aparte.
+
+ALTER SEQUENCE cotizacion_id_seq RESTART WITH 1;
+
+-- Fin del script

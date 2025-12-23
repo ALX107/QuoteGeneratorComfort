@@ -50,25 +50,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
         total: 0,
     });
 
-    useEffect(() => {
-        // Fetch default conceptos once when the component mounts
-        // Previene la doble llamada de la API en StrictMode
-        if (conceptsFetchedRef.current) {
-            return;
-        }
-        conceptsFetchedRef.current = true;
-        const fetchDefaultConceptos = async () => {
-            try {
-                const response = await axios.get('http://localhost:3000/api/conceptos-default');
-                setDefaultConceptos(response.data);
-            } catch (error) {
-                console.error('Error fetching default conceptos:', error);
-            }
-        };
-
-        fetchDefaultConceptos();
-    }, []);
-
+  
     useEffect(() => {
         //Si es una cotización existente, cargar sus datos (Previewing Quote)
         if (quoteId) {
@@ -260,49 +242,6 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
         }
     }, [quoteDataForPreview, isFormReady, previewingQuote]);
 
-
-    useEffect(() => {
-
-        // CONDICIÓN DE SEGURIDAD:
-        // Solo ejecuta este bloque si:
-        // 1. Es una cotización nueva (quoteId es null).
-        // 2. Ya tenemos los conceptos por defecto.
-        // 3. Ya tenemos un tipo de cambio válido (mayor que 0).
-        if (!quoteId && !previewingQuote?.isClone && defaultConceptos.length > 0 && exchangeRate > 0) {
-            const newItems = defaultConceptos.map(concepto => {
-                const priceMXN = concepto.costo_concepto_default || 0;
-
-                // Ahora estamos seguros de que 'exchangeRate' es un número válido.
-                const priceUSD = +((priceMXN) / exchangeRate).toFixed(4);
-                const quantity = 1;
-                const scPercentage = 0.18; // Default 8%
-                const vatPercentage = 0.16;
-
-                const cost = quantity * priceUSD;
-                const serviceCharge = cost * scPercentage;
-                const vat = cost * vatPercentage;
-                const total = cost + serviceCharge + vat;
-
-                return {
-                    description: concepto.nombre_concepto_default,
-                    category: concepto.nombre_cat_concepto,
-                    quantity,
-                    priceMXN,
-            priceUSD: parseFloat(priceUSD.toFixed(2)), // Round to 2 decimals
-                    scPercentage,
-                    vatPercentage,
-            noSc: scPercentage === 0,
-            noVat: vatPercentage === 0,
-                    anchorCurrency: 'MXN',
-                    total,
-                };
-
-            });
-            setItems(newItems);
-        }
-
-    }, [quoteId, defaultConceptos, exchangeRate]);
-
     useEffect(() => {
         const newTotals = items.reduce((acc, item) => {
             // Aseguramos que todos los valores sean numéricos, con 0 como fallback.
@@ -383,121 +322,84 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
     };
 
     const fetchServices = async (id_aeropuerto, id_fbo) => {
-        // 1. Filter out old services before fetching new ones.
-        // Keep items that are manually added (empty description) or are default concepts.
-        const currentServiceNames = new Set(allServices.map(s => s.nombre_concepto_default));
-        const defaultConceptNames = new Set(defaultConceptos.map(c => c.nombre_concepto_default));
+        // GUARDIA DE SEGURIDAD:
+        // Si estamos en modo lectura (visualizando una cotización guardada), 
+        // NO permitimos que esta función altere o limpie los servicios.
+        if (isReadOnly) return;
 
-        setItems(prevItems => prevItems.filter(item => {
-            // Keep if it's a new empty row, a default concept, or not a service from the previous list.
-            return item.description === '' || defaultConceptNames.has(item.description) || !currentServiceNames.has(item.description);
-        }));
+        // 1. Siempre limpiar items al cambiar de selección principal
+        // Mantenemos solo items manuales que el usuario haya escrito a mano (sin descripción predefinida)
+
+        setItems(prevItems => prevItems.filter(item => item.description === ''));
 
         if (id_fbo) {
             try {
                 const response = await axios.get('http://localhost:3000/api/servicios', {
                     params: { id_fbo }, // Send only id_fbo
                 });
-                setAllServices(response.data);
 
-                // **CORRECTED LOGIC: Remove old FBO-specific services AND update prices**
-                const newServicesMap = new Map(response.data.map(s => [s.nombre_concepto_default, s]));
-                const defaultConceptNames = new Set(defaultConceptos.map(c => c.nombre_concepto_default));
-                const previousFboServiceNames = new Set(allServices.map(s => s.nombre_concepto_default));
+                const serviciosData = response.data;
+                setAllServices(serviciosData); // Guardamos todo para el Modal
+ 
+               // 2. Filtramos solo los que deben aparecer AUTOMÁTICAMENTE (es_default = true)
+                const defaultServices = serviciosData.filter(s => s.es_default);
 
-                setItems(prevItems => {
-                    // 1. Filter out services that are no longer valid
-                    const filteredItems = prevItems.filter(item => {
-                        const isFromPreviousFbo = previousFboServiceNames.has(item.description);
-                        const isDefault = defaultConceptNames.has(item.description);
-                        // Remove if it was from the previous FBO list AND it's NOT a default concept.
-                        // Keep all other items (manual rows, default concepts, etc.)
-                        return !(isFromPreviousFbo && !isDefault);
-                    });
+                const newItemsToAdd = defaultServices.map(s => {
+                // 1. Detectamos la divisa base del servicio
+                const isUSD = s.divisa === 'USD';
+                
+                let priceMXN = 0;
+                let priceUSD = 0;
 
-                    // 2. Update prices for the remaining items
-                    const updatedItems = filteredItems.map(item => {
-                        const matchingNewService = newServicesMap.get(item.description);
-                        if (matchingNewService) {
-                            // A service with the same name exists for the new FBO, update its price.
-                            const newPriceMXN = parseFloat(matchingNewService.tarifa_servicio) || 0;
-                            const newPriceUSD = exchangeRate ? +((newPriceMXN) / exchangeRate).toFixed(4) : 0;
-                            return { ...item, priceMXN: newPriceMXN, priceUSD: newPriceUSD, anchorCurrency: 'MXN', category: matchingNewService.nombre_cat_concepto };
-                        }
-                        // If no match, it's a manual row or a default concept not priced by this FBO. Return as is.
-                        return item;
-                    });
+                // 2. Calculamos precios según la divisa base
+                if (isUSD) {
+                    priceUSD = parseFloat(s.tarifa_servicio) || 0;
+                    // Si es USD, el MXN se calcula multiplicando por el tipo de cambio
+                    priceMXN = exchangeRate ? +((priceUSD) * exchangeRate).toFixed(2) : 0;
+                } else {
+                    priceMXN = parseFloat(s.tarifa_servicio) || 0;
+                    // Si es MXN, el USD se calcula dividiendo
+                    priceUSD = exchangeRate ? +((priceMXN) / exchangeRate).toFixed(4) : 0;
+                }
 
-                    // 3. Add new default services for this FBO (es_default = true)
-                    const currentDescriptions = new Set(updatedItems.map(i => i.description));
-                    const newDefaults = response.data.filter(s => s.es_default && !currentDescriptions.has(s.nombre_concepto_default));
+                const quantity = 1;
+                const scPercentage = globalNoSc ? 0 : 0.18;
+                const vatPercentage = globalNoVat ? 0 : 0.16;
+                
+                // Calcular totales usando priceUSD (que ya es correcto sea cual sea el origen)
+                const cost = quantity * priceUSD;
+                const serviceCharge = cost * scPercentage;
+                const vat = cost * vatPercentage;
+                const total = cost + serviceCharge + vat;
 
-                    const newItemsToAdd = newDefaults.map(s => {
-                        const priceMXN = parseFloat(s.tarifa_servicio) || 0;
-                        const priceUSD = exchangeRate ? +((priceMXN) / exchangeRate).toFixed(4) : 0;
-                        const quantity = 1;
-                        const scPercentage = globalNoSc ? 0 : 0.08;
-                        const vatPercentage = globalNoVat ? 0 : 0.16;
-                        const cost = quantity * priceUSD;
-                        const serviceCharge = cost * scPercentage;
-                        const vat = cost * vatPercentage;
-                        const total = cost + serviceCharge + vat;
-
-                        return {
-                            description: s.nombre_concepto_default,
-                            category: s.nombre_cat_concepto,
-                            quantity,
-                            priceMXN,
-                            priceUSD,
-                            scPercentage,
-                            vatPercentage,
-                            noSc: globalNoSc,
-                            noVat: globalNoVat,
-                            anchorCurrency: 'MXN',
-                            total,
-                        };
-                    });
-
-                    return [...updatedItems, ...newItemsToAdd];
-                });
+                return {
+                    description: s.nombre_concepto_default,
+                    category: s.nombre_cat_concepto,
+                    quantity,
+                    priceMXN,
+                    priceUSD,
+                    scPercentage,
+                    vatPercentage,
+                    noSc: globalNoSc,
+                    noVat: globalNoVat,
+                    // 3. Aquí definimos quién manda (el ancla) para futuras ediciones manuales
+                    anchorCurrency: isUSD ? 'USD' : 'MXN', 
+                    total,
+                };
+            });
+                    
+                // Agregamos a la tabla
+                setItems(prev => [...prev, ...newItemsToAdd]);
 
             } catch (error) {
                 console.error('Error fetching FBO services:', error);
             }
-        } else if (id_aeropuerto) {
-            // When a station is selected but not an FBO, show the default concepts
-            const formattedDefaultConceptos = defaultConceptos.map(c => ({
-                ...c,
-                // nombre_concepto_default is already present
-                tarifa_servicio: c.costo_concepto_default,
-                divisa: 'MXN', // Assuming default is MXN
-            }));
-            setAllServices(formattedDefaultConceptos);
-            // When an airport is selected but FBO is cleared, reset prices to default (0).
-            setItems(prevItems => prevItems.map(item => {
-                const isDefault = defaultConceptos.some(c => c.nombre_concepto_default === item.description);
-                if (isDefault) {
-                    // This is a default concept, reset its price to the default value (which is 0).
-                    const defaultConcept = defaultConceptos.find(c => c.nombre_concepto_default === item.description);
-                    const priceMXN = defaultConcept.costo_concepto_default || 0;
-                    const priceUSD = exchangeRate ? +((priceMXN) / exchangeRate).toFixed(4) : 0;
-                    return { ...item, priceMXN, priceUSD };
-                }
-                // If it's not a default concept (e.g., manual row), keep it as is.
-                return item;
-            }));
-
         } else {
-            // When nothing is selected, also show default concepts
-            const formattedDefaultConceptos = defaultConceptos.map(c => ({
-                ...c,
-                tarifa_servicio: c.costo_concepto_default,
-                divisa: 'MXN',
-            }));
-            setAllServices(formattedDefaultConceptos);
+            // Si no hay FBO seleccionado (o se deseleccionó), limpiamos la lista de servicios disponibles
+            setAllServices([]);
         }
     };
-
+                 
     const handleAddItem = () => {
         const newItem = {
             description: '',
@@ -572,12 +474,27 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
         if (!exchangeRate) return;
 
         const newServiceItems = selectedServicesFromModal.map(service => {
-            const priceMXN = parseFloat(service.tarifa_servicio) || 0;
-            const priceUSD = +((priceMXN) / exchangeRate).toFixed(4);
-            const quantity = 1;
-            const scPercentage = globalNoSc ? 0 : 0.18; // Respect global state
-            const vatPercentage = globalNoVat ? 0 : 0.16; // Respect global state
+            //1. DETECCIÓN DE DIVISA
+            // Verificamos si el servicio viene en USD desde la base de datos
+            const isUSD = service.divisa?.trim().toUpperCase() === 'USD';
 
+            let priceMXN = 0;
+            let priceUSD = 0;
+
+            // 2. CÁLCULO DE PRECIOS SEGÚN DIVISA BASE
+            if (isUSD) {
+                priceUSD = parseFloat(service.tarifa_servicio) || 0;
+                priceMXN = +((priceUSD) * exchangeRate).toFixed(2);
+            } else {
+                priceMXN = parseFloat(service.tarifa_servicio) || 0;
+                priceUSD = +((priceMXN) / exchangeRate).toFixed(4);
+            }
+
+            const quantity = 1;
+            const scPercentage = globalNoSc ? 0 : 0.18; 
+            const vatPercentage = globalNoVat ? 0 : 0.16;
+
+            // Calculamos totales basados en priceUSD (estándar)
             const cost = quantity * priceUSD;
             const serviceCharge = cost * scPercentage;
             const vat = cost * vatPercentage;
@@ -593,7 +510,8 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                 vatPercentage,
                 noSc: globalNoSc,
                 noVat: globalNoVat,
-                anchorCurrency: 'MXN',
+                // 3. FIJAMOS EL ANCLA CORRECTA
+                anchorCurrency: isUSD ? 'USD' : 'MXN',
                 total,
             };
         });

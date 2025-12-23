@@ -4,6 +4,6 @@ const { getServiciosByAeropuertoOrFbo, getDefaultConceptos } = require('../contr
 
 router.get('/servicios', getServiciosByAeropuertoOrFbo);
 
-router.get('/conceptos-default', getDefaultConceptos);
+//router.get('/conceptos-default', getDefaultConceptos);
 
 module.exports = router;

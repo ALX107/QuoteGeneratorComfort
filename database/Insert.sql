@@ -15,15 +15,14 @@ INSERT INTO clientes (id_cliente, nombre_cliente, email_cliente, telefono_client
 (11, 'APOLLO AVIATION', 'support@apolloav.co.uk', '+44-20-7946-0123', '10 Downing Street Area', 'Londres', 'Inglaterra', 'Reino Unido', 'SW1A 2AA', 'James Bond'),
 (12, 'BIG SKY INSULATION', 'hangar@bigskycorp.com', '+1-406-555-0333', '200 Mountain View Rd', 'Bozeman', 'Montana', 'USA', '59715', 'John Dutton'),
 (13, 'MIDWEST AVIATION', 'operations@midwestav.com', '+1-312-555-0222', '300 Wacker Drive', 'Chicago', 'Illinois', 'USA', '60606', 'Alicia Florrick'),
-(14, 'REVA', 'contact@reva.com', '+1-305-555-0101', '150 Aviation Blvd', 'Miami', 'Florida', 'USA', '33142', 'Michael Carter'),
-(15, 'AEG', 'info@aegaviation.com', '+1-213-555-0202', '400 Skyway Ave', 'Los Angeles', 'California', 'USA', '90045', 'Sarah Mitchell'),
-(16, 'PRIME JET', 'sales@primejet.com', '+1-214-555-0303', '2200 Jetstream Rd', 'Dallas', 'Texas', 'USA', '75261', 'Robert Jenkins'),
-(17, 'PINACLE', 'support@pinacleaviation.com', '+1-404-555-0404', '980 Runway Park Dr', 'Atlanta', 'Georgia', 'USA', '30320', 'Emily Thompson');
-(13, 'MIDWEST AVIATION', 'operations@midwestav.com', '+1-312-555-0222', '300 Wacker Drive', 'Chicago', 'Illinois', 'USA', '60606', 'Alicia Florrick'),
-(14, 'REVA', 'contact@reva.com', '+1-305-555-0101', '150 Aviation Blvd', 'Miami', 'Florida', 'USA', '33142', 'Michael Carter'),
-(15, 'AEG', 'info@aegaviation.com', '+1-213-555-0202', '400 Skyway Ave', 'Los Angeles', 'California', 'USA', '90045', 'Sarah Mitchell'),
-(16, 'PRIME JET', 'sales@primejet.com', '+1-214-555-0303', '2200 Jetstream Rd', 'Dallas', 'Texas', 'USA', '75261', 'Robert Jenkins'),
-(17, 'PINACLE', 'support@pinacleaviation.com', '+1-404-555-0404', '980 Runway Park Dr', 'Atlanta', 'Georgia', 'USA', '30320', 'Emily Thompson');
+(14, 'PCJ', 'dispatch@pcj.aero', '+1-818-555-0199', '16700 Roscoe Blvd', 'Van Nuys', 'California', 'USA', '91406', 'Michael Vance'),
+(15, 'REVA', 'ops@revaair.com', '+1-954-555-2200', '2101 W Commercial Blvd', 'Fort Lauderdale', 'Florida', 'USA', '33309', 'Sarah Connor'),
+(16, 'AEG ICE', 'deicing@aegfuels.com', '+44-20-7555-0888', 'Gatwick Airport, South Terminal', 'London', 'England', 'UK', 'RH6 0NP', 'James Sterling'),
+(17, 'AEG GRAL', 'general.aviation@aegfuels.com', '+1-305-555-1234', '701 Brickell Avenue', 'Miami', 'Florida', 'USA', '33131', 'Elena Rodriguez'),
+(18, 'ALE', 'logistics@ale-inc.com', '+52-55-5555-9876', 'Av. Paseo de la Reforma 222', 'Ciudad de México', 'CDMX', 'Mexico', '06600', 'Carlos Méndez'),
+(19, 'UAS', 'dxb.ops@uas.aero', '+971-4-555-6789', 'Dubai Airport Freezone', 'Dubai', 'Dubai', 'UAE', '00000', 'Amira Al-Fayed'),
+(20, 'GLOBAL X', 'charter@globalxair.com', '+1-786-555-4321', 'Miami International Airport', 'Miami', 'Florida', 'USA', '33126', 'Ricardo Tubbs'),
+(21, 'PRIME JET', 'sales@primejet.com', '+1-303-555-8765', '7625 S Peoria St', 'Englewood', 'Colorado', 'USA', '80112', 'David Bowman');
 
 -- Aeropuertos (58 aeropuertos de México)
 INSERT INTO aeropuertos (id_aeropuerto, icao_aeropuerto, nombre_aeropuerto, ciudad_aeropuerto, estado_aeropuerto, pais_aeropuerto, clasificacion_aeropuerto, grupo_aeropuerto) VALUES
@@ -105,28 +104,6 @@ INSERT INTO categorias_operaciones (id_cat_operacion, nombre_cat_operacion) VALU
 -- Categorías de Conceptos (Servicios)
 INSERT INTO categorias_conceptos (id_cat_concepto, nombre_cat_concepto) VALUES
 (1, 'FBO Services'),
-(2, 'Taxes % Imigration Services FBO'),
-(3, 'Landing Permit FBO'),
-(4, 'RAF Coordination FBO'),
-(5, 'Fuel FBO'),
-(6, 'APIS FBO'),
-(7, 'Additional Services FBO'),
-(8, 'Airport Services General Aviation'),
-(9, 'Third-Party Services General Aviation'),
-(10, 'Taxes % Imigration Services General Aviation'),
-(11, 'Landing Permit General Aviation'),
-(12, 'RAF Coordination General Aviation'),
-(13, 'Fuel General Aviation'),
-(14, 'APIS General Aviation'),
-(15, 'Additional Services General Aviation'),
-(16, 'Airport Services Commercial Aviation'),
-(17, 'Third-Party Services Commercial Aviation'),
-(18, 'Taxes % Imigration Services Commercial Aviation'),
-(19, 'Landing Permit Commercial Aviation'),
-(20, 'RAF Coordination Commercial Aviation'),
-(21, 'Fuel Commercial Aviation'),
-(22, 'APIS Commercial Aviation'),
-(23, 'Additional Services Commercial Aviation');
 (2, 'Taxes % Imigration Services FBO'),
 (3, 'Landing Permit FBO'),
 (4, 'RAF Coordination FBO'),
@@ -528,162 +505,164 @@ INSERT INTO fbos (id_fbo, nombre_fbo, grupo_fbo, id_aeropuerto) VALUES
 
 -- Conceptos Default (Servicios base)
 INSERT INTO conceptos_default (id_concepto_std, nombre_concepto_default, costo_concepto_default, divisa_concepto_default, es_default, id_categoria_concepto) VALUES
+--FBO SERVICES (1)
 (1, 'Landing Fee', 0.00,'MXN', true, 1),
 (2, 'Embarking / Disembarking', 0.00,'MXN', true, 1),
 (3, 'Parking Fee', 0.00, 'MXN',true, 1),
 (4, 'Overnight', 0.00,'MXN', true, 1),
 (5, 'TUA', 0.00,'MXN',true, 1),
-(6, 'Landing Permit Cost', 2281.00, 'MXN', true, 3),
-(7, 'Landing Permit Coordination', 0.00,'MXN', true,3),
-(8, 'RAF Coordination', 0.00,'USD', true, 4),
-(9, 'Agent Supervisory Fee', 0.00,'MXN', true, 4),
-
-(10, 'TUI', 0.00, 'MXN',false, 1),
-(11, 'Handling', 0.00,'MXN', false, 1),
-(12, 'Lav Service', 0.00, 'MXN',false, 1),
-(13, 'Dish Wash', 0.00,'MXN', false, 1),
-(14, 'Food Refrigeration', 0.00, 'MXN',false, 1),
-(15, 'Luggage Hauling', 0.00,'MXN', false, 1),
-(16, 'Catering', 0.00,'MXN', false, 1),
-(17, 'Transportation', 0.00, 'MXN',false, 1),
-(18, 'Airport Participation', 0.00, 'MXN',false, 1),
-
-(19, 'DNR', 861, 'MXN',false, 2),
-(20, 'DSM', 223, 'MXN',false, 2),
-(21, 'DSME/Arrival', 2707, 'MXN', false, 2),
-(22, 'DSME/Departure', 2707, 'MXN', false, 2),
-
+(6, 'TUI', 0.00, 'MXN',false, 1),
+(7, 'Handling', 0.00,'MXN', false, 1),
+(8, 'Lav Service', 0.00, 'MXN',false, 1),
+(9, 'Dish Wash', 0.00,'MXN', false, 1),
+(10, 'Food Refrigeration', 0.00, 'MXN',false, 1),
+(11, 'Luggage Hauling', 0.00,'MXN', false, 1),
+(12, 'Catering', 0.00,'MXN', false, 1),
+(13, 'Transportation', 0.00, 'MXN',false, 1),
+(14, 'Airport Participation', 0.00, 'MXN',false, 1),
+--TAXES & IMMIGRATION SERVICES (2) --FBO
+(15, 'DNR', 861, 'MXN',false, 2),
+(16, 'DSM', 223, 'MXN',false, 2),
+(17, 'DSME/Arrival', 2707, 'MXN', false, 2),
+(18, 'DSME/Departure', 2707, 'MXN', false, 2),
+--LANDING PERMIT (3) --FBO
+(19, 'Landing Permit Cost', 2281.00, 'MXN', true, 3),
+(20, 'Landing Permit Coordination', 0.00,'MXN', true,3),
+--RAF COORDINATION (4) --FBO 
+(21, 'RAF Coordination', 0.00,'USD', true, 4),
+(22, 'Agent Supervisory Fee', 0.00,'MXN', true, 4),
+--FUEL (5) --FBO
 (23, 'Fuel Uplift', 0.00,'MXN', false, 5),
 (24, 'Dugaem', 0.00,'MXN', false, 5),
 (25, 'Fuel Supervision', 0.00,'MXN', false, 5),
-
+--APIS (6) --FBO
 (26, 'APIS National', 50.00,'USD', false, 6),
 (27, 'APIS International', 50.00,'USD', false, 6),
-
+--ADDTIONAL SERVICES (7) --FBO
 (28, 'Vehicle Access To Ramp', 0.00,'MXN', false, 7),
 (29, 'Extension Time', 0.00,'MXN', false, 7),
 (30, 'Anticipation Time', 0.00,'MXN', false, 7),
 (31, 'ICQ', 0.00,'MXN', false, 7),
 (32, 'VIP Service', 0.00,'MXN', false, 7),
 (33, 'Mexican Insurance', 0.00,'MXN', false, 7),
-
+--AIRPORT SERVICES (8) --AV.GRAL
 (34, 'Landing Fee', 0.00,'MXN', true, 8),
 (35, 'Embarking / Disembarking', 0.00,'MXN', true, 8),
 (36, 'Parking Fee', 0.00, 'MXN',true, 8),
 (37, 'Overnight', 0.00,'MXN', true, 8),
 (38, 'TUA', 0.00,'MXN',true, 8),
 (39 ,'GAT', 0.00,'MXN', false, 8),
-
+--THIRD PARTY SERVICES (9) --AV.GRAL
 (40, 'Lavatory Service', 0.00, 'MXN', false, 9),
 (41, 'Catering', 0.00,'MXN', false, 9),
 (42, 'Transportation', 0.00, 'MXN',false, 9),
 (43, 'GPU/APU', 0.00, 'MXN',false, 9),
-
-(44, 'Vehicle Access To Ramp', 0.00, 'MXN',false, 15),
-(45, 'Extension Time', 0.00, 'MXN',false, 15),
-(46, 'Anticipation Time', 0.00, 'MXN',false, 15),
-(47, 'VIP Service', 0.00, 'MXN',false, 15),
-(48, 'Mexican Insurance', 0.00, 'MXN',false, 15),
-
-(49, 'Landing Fee', 0.00, 'MXN',true, 16),
-(50, 'Embarking / Disembarking', 0.00, 'MXN',true, 16),
-(51, 'Parking Fee', 0.00, 'MXN',true, 16),
-(52, 'Overnight', 0.00, 'MXN',true, 16),
-(53, 'TUA', 0.00, 'MXN',true, 16),
-(54, 'Passenger Security', 0.00, 'MXN',false, 16),
-(55, 'Counters', 0.00, 'MXN',false, 16),
-(56, 'Jetway', 0.00, 'MXN',false, 16),
-(57, 'Shuttle', 0.00, 'MXN', false, 16),
-(58, 'Slots', 0.00,'MXN', false, 16),
-
-(59, 'Ground Support Equipment', 0.00, 'MXN',false, 17),
-(60, 'Security', 0.00, 'MXN',false, 17),
-(61, 'Catering', 0.00, 'MXN',false, 17),
-(62, 'Transportation', 0.00, 'MXN',false, 17);
-INSERT INTO conceptos_default (id_concepto_std, nombre_concepto_default, costo_concepto_default, divisa_concepto_default, es_default, id_categoria_concepto) VALUES
-(1, 'Landing Fee', 0.00,'MXN', true, 1),
-(2, 'Embarking / Disembarking', 0.00,'MXN', true, 1),
-(3, 'Parking Fee', 0.00, 'MXN',true, 1),
-(4, 'Overnight', 0.00,'MXN', true, 1),
-(5, 'TUA', 0.00,'MXN',true, 1),
-(6, 'Landing Permit Cost', 2281.00, 'MXN', true, 3),
-(7, 'Landing Permit Coordination', 0.00,'MXN', true,3),
-(8, 'RAF Coordination', 0.00,'USD', true, 4),
-(9, 'Agent Supervisory Fee', 0.00,'MXN', true, 4),
-
-(10, 'TUI', 0.00, 'MXN',false, 1),
-(11, 'Handling', 0.00,'MXN', false, 1),
-(12, 'Lav Service', 0.00, 'MXN',false, 1),
-(13, 'Dish Wash', 0.00,'MXN', false, 1),
-(14, 'Food Refrigeration', 0.00, 'MXN',false, 1),
-(15, 'Luggage Hauling', 0.00,'MXN', false, 1),
-(16, 'Catering', 0.00,'MXN', false, 1),
-(17, 'Transportation', 0.00, 'MXN',false, 1),
-(18, 'Airport Participation', 0.00, 'MXN',false, 1),
-
-(19, 'DNR', 861, 'MXN',false, 2),
-(20, 'DSM', 223, 'MXN',false, 2),
-(21, 'DSME/Arrival', 2707, 'MXN', false, 2),
-(22, 'DSME/Departure', 2707, 'MXN', false, 2),
-
-(23, 'Fuel Uplift', 0.00,'MXN', false, 5),
-(24, 'Dugaem', 0.00,'MXN', false, 5),
-(25, 'Fuel Supervision', 0.00,'MXN', false, 5),
-
-(26, 'APIS National', 50.00,'USD', false, 6),
-(27, 'APIS International', 50.00,'USD', false, 6),
-
-(28, 'Vehicle Access To Ramp', 0.00,'MXN', false, 7),
-(29, 'Extension Time', 0.00,'MXN', false, 7),
-(30, 'Anticipation Time', 0.00,'MXN', false, 7),
-(31, 'ICQ', 0.00,'MXN', false, 7),
-(32, 'VIP Service', 0.00,'MXN', false, 7),
-(33, 'Mexican Insurance', 0.00,'MXN', false, 7),
-
-(34, 'Landing Fee', 0.00,'MXN', true, 8),
-(35, 'Embarking / Disembarking', 0.00,'MXN', true, 8),
-(36, 'Parking Fee', 0.00, 'MXN',true, 8),
-(37, 'Overnight', 0.00,'MXN', true, 8),
-(38, 'TUA', 0.00,'MXN',true, 8),
-(39 ,'GAT', 0.00,'MXN', false, 8),
-
-(40, 'Lavatory Service', 0.00, 'MXN', false, 9),
-(41, 'Catering', 0.00,'MXN', false, 9),
-(42, 'Transportation', 0.00, 'MXN',false, 9),
-(43, 'GPU/APU', 0.00, 'MXN',false, 9),
-
-(44, 'Vehicle Access To Ramp', 0.00, 'MXN',false, 15),
-(45, 'Extension Time', 0.00, 'MXN',false, 15),
-(46, 'Anticipation Time', 0.00, 'MXN',false, 15),
-(47, 'VIP Service', 0.00, 'MXN',false, 15),
-(48, 'Mexican Insurance', 0.00, 'MXN',false, 15),
-
-(49, 'Landing Fee', 0.00, 'MXN',true, 16),
-(50, 'Embarking / Disembarking', 0.00, 'MXN',true, 16),
-(51, 'Parking Fee', 0.00, 'MXN',true, 16),
-(52, 'Overnight', 0.00, 'MXN',true, 16),
-(53, 'TUA', 0.00, 'MXN',true, 16),
-(54, 'Passenger Security', 0.00, 'MXN',false, 16),
-(55, 'Counters', 0.00, 'MXN',false, 16),
-(56, 'Jetway', 0.00, 'MXN',false, 16),
-(57, 'Shuttle', 0.00, 'MXN', false, 16),
-(58, 'Slots', 0.00,'MXN', false, 16),
-
-(59, 'Ground Support Equipment', 0.00, 'MXN',false, 17),
-(60, 'Security', 0.00, 'MXN',false, 17),
-(61, 'Catering', 0.00, 'MXN',false, 17),
-(62, 'Transportation', 0.00, 'MXN',false, 17);
+--TAXES & IMMIGRATION SERVICES (10) --AV.GRAL
+(44, 'DNR', 861.00, 'MXN',false, 10),
+(45, 'DSM', 223.00, 'MXN',false, 10),
+(46, 'DSME/Arrival', 2707.00, 'MXN', false, 10),
+(47, 'DSME/Departure', 2707.00, 'MXN', false, 10),
+--LANDING PERMIT (11) --AV.GRAL
+(48, 'Landing Permit Cost', 2281.00, 'MXN', true, 11),
+(49, 'Landing Permit Coordination', 0.00,'MXN', true,11),
+--RAF COORDINATION (12) --AV.GRAL
+(50, 'RAF Coordination', 0.00,'USD', true, 12),
+(51, 'Agent Supervisory Fee', 0.00,'MXN', true, 12),
+--FUEL (13) --AV.GRAL
+(52, 'Fuel Uplift', 0.00,'MXN', false, 13),
+(53, 'Dugaem', 0.00,'MXN', false, 13),
+(54, 'Fuel Supervision', 0.00,'MXN', false, 13),
+--APIS (14) --AV.GRAL
+(55, 'APIS National', 50.00,'USD', false, 14),
+(56, 'APIS International', 50.00,'USD', false, 14),
+--ADDITIONAL SERVICES (15) --AV.GRAL
+(57, 'Vehicle Access To Ramp', 0.00, 'MXN',false, 15),
+(58, 'Extension Time', 0.00, 'MXN',false, 15),
+(59, 'Anticipation Time', 0.00, 'MXN',false, 15),
+(60, 'VIP Service', 0.00, 'MXN',false, 15),
+(61, 'Mexican Insurance', 0.00, 'MXN',false, 15),
+--AIRPORT SERVICES (16) --AV.COM
+(62, 'Landing Fee', 0.00, 'MXN',true, 16),
+(63, 'Embarking / Disembarking', 0.00, 'MXN',true, 16),
+(64, 'Parking Fee', 0.00, 'MXN',true, 16),
+(65, 'Overnight', 0.00, 'MXN',true, 16),
+(66, 'TUA', 0.00, 'MXN',true, 16),
+(67, 'Passenger Security', 0.00, 'MXN',false, 16),
+(68, 'Counters', 0.00, 'MXN',false, 16),
+(69, 'Jetway', 0.00, 'MXN',false, 16),
+(70, 'Shuttle', 0.00, 'MXN', false, 16),
+(71, 'Slots', 0.00,'MXN', false, 16),
+--THIRD PARTY SERVICES (17) --AV.COM
+(72, 'Ground Support Equipment', 0.00, 'MXN',false, 17),
+(73, 'Security', 0.00, 'MXN',false, 17),
+(74, 'Catering', 0.00, 'MXN',false, 17),
+(75, 'Transportation', 0.00, 'MXN',false, 17),
+--TAXES & IMMIGRATION SERVICES (18) --AV.COM
+(76, 'DNR', 861.00, 'MXN',false, 18),
+(77, 'DSM', 223.00, 'MXN',false, 18),
+(78, 'DSME/Arrival', 2707.00, 'MXN', false, 18),
+(79, 'DSME/Departure', 2707.00, 'MXN', false, 18),
+--LANDING PERMIT (19) --AV.COM
+(80, 'Landing Permit Cost', 2281.00, 'MXN', true, 19),
+(81, 'Landing Permit Coordination', 0.00,'MXN', true,19),
+--RAF COORDINATION (20) --AV.COM
+(82, 'RAF Coordination', 0.00,'USD', true, 20),
+(83, 'Agent Supervisory Fee', 0.00,'MXN', true, 20),
+--FUEL (21) --AV.COM
+(84, 'Fuel Uplift', 0.00,'MXN', false, 21),
+(85, 'Dugaem', 0.00,'MXN', false, 21),
+(86, 'Fuel Supervision', 0.00,'MXN', false, 21),
+--APIS (22) --AV.COM
+(87, 'APIS National', 50.00,'USD', false, 22),
+(88, 'APIS International', 50.00,'USD', false, 22),
+--ADDITIONAL SERVICES (23) --AV.COM
+(89, 'Vehicle Access To Ramp', 0.00, 'MXN',false, 23),
+(90, 'Extension Time', 0.00, 'MXN',false, 23),
+(91, 'Anticipation Time', 0.00, 'MXN',false, 23),
+(92, 'VIP Service', 0.00, 'MXN',false, 23),
+(93, 'Mexican Insurance', 0.00, 'MXN',false, 23);
 
 -- Servicios Especiales con costo fijo por cliente
 INSERT INTO servicios_cliente_especiales (id_servicio_especial, id_cliente, id_concepto_std, costo_servicio) VALUES
-(1, 14, 8, 550.00),
-(2, 14, 6, 700.00),
-(3, 15, 8, 1200.00), --AEG (SOLO VUELOS DE REPATRIACIÓN)
-(4, 15, 6, 400.00), --AEG (SOLO VUELOS DE REPATRIACIÓN)
-(5, 16, 8, 1467.00),
-(6, 16, 6, 400.00),
-(7, 17, 8, 350.00), --PINACLE (SOLO PARA SÁN JOSÉ, CANCUN, SAN LUCAS, GUADALAJARA Y PUERTO VALLARTA)
-(8, 17, 6, 400.00); --PINACLE (SOLO PARA SÁN JOSÉ, CANCUN, SAN LUCAS, GUADALAJARA Y PUERTO VALLARTA)
+(1, 14, 21, 0.00), --PCJ RAF COORDINATION FBO
+(2, 14, 50, 0.00), --PCJ RAF COORDINATION AV GRAL
+(3, 14, 82, 0.00), --PCJ RAF COORDINATION AV COM
+
+(4, 15, 21, 550.00), --REVA RAF COORDINATION FBO
+(5, 15, 50, 550.00), --REVA RAF COORDINATION AV GRAL
+(6, 15, 82, 550.00), --REVA RAF COORDINATION AV COM
+
+(7, 16, 21, 1200.00), --AEG ICE RAF COORDINATION FBO -- SOLO VUELOS DE REPATRIACIÓN
+(8, 16, 50, 1200.00), --AEG ICE RAF COORDINATION AV GRAL -- SOLO VUELOS DE REPATRIACIÓN
+(9, 16, 82, 1200.00), --AEG ICE RAF COORDINATION AV COM -- SOLO VUELOS DE REPATRIACIÓN
+
+(10, 17, 21, 0.00), --AEG GRAL RAF COORDINATION FBO
+(11, 17, 50, 0.00), --AEG GRAL RAF COORDINATION AV GRAL
+(12, 17, 82, 0.00), --AEG GRAL RAF COORDINATION AV COM
+
+(13, 18, 21, 0.00), --ALE RAF COORDINATION FBO
+(14, 18, 50, 0.00), --ALE RAF COORDINATION AV GRAL
+(15, 18, 82, 0.00), --ALE RAF COORDINATION AV COM
+
+(16, 19, 21, 0.00), --UAS RAF COORDINATION FBO
+(17, 19, 50, 0.00), --UAS RAF COORDINATION AV GRAL
+(18, 19, 82, 0.00), --UAS RAF COORDINATION AV COM
+
+(19, 20, 21, 0.00), --GLOBAL X RAF COORDINATION FBO
+(20, 20, 50, 0.00), --GLOBAL X RAF COORDINATION AV GRAL
+(21, 20, 82, 0.00), --GLOBAL X RAF COORDINATION AV COM
+
+(22, 21, 21, 1467.00), --PRIME JET RAF COORDINATION FBO
+(23, 21, 50, 1467.00), --PRIME JET RAF COORDINATION AV GRAL
+(24, 21, 82, 1467.00); --PRIME JET RAF COORDINATION AV COM
+
+--(2, 14, 6, 700.00),
+--(3, 15, 8, 1200.00), --AEG (SOLO VUELOS DE REPATRIACIÓN)
+--(4, 15, 6, 400.00), --AEG (SOLO VUELOS DE REPATRIACIÓN)
+--(5, 16, 8, 1467.00),
+--(6, 16, 6, 400.00),
+--(7, 17, 8, 350.00), --PINACLE (SOLO PARA SÁN JOSÉ, CANCUN, SAN LUCAS, GUADALAJARA Y PUERTO VALLARTA)
+--(8, 17, 6, 400.00); --PINACLE (SOLO PARA SÁN JOSÉ, CANCUN, SAN LUCAS, GUADALAJARA Y PUERTO VALLARTA)
 
 -- ========= INSERCIÓN DE DATOS EN TABLAS DEPENDIENTES (Nivel 2) =========
 
@@ -693,146 +672,58 @@ INSERT INTO precios_conceptos (id_precio_concepto, tarifa_servicio, divisa, id_c
 -- 1. Servicios del AEROPUERTO (sin FBO se tendría q poner NULL) -> (1, '', 1.00, 'MXN', 1, 44, NULL),
 -- 2. Servicios FBO 'Asertec' (id_fbo=1) en MMTO
 
-
 -----------TOLUCA AVIACIÓN GENERAL (id_aeropuerto:44) -----------
 (1, 0, 'MXN', 34, 8, 44, 106),
 (2, 0, 'MXN', 35, 8, 44, 106),
 (3, 0, 'MXN', 36, 8, 44, 106),
 (4, 0, 'MXN', 37, 8, 44, 106),
 (5, 0, 'MXN', 38, 8, 44, 106),
-(6, 0, 'MXN', 39, 8, 44, 106),
-(7, 0, 'MXN', 40, 9, 44, 106),
-(8, 0, 'MXN', 41, 9, 44, 106),
-(9, 0, 'MXN', 42, 9, 44, 106),
-(10, 0, 'MXN', 43, 9, 44, 106),
-(11, 0, 'MXN', 44, 15, 44, 106),
-(12, 0, 'MXN', 45, 15, 44, 106),
-(13, 0, 'MXN', 46, 15, 44, 106),
-(14, 0, 'MXN', 47, 15, 44, 106),
-(15, 0, 'MXN', 48, 15, 44, 106),
-
 
 -----------SAN JOSÉ DEL CABO AVIACIÓN GENERAL (id_aeropuerto:36) -----------
-(16, 103.42, 'MXN', 34, 8, 36, 90), --POR TONELADA Y 3O MINS DE ESTACIONAMIENTO
-(17, 0, 'MXN', 35, 8, 36, 90), 
-(18, 34.46, 'MXN', 36, 8, 36, 90), --POR TONELADA Y POR MEDIA HORA
-(19, 4.11, 'MXN', 37, 8, 36, 90), --POR TONELADA Y POR MEDIA HORA 
-(20, 63.25, 'USD', 38, 8, 36, 90), --POR PASAJERO
-(21, 0, 'MXN', 39, 8, 36, 90),
-(22, 0, 'MXN', 40, 9, 36, 90),
-(23, 0, 'MXN', 41, 9, 36, 90),
-(24, 0, 'MXN', 42, 9, 36, 90),
-(25, 0, 'MXN', 43, 9, 36, 90),
-(26, 0, 'MXN', 44, 15, 36, 90),
-(27, 0, 'MXN', 45, 15, 36, 90),
-(28, 0, 'MXN', 46, 15, 36, 90),
-(29, 0, 'MXN', 47, 15, 36, 90),
-(30, 0, 'MXN', 48, 15, 36, 90),
-
+(6, 103.42, 'MXN', 34, 8, 36, 90), --POR TONELADA Y 3O MINS DE ESTACIONAMIENTO
+(7, 0, 'MXN', 35, 8, 36, 90), 
+(8, 34.46, 'MXN', 36, 8, 36, 90), --POR TONELADA Y POR MEDIA HORA
+(9, 4.11, 'MXN', 37, 8, 36, 90), --POR TONELADA Y POR MEDIA HORA 
+(10, 63.25, 'USD', 38, 8, 36, 90), --POR PASAJERO
 
 -----------CANCÚN AVIACIÓN GENERAL (id_aeropuerto:46) -----------
-(31, 0, 'MXN', 34, 8, 46, 110),
-(32, 0, 'MXN', 35, 8, 46, 110),
-(33, 0, 'MXN', 36, 8, 46, 110),
-(34, 0, 'MXN', 37, 8, 46, 110),
-(35, 0, 'MXN', 38, 8, 46, 110),
-(36, 0, 'MXN', 39, 8, 46, 110),
-(37, 0, 'MXN', 40, 9, 46, 110),
-(38, 0, 'MXN', 41, 9, 46, 110),
-(39, 0, 'MXN', 42, 9, 46, 110),
-(40, 0, 'MXN', 43, 9, 46, 110),
-(41, 0, 'MXN', 44, 15, 46, 110),
-(42, 0, 'MXN', 45, 15, 46, 110),
-(43, 0, 'MXN', 46, 15, 46, 110),
-(44, 0, 'MXN', 47, 15, 46, 110),
-(45, 0, 'MXN', 48, 15, 46, 110),
-
+(11, 0, 'MXN', 34, 8, 46, 110),
+(12, 0, 'MXN', 35, 8, 46, 110),
+(13, 0, 'MXN', 36, 8, 46, 110),
+(14, 0, 'MXN', 37, 8, 46, 110),
+(15, 0, 'MXN', 38, 8, 46, 110),
 
 -----------AIFA AVIACIÓN GENERAL (id_aeropuerto:38) -----------
-(46, 0, 'MXN', 34, 8, 38, 94),
-(47, 0, 'MXN', 35, 8, 38, 94),
-(48, 0, 'MXN', 36, 8, 38, 94),
-(49, 0, 'MXN', 37, 8, 38, 94),
-(50, 0, 'MXN', 38, 8, 38, 94),
-(51, 0, 'MXN', 39, 8, 38, 94),
-(52, 0, 'MXN', 40, 9, 38, 94),
-(53, 0, 'MXN', 41, 9, 38, 94),
-(54, 0, 'MXN', 42, 9, 38, 94),
-(55, 0, 'MXN', 43, 9, 38, 94),
-(56, 0, 'MXN', 44, 15, 38, 94),
-(57, 0, 'MXN', 45, 15, 38, 94),
-(58, 0, 'MXN', 46, 15, 38, 94),
-(59, 0, 'MXN', 47, 15, 38, 94),
-(60, 0, 'MXN', 48, 15, 38, 94),
-
+(16, 0, 'MXN', 34, 8, 38, 94),
+(17, 0, 'MXN', 35, 8, 38, 94),
+(18, 0, 'MXN', 36, 8, 38, 94),
+(19, 0, 'MXN', 37, 8, 38, 94),
+(20, 0, 'MXN', 38, 8, 38, 94),
 
 -----------TULUM AVIACIÓN GENERAL (id_aeropuerto:42) -----------
-(61, 0, 'MXN', 34, 8, 42, 102),
-(62, 0, 'MXN', 35, 8, 42, 102),
-(63, 0, 'MXN', 36, 8, 42, 102),
-(64, 0, 'MXN', 37, 8, 42, 102),
-(65, 0, 'MXN', 38, 8, 42, 102),
-(66, 0, 'MXN', 39, 8, 42, 102),
-(67, 0, 'MXN', 40, 9, 42, 102),
-(68, 0, 'MXN', 41, 9, 42, 102),
-(69, 0, 'MXN', 42, 9, 42, 102),
-(70, 0, 'MXN', 43, 9, 42, 102),
-(71, 0, 'MXN', 44, 15, 42, 102),
-(72, 0, 'MXN', 45, 15, 42, 102),
-(73, 0, 'MXN', 46, 15, 42, 102),
-(74, 0, 'MXN', 47, 15, 42, 102),
-(75, 0, 'MXN', 48, 15, 42, 102),
-
+(21, 0, 'MXN', 34, 8, 42, 102),
+(22, 0, 'MXN', 35, 8, 42, 102),
+(23, 0, 'MXN', 36, 8, 42, 102),
+(24, 0, 'MXN', 37, 8, 42, 102),
+(25, 0, 'MXN', 38, 8, 42, 102),
 
 -----------MONTERREY MMAN AVIACIÓN GENERAL (id_aeropuerto:3) -----------
-(76, 107.51, 'MXN', 34, 8, 3, 24), --TARIFA HORARIO ESTÁNDAR
-(77, 0, 'MXN', 35, 8, 3, 24),
-(78, 0, 'MXN', 36, 8, 3, 24),
-(79, 6.28, 'MXN', 37, 8, 3, 24),
-(80, 57.74, 'USD', 38, 8, 3, 24),
-(81, 0, 'MXN', 39, 8, 3, 24),
-(82, 0, 'MXN', 40, 9, 3, 24),
-(83, 0, 'MXN', 41, 9, 3, 24),
-(84, 0, 'MXN', 42, 9, 3, 24),
-(85, 0, 'MXN', 43, 9, 3, 24),
-(86, 0, 'MXN', 44, 15, 3, 24),
-(87, 0, 'MXN', 45, 15, 3, 24),
-(88, 0, 'MXN', 46, 15, 3, 24),
-(89, 0, 'MXN', 47, 15, 3, 24),
-(90, 0, 'MXN', 48, 15, 3, 24),
-
+(26, 107.51, 'MXN', 34, 8, 3, 24), --TARIFA HORARIO ESTÁNDAR
+(27, 0, 'MXN', 35, 8, 3, 24),
+(28, 0, 'MXN', 36, 8, 3, 24),
+(29, 6.28, 'MXN', 37, 8, 3, 24),
+(30, 57.74, 'USD', 38, 8, 3, 24),
 
 -----------GUADALAJARA AVIACIÓN GENERAL (id_aeropuerto:13) -----------
-(91, 125.15 , 'MXN', 34, 8, 13, 44),
-(92, 0, 'MXN', 35, 8, 13, 44),
-(93, 41.76, 'MXN', 36, 8, 13, 44),
-(94, 5.01, 'MXN', 37, 8, 13, 44),
-(95, 63.25, 'USD', 38, 8, 13, 44),
-(96, 0, 'MXN', 39, 8, 13, 44),
-(97, 0, 'MXN', 40, 9, 13, 44),
-(98, 0, 'MXN', 41, 9, 13, 44),
-(99, 0, 'MXN', 42, 9, 13, 44),
-(100, 0, 'MXN', 43, 9, 13, 44),
-(101, 0, 'MXN', 44, 15, 13, 44),
-(102, 0, 'MXN', 45, 15, 13, 44),
-(103, 0, 'MXN', 46, 15, 13, 44),
-(104, 0, 'MXN', 47, 15, 13, 44),
-(105, 0, 'MXN', 48, 15, 13, 44),
-
+(31, 125.15 , 'MXN', 34, 8, 13, 44),
+(32, 0, 'MXN', 35, 8, 13, 44),
+(33, 41.76, 'MXN', 36, 8, 13, 44),
+(34, 5.01, 'MXN', 37, 8, 13, 44),
+(35, 63.25, 'USD', 38, 8, 13, 44),
 
 -----------SAN LUCAS AVIACIÓN GENERAL (id_aeropuerto:37) -----------
-(106, 0, 'MXN', 34, 8, 37, 92),
-(107, 0, 'MXN', 35, 8, 37, 92),
-(108, 0, 'MXN', 36, 8, 37, 92),
-(109, 0, 'MXN', 37, 8, 37, 92),
-(110, 0, 'MXN', 38, 8, 37, 92),
-(111, 0, 'MXN', 39, 8, 37, 92),
-(112, 0, 'MXN', 40, 9, 37, 92),
-(113, 0, 'MXN', 41, 9, 37, 92),
-(114, 0, 'MXN', 42, 9, 37, 92),
-(115, 0, 'MXN', 43, 9, 37, 92),
-(116, 0, 'MXN', 44, 15, 37, 92),
-(117, 0, 'MXN', 45, 15, 37, 92),
-(118, 0, 'MXN', 46, 15, 37, 92),
-(119, 0, 'MXN', 47, 15, 37, 92),
-(120, 0, 'MXN', 48, 15, 37, 92);
+(36, 0, 'MXN', 34, 8, 37, 92),
+(37, 0, 'MXN', 35, 8, 37, 92),
+(38, 0, 'MXN', 36, 8, 37, 92),
+(39, 0, 'MXN', 37, 8, 37, 92),
+(40, 0, 'MXN', 38, 8, 37, 92);
