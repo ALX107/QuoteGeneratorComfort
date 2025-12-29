@@ -5,7 +5,7 @@ import { jwtDecode } from 'jwt-decode';
 import Calculator from '../features/Calculator.jsx';
 
 
-const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange, exchangeRate, onExchangeRateChange, isReadOnly, onDataLoaded, globalNoSc, globalNoVat, onGlobalNoScChange, onGlobalNoVatChange }, ref) => {
+const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange, exchangeRate, onExchangeRateChange, isReadOnly, onDataLoaded, globalNoSc, globalNoVat, onGlobalNoScChange, onGlobalNoVatChange, onCaaChange}, ref) => {
     const [clientes, setClientes] = useState([]);
     const [aeropuertos, setAeropuertos] = useState([]);
     const [clientesAeronaves, setClientesAeronaves] = useState([]); 
@@ -394,6 +394,8 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
             }
         }
 
+        
+
         // 2. Establecer fechas de hoy
         const today = new Date();
         const formattedDate = today.toISOString().split('T')[0];
@@ -451,6 +453,13 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
             setEtdDate(''); // Limpia la fecha si 'No ETD' está marcado
         }
     }, [noEtd]);
+
+    useEffect(() => {
+        if (onCaaChange) {
+            onCaaChange(isCaaMember);
+        }
+    }, [isCaaMember, onCaaChange]);
+
 
     // Cuando se desmarca el checkbox, si no hay fecha, se establece la de hoy.
     const handleNoEtaChange = (e) => {
@@ -1315,7 +1324,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                         checked={globalNoSc}
                         onChange={onGlobalNoScChange}
                         disabled={isReadOnly}
-                        className="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded disabled:cursor-not-allowed"
+                        className="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded disabled:cursor-not-allowed cursor-pointer"
                     />
                     <label htmlFor="global-no-sc" className="ml-2 text-sm font-medium text-dark-gray">No S.C. (All)</label>
                 </div>
@@ -1327,7 +1336,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                         checked={globalNoVat}
                         onChange={onGlobalNoVatChange}
                         disabled={isReadOnly}
-                        className="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded disabled:cursor-not-allowed"
+                        className="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded disabled:cursor-not-allowed cursor-pointer"
                     />
                     <label htmlFor="global-no-vat" className="ml-2 text-sm font-medium text-dark-gray">No VAT (All)</label>
                 </div>

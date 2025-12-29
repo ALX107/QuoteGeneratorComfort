@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { jwtDecode } from 'jwt-decode';
 import QuoteHeader from '../components/quote/QuoteHeader';
 import QuoteForm from '../components/quote/QuoteForm';
@@ -29,6 +29,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
     const [allServices, setAllServices] = useState([]);
     const [defaultConceptos, setDefaultConceptos] = useState([]);
 
+
     // isReadOnly será true si se está previsualizando CUALQUIER cotización existente.
     const [isReadOnly, setIsReadOnly] = useState(!!previewingQuote);
 
@@ -42,6 +43,9 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
     const [globalNoVat, setGlobalNoVat] = useState(false);
 
     const quoteId = previewingQuote ? previewingQuote.id_cotizacion : null;
+
+    const [isCaaMember, setIsCaaMember] = useState(false);
+
 
     const [totals, setTotals] = useState({
         cost: 0,
@@ -399,16 +403,49 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
             setAllServices([]);
         }
     };
-                 
+
+    // Usamos useCallback para que la función no se recree en cada render
+        // y evite disparar el useEffect del hijo infinitamente.
+        const handleCaaChange = useCallback((isMember) => {
+            setIsCaaMember(isMember); 
+            
+            // Si Global No SC está activo, no hacemos nada visualmente
+            if (globalNoSc) return; 
+
+            setItems(prevItems => 
+                prevItems.map(item => {
+                    const newScPercentage = isMember ? 0.10 : 0.18;
+                    
+                    // Recalcular totales
+                    // Nota: Usamos item.priceUSD y item.vatPercentage directamente del item actual
+                    const cost = (item.quantity || 0) * (item.priceUSD || 0);
+                    const sCharge = cost * newScPercentage;
+                    const vat = cost * (item.vatPercentage || 0);
+                    const newTotal = cost + sCharge + vat;
+
+                    return {
+                        ...item,
+                        scPercentage: newScPercentage,
+                        noSc: newScPercentage === 0, 
+                        total: newTotal
+                    };
+                })
+            );
+        }, [globalNoSc]); // Dependencia: Solo se recrea si globalNoSc cambia
+        
+    
     const handleAddItem = () => {
+
+        // Determinar porcentaje inicial: Si hay GlobalNoSC es 0, si es CAA es 0.10, sino 0.18
+        const initialSc = globalNoSc ? 0 : (isCaaMember ? 0.10 : 0.18);
+
         const newItem = {
             description: '',
             category: '',
             quantity: 1,
             priceMXN: 0,
             priceUSD: 0,
-            scPercentage: globalNoSc ? 0 : 0.18, // Respect global state
-            vatPercentage: globalNoVat ? 0 : 0.16, // Respect global state
+            scPercentage: initialSc, // <--- CAMBIO AQUÍ            vatPercentage: globalNoVat ? 0 : 0.16, // Respect global state
             noSc: globalNoSc,
             noVat: globalNoVat,
             anchorCurrency: 'MXN', // Default anchor
@@ -491,9 +528,10 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
             }
 
             const quantity = 1;
-            const scPercentage = globalNoSc ? 0 : 0.18; 
-            const vatPercentage = globalNoVat ? 0 : 0.16;
 
+            const scPercentage = globalNoSc ? 0 : (isCaaMember ? 0.10 : 0.18);
+            const vatPercentage = globalNoVat ? 0 : 0.16;
+        
             // Calculamos totales basados en priceUSD (estándar)
             const cost = quantity * priceUSD;
             const serviceCharge = cost * scPercentage;
@@ -761,6 +799,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                     <QuoteForm
                         ref={quoteFormRef}
                         onAddItem={handleAddItem}
+                        onCaaChange={handleCaaChange}
                         onOpenServiceModal={() => setIsModalOpen(true)}
                         onSelectionChange={fetchServices}
                         exchangeRate={exchangeRate || ''}
