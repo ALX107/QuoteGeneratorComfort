@@ -1,4 +1,4 @@
--- ========= SCRIPT DE LIMPIEZA DE DATOS =========
+-- ========= SCRIPT DE LIMPIEZA DE DATOS (RESET) =========
 
 -- Deshabilitar restricciones y limpiar tablas masivamente.
 -- RESTART IDENTITY: Reinicia los contadores (SERIAL/BIGSERIAL) a 1.
@@ -9,10 +9,12 @@ TRUNCATE TABLE
     cotizaciones_historico,
     precios_conceptos,
     servicios_cliente_especiales,
+    tarifas_raf_mtow,           -- Agregada (Nueva tabla)
     conceptos_default,
     fbos,
     clientes_aeronaves,
     aeronaves_modelos,
+    clasificaciones_aeronaves,  -- Agregada (Nueva tabla)
     categorias_conceptos,
     categorias_operaciones,
     aeropuertos,
@@ -22,9 +24,7 @@ RESTART IDENTITY CASCADE;
 
 -- ========= REINICIO DE SECUENCIAS INDEPENDIENTES =========
 
--- Como creaste una secuencia manual que no está atada directamente 
--- a una columna SERIAL (cotizacion_id_seq), hay que reiniciarla aparte.
-
+-- Reiniciamos la secuencia manual que no depende de una columna SERIAL
 ALTER SEQUENCE cotizacion_id_seq RESTART WITH 1;
 
 -- Fin del script

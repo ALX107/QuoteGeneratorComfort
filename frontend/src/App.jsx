@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import CotizacionNueva from './pages/NewQuote.jsx';
 import Catalogos from './pages/Catalogos.jsx';
 import HistoricoCotizaciones from './pages/HistoricQuote.jsx';
@@ -8,28 +8,75 @@ import '../index.css';
 import RAFLogoBlanco from './assets/RafLogoBlanco.png';
 import axios from 'axios';
 
+const HeaderClock = ({ userName }) => {
+    const [dateState, setDateState] = useState(new Date());
+
+    useEffect(() => {
+        const timer = setInterval(() => setDateState(new Date()), 1000); 
+        return () => clearInterval(timer);
+    }, []);
+
+    // Formateo de fecha y hora
+    const formattedData = useMemo(() => {
+        const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+        
+        const day = dateState.getDate();
+        const month = months[dateState.getMonth()];
+        const year = dateState.getFullYear();
+
+        // Helper para agregar ceros (09:05 en vez de 9:5)
+        const pad = (n) => n < 10 ? '0' + n : n;
+
+        const utcHours = pad(dateState.getUTCHours());
+        const utcMinutes = pad(dateState.getUTCMinutes());
+        
+        const localHours = pad(dateState.getHours());
+        const localMinutes = pad(dateState.getMinutes());
+
+        return {
+            date: `${month} ${day}/${year}`,
+            utc: `${utcHours}:${utcMinutes}`,
+            lc: `${localHours}:${localMinutes}`
+        };
+    }, [dateState]);
+
+    return (
+        <h1 className="text-s font-bold text-slate-200">
+            Welcome {userName || 'User'} {formattedData.date} UTC: {formattedData.utc} | LC: {formattedData.lc}
+        </h1>
+    );
+};
+
 export default function App() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [currentPage, setCurrentPage] = useState('historico');
     const [previewingQuote, setPreviewingQuote] = useState(null);
 
+    const [currentUser, setCurrentUser] = useState('');
+
     useEffect(() => {
         const token = localStorage.getItem('token');
+        const savedUser = localStorage.getItem('username');
+
         if (token) {
             axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
             setIsAuthenticated(true);
+            if (savedUser) setCurrentUser(savedUser);
         }
     }, []);
 
-    const handleLogin = () => {
+    const handleLogin = (usernameFromLogin) => {
         setIsAuthenticated(true);
+        setCurrentUser(usernameFromLogin);
         setCurrentPage('historico');
     };
 
     const handleLogout = () => {
         localStorage.removeItem('token');
+        localStorage.removeItem('username'); // Borramos usuario al salir
         delete axios.defaults.headers.common['Authorization'];
         setIsAuthenticated(false);
+        setCurrentUser(''); // Limpiamos estado
     };
 
     const handleCloneQuote = (quoteDataToClone) => {
@@ -92,7 +139,7 @@ export default function App() {
                                     src={RAFLogoBlanco}
                                     className="h-10 w-auto object-contain"
                                 />
-                                <h1 className="text-s font-bold text-slate-200">Welcome Alex DEC 05/2025 UTC: 17:20  | LC: 12:20</h1>
+                                <HeaderClock userName={currentUser}/>
                             </div>
                         </div>
                         <div className="flex items-center space-x-8">

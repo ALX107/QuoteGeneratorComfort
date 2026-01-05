@@ -298,21 +298,21 @@ const CATEGORY_ORDER = [
   'Third-Party Services General Aviation',
   'Taxes % Imigration Services FBO',
   'Landing Permit FBO',
-  'Raf Coordination FBO',
+  'RAF Coordination FBO',
   'Fuel FBO',
   'APIS FBO',
   'Additional Services FBO',
   'Default',
   'Taxes % Imigration Services General Aviation',
   'Landing Permit General Aviation',
-  'Raf Coordination General Aviation',
+  'RAF Coordination General Aviation',
   'Fuel General Aviation',
   'APIS General Aviation',
   'Additional Services General Aviation',
   'Third-Party Services Commercial Aviation',
   'Taxes % Imigration Services Commercial Aviation',
   'Landing Permit Commercial Aviation',
-  'Raf Coordination Commercial Aviation',
+  'RAF Coordination Commercial Aviation',
   'Fuel Commercial Aviation',
   'APIS Commercial Aviation',
   'Additional Services Commercial Aviation'
@@ -324,8 +324,8 @@ const groupItems = (items) => {
   items.forEach(item => {
     // Si existe categoría, úsala (limpiando espacios). Si no, agrupa todo en "Additional Services".
     // Esto asegura que los items manuales se sumen en una sola línea en lugar de separarse.
-    const key = (item.category && item.category.trim()) ? item.category.trim() : 'Additional Services';
-    if (!groups[key]) {
+  const key = (item.category && item.category.trim() !== "") ? item.category.trim() : 'Additional Services';
+  if (!groups[key]) {
       groups[key] = { description: key, quantity: 1, total: 0 };
     }
     groups[key].total += (parseFloat(item.total) || 0);
@@ -334,6 +334,7 @@ const groupItems = (items) => {
   return Object.values(groups).sort((a, b) => {
     const indexA = CATEGORY_ORDER.indexOf(a.description);
     const indexB = CATEGORY_ORDER.indexOf(b.description);
+    
     if (indexA !== -1 && indexB !== -1) return indexA - indexB;
     if (indexA !== -1) return -1;
     if (indexB !== -1) return 1;

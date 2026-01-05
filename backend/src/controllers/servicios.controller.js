@@ -40,6 +40,7 @@ const getServiciosByAeropuertoOrFbo = async (req, res) => {
         // Trae los conceptos default dentro del rango.
         // Hace JOIN con precios_conceptos especificamente para ESTE id_fbo.
         // Si hay precio especifico lo usa, si no, usa el default.
+        
         const query = `
             SELECT 
                 cd.id_concepto_std,
@@ -52,13 +53,13 @@ const getServiciosByAeropuertoOrFbo = async (req, res) => {
                 COALESCE(pc.divisa, cd.divisa_concepto_default) as divisa,
                 pc.id_precio_concepto
             FROM conceptos_default cd
-            JOIN categorias_conceptos cc ON cd.id_categoria_concepto = cc.id_cat_concepto
+            JOIN categorias_conceptos cc ON cd.id_cat_concepto = cc.id_cat_concepto
             LEFT JOIN precios_conceptos pc 
                 ON cd.id_concepto_std = pc.id_concepto_std 
                 AND pc.id_fbo = $1
-            WHERE cd.id_categoria_concepto BETWEEN $2 AND $3
+            WHERE cd.id_cat_concepto BETWEEN $2 AND $3
             ORDER BY cd.id_concepto_std ASC
-        `;
+        `;            
 
         const result = await pool.query(query, [id_fbo, catMin, catMax]);
         res.json(result.rows);

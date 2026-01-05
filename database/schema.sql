@@ -44,16 +44,25 @@ CREATE TABLE categorias_conceptos (
     nombre_cat_concepto VARCHAR(100) UNIQUE NOT NULL
 );
 
+--Categorías para las clasificaciones de aeronaves
+CREATE TABLE clasificaciones_aeronaves (
+    id_clasificacion BIGSERIAL PRIMARY KEY,
+    nombre_clasificacion VARCHAR(500) UNIQUE NOT NULL,
+    descripcion TEXT -- Opcional, por si quieres poner notas
+);
+
 -- ========= TABLAS DEPENDIENTES (Nivel 1) =========
 
 -- Tabla "universo" para los modelos de aeronaves.
 CREATE TABLE aeronaves_modelos (
     id_modelo_aeronave BIGSERIAL PRIMARY KEY,
-    icao_aeronave VARCHAR(10) UNIQUE NOT NULL,
+    icao_aeronave VARCHAR(10) NOT NULL, --Quité el UNIQUE para permitir variantes
     nombre_aeronave VARCHAR(100) NOT NULL,
     -- MTOW (Maximum Takeoff Weight) en toneladas.
     mtow_aeronave DECIMAL(10, 2) NOT NULL,
-    envergadura_aeronave DECIMAL(10, 2) NOT NULL
+    envergadura_aeronave DECIMAL(10, 2) NOT NULL,
+    id_clasificacion BIGINT,
+    CONSTRAINT fk_aeronaves_clasificacion FOREIGN KEY (id_clasificacion) REFERENCES clasificaciones_aeronaves(id_clasificacion)
 );
 
 -- Tabla para las aeronaves específicas de cada cliente (la flota).
@@ -87,9 +96,9 @@ CREATE TABLE conceptos_default (
     costo_concepto_default DECIMAL(12, 2) NOT NULL,
     divisa_concepto_default VARCHAR(3) NOT NULL,
     es_default boolean DEFAULT false,
-    id_categoria_concepto BIGINT NOT NULL,
+    id_cat_concepto BIGINT NOT NULL,
 
-    CONSTRAINT fk_conceptos_categoria FOREIGN KEY (id_categoria_concepto) REFERENCES categorias_conceptos(id_cat_concepto)
+    CONSTRAINT fk_conceptos_categoria FOREIGN KEY (id_cat_concepto) REFERENCES categorias_conceptos(id_cat_concepto)
 );
 
 -------- Servicios especiales con costo fijo para un cliente específico.
@@ -97,12 +106,26 @@ CREATE TABLE servicios_cliente_especiales (
     id_servicio_especial BIGSERIAL PRIMARY KEY, 
     id_cliente BIGINT NOT NULL, -- FK que referencia al cliente
     id_concepto_std BIGINT, -- FK que referencia al concepto/servicio
+    id_cat_operacion BIGINT,
     costo_servicio DECIMAL(12, 2) NOT NULL,
 
     CONSTRAINT fk_servicios_cliente_especial_cliente FOREIGN KEY (id_cliente) REFERENCES clientes(id_cliente),
-    CONSTRAINT fk_servicios_cliente_especial_concepto FOREIGN KEY (id_concepto_std) REFERENCES conceptos_default(id_concepto_std)
+    CONSTRAINT fk_servicios_cliente_especial_concepto FOREIGN KEY (id_concepto_std) REFERENCES conceptos_default(id_concepto_std),
+    CONSTRAINT fk_servicios_cliente_especial_operacion FOREIGN KEY (id_cat_operacion) REFERENCES categorias_operaciones(id_cat_operacion)
 );
 
+-- Tarifas RAF basadas en MTOW (2026)
+CREATE TABLE tarifas_raf_mtow (
+    id_tarifa BIGSERIAL PRIMARY KEY,
+    min_weight DECIMAL(10, 2) NOT NULL, 
+    max_weight DECIMAL(10, 2) NOT NULL, 
+    costo_usd DECIMAL(10, 2) NOT NULL,  
+    id_concepto_std BIGINT NOT NULL,    -- ID del servicio 
+    id_clasificacion BIGINT,          -- Clasificación de aeronave 
+    anio_vigencia INT DEFAULT 2026,
+    CONSTRAINT fk_tarifa_mtow_concepto FOREIGN KEY (id_concepto_std) REFERENCES conceptos_default(id_concepto_std),
+    CONSTRAINT fk_tarifa_mtow_clasificacion FOREIGN KEY (id_clasificacion) REFERENCES clasificaciones_aeronaves(id_clasificacion)
+);
 -- ========= TABLAS DEPENDIENTES (Nivel 2) =========
 
 -- Precios específicos para un concepto. Puede variar por aeropuerto o FBO.
@@ -195,6 +218,7 @@ CREATE TABLE cotizacion_conceptos (
     cantidad INT NOT NULL,
     costo_mxn DECIMAL(12, 2) NOT NULL,
     costo_usd DECIMAL(12, 2) NOT NULL,
+    nombre_cat_concepto VARCHAR(100) NOT NULL,
     
     -- Porcentajes aplicados
     sc_porcentaje DECIMAL(5, 2) NOT NULL, -- Ej: 15.00 para 15%
@@ -206,7 +230,8 @@ CREATE TABLE cotizacion_conceptos (
     total_usd DECIMAL(15, 2) NOT NULL,
 
     CONSTRAINT fk_conceptos_cotizacion FOREIGN KEY (id_cotizacion) REFERENCES cotizaciones_historico(id_cotizacion) ON DELETE CASCADE,
-    CONSTRAINT fk_conceptos_precio FOREIGN KEY (id_precio_concepto) REFERENCES precios_conceptos(id_precio_concepto)
+    CONSTRAINT fk_conceptos_precio FOREIGN KEY (id_precio_concepto) REFERENCES precios_conceptos(id_precio_concepto),
+    CONSTRAINT fk_conceptos_cat_concepto FOREIGN KEY (nombre_cat_concepto) REFERENCES categorias_conceptos(nombre_cat_concepto)
 );
 
 

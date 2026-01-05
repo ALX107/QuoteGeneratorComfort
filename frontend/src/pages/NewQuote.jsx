@@ -46,6 +46,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
 
     const [isCaaMember, setIsCaaMember] = useState(false);
 
+    const [currentMtow, setCurrentMtow] = useState(0); // Guardar el peso actual en Toneladas
 
     const [totals, setTotals] = useState({
         cost: 0,
@@ -53,6 +54,15 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
         vat: 0,
         total: 0,
     });
+
+    // Convertir a Toneladas
+    const calculateTons = (val, unit) => {
+        const weight = parseFloat(val) || 0;
+        if (weight === 0) return 0;
+        // Si es KG -> dividir entre 1000
+        // Si es LB -> dividir entre 2204.62
+        return unit === 'KG' ? weight / 1000 : weight / 2204.62;
+    };
 
   
     useEffect(() => {
@@ -198,6 +208,15 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
             setGlobalNoSc(allNoSc);
             setGlobalNoVat(allNoVat);
 
+            // Cargar los servicios disponibles para el FBO seleccionado
+            if (previewingQuote.selectedFboId) {
+                axios.get('http://localhost:3000/api/servicios', {
+                    params: { id_fbo: previewingQuote.selectedFboId },
+                })
+                .then(response => setAllServices(response.data))
+                .catch(error => console.error('Error fetching services for clone:', error));
+            }
+
             //Si es nueva cotización
         } else {
             // Limpia todo y busca el tipo de cambio
@@ -302,22 +321,42 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
     // Effect for Global "No SC" Checkbox
     useEffect(() => {
         setItems(prevItems =>
-            prevItems.map(item => ({
-                ...item,
-                scPercentage: globalNoSc ? 0 : 0.18,
-                noSc: globalNoSc,
-            }))
+            prevItems.map(item => {
+            const targetSc = globalNoSc ? 0 : (isCaaMember ? 0.10 : 0.18);
+                
+                // Recalcular costos con el nuevo porcentaje
+                const cost = (item.quantity || 0) * (item.priceUSD || 0);
+                const sCharge = cost * targetSc;
+                const vat = cost * (item.vatPercentage || 0); // Mantenemos el IVA que ya tenía
+                
+                return {
+                    ...item,
+                    scPercentage: targetSc,
+                    noSc: globalNoSc,
+                    total: cost + sCharge + vat,
+                };
+            })
         );
-    }, [globalNoSc]);
+    }, [globalNoSc, isCaaMember]);
 
     // Effect for Global "No VAT" Checkbox
     useEffect(() => {
         setItems(prevItems =>
-            prevItems.map(item => ({
-                ...item,
-                vatPercentage: globalNoVat ? 0 : 0.16,
-                noVat: globalNoVat,
-            }))
+            prevItems.map(item => {
+                const targetVat = globalNoVat ? 0 : 0.16;
+                
+                // Recalcular costos
+                const cost = (item.quantity || 0) * (item.priceUSD || 0);
+                const sCharge = cost * (item.scPercentage || 0); // Mantenemos el SC que ya tenía
+                const vat = cost * targetVat;
+
+                return {
+                    ...item,
+                    vatPercentage: targetVat,
+                    noVat: globalNoVat,
+                    total: cost + sCharge + vat, 
+                };
+            })
         );
     }, [globalNoVat]);
 
@@ -343,6 +382,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                 });
 
                 const serviciosData = response.data;
+
                 setAllServices(serviciosData); // Guardamos todo para el Modal
  
                // 2. Filtramos solo los que deben aparecer AUTOMÁTICAMENTE (es_default = true)
@@ -367,7 +407,8 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                 }
 
                 const quantity = 1;
-                const scPercentage = globalNoSc ? 0 : 0.18;
+
+                const scPercentage = globalNoSc ? 0 : (isCaaMember ? 0.10 : 0.18);
                 const vatPercentage = globalNoVat ? 0 : 0.16;
                 
                 // Calcular totales usando priceUSD (que ya es correcto sea cual sea el origen)
@@ -404,34 +445,63 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
         }
     };
 
+    // 2. CALLBACK: Manejar cambio de MTOW (Con useCallback para evitar el error de loop)
+    const handleMtowChange = useCallback((val, unit) => {
+        const tons = calculateTons(val, unit);
+        setCurrentMtow(tons);
+
+        setItems(prevItems => 
+            prevItems.map(item => {
+                // Solo recalculamos si el ítem tiene guardada una 'baseRate' (Tarifa del DOF)
+                // O si detectamos keywords en la descripción (por si son ítems viejos)
+                const isLanding = item.description.toUpperCase().includes('ATERRIZAJE') || item.description.toUpperCase().includes('LANDING FEE');
+                const isParking = item.description.toUpperCase().includes('PERNOCTA') || item.description.toUpperCase().includes('OVERNIGHT') || item.description.toUpperCase().includes('ESTACIONAMIENTO');
+
+                // Si no es un servicio calculado, lo dejamos igual
+                if (!item.baseRate && !isLanding && !isParking) return item;
+
+                // Definimos la tarifa base (Si ya la guardamos la usamos, si no, intentamos usar el precio actual como base solo la primera vez, pero es arriesgado. Mejor confiamos en baseRate)
+                const rate = item.baseRate || item.priceMXN; 
+                
+                // Si tons es 0, dejamos el precio en 0 para evitar errores, o dejamos la tarifa base. 
+                // Normalmente si no hay peso, el costo es 0 o la tarifa mínima. Asumiremos cálculo directo.
+                let newPriceMXN = 0;
+
+                if (tons > 0) {
+                     // FÓRMULA DOF: Tarifa * Toneladas
+                     // Para aterrizaje: Precio Final = Tarifa * Tons
+                     // Para pernocta: Precio Por Hora = Tarifa * Tons (luego la cantidad multiplica las horas)
+                     newPriceMXN = rate * tons * (1.16);
+                }
+
+                // Convertir a USD y anclar
+                const newPriceUSD = exchangeRate ? +((newPriceMXN) / exchangeRate).toFixed(4) : 0;
+                
+                // Recalcular totales del renglón
+                const cost = (item.quantity || 0) * (item.anchorCurrency === 'MXN' ? newPriceMXN : newPriceUSD); // Nota: Aquí deberíamos respetar el anchor, pero como es tarifa DOF (pesos), forzamos MXN logic
+                const scPercentage = item.scPercentage || 0;
+                const vatPercentage = item.vatPercentage || 0;
+                
+                return {
+                    ...item,
+                    // IMPORTANTE: Guardamos la tarifa original si no existía, para futuros cambios de peso
+                    baseRate: item.baseRate || rate, 
+                    priceMXN: parseFloat(newPriceMXN.toFixed(2)),
+                    priceUSD: newPriceUSD,
+                    total: cost + (cost * scPercentage) + (cost * vatPercentage)
+                };
+            })
+        );
+
+    }, [exchangeRate]); // Dependencias: exchangeRate
+
     // Usamos useCallback para que la función no se recree en cada render
         // y evite disparar el useEffect del hijo infinitamente.
         const handleCaaChange = useCallback((isMember) => {
-            setIsCaaMember(isMember); 
+            setIsCaaMember(isMember);
+        }, []); 
             
-            // Si Global No SC está activo, no hacemos nada visualmente
-            if (globalNoSc) return; 
-
-            setItems(prevItems => 
-                prevItems.map(item => {
-                    const newScPercentage = isMember ? 0.10 : 0.18;
-                    
-                    // Recalcular totales
-                    // Nota: Usamos item.priceUSD y item.vatPercentage directamente del item actual
-                    const cost = (item.quantity || 0) * (item.priceUSD || 0);
-                    const sCharge = cost * newScPercentage;
-                    const vat = cost * (item.vatPercentage || 0);
-                    const newTotal = cost + sCharge + vat;
-
-                    return {
-                        ...item,
-                        scPercentage: newScPercentage,
-                        noSc: newScPercentage === 0, 
-                        total: newTotal
-                    };
-                })
-            );
-        }, [globalNoSc]); // Dependencia: Solo se recrea si globalNoSc cambia
+            
         
     
     const handleAddItem = () => {
@@ -590,6 +660,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                     s_cargo: s_cargo,
                     vat: vat,
                     total_usd: item.total,
+                    nombre_cat_concepto: item.category,
                 };
             });
 
@@ -800,6 +871,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                         ref={quoteFormRef}
                         onAddItem={handleAddItem}
                         onCaaChange={handleCaaChange}
+                        onMtowChange={handleMtowChange} 
                         onOpenServiceModal={() => setIsModalOpen(true)}
                         onSelectionChange={fetchServices}
                         exchangeRate={exchangeRate || ''}

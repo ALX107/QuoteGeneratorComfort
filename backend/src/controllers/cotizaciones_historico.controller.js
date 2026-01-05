@@ -142,21 +142,23 @@ const createQuote = async (req, res) => {
 
     const conceptosQuery = `
       INSERT INTO "cotizacion_conceptos" (
-        id_cotizacion, nombre_servicio, cantidad, costo_mxn, costo_usd,
+        id_cotizacion, nombre_servicio, cantidad, costo_mxn, costo_usd, nombre_cat_concepto,
         sc_porcentaje, vat_porcentaje, s_cargo, vat, total_usd
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11);
     `;
 
     for (const servicio of servicios) {
       // FIX: Desestructurar las propiedades del objeto 'servicio'
       const {
-        nombre_servicio, cantidad, costo_mxn, costo_usd,
+        nombre_servicio, cantidad, costo_mxn, costo_usd,nombre_cat_concepto,
         sc_porcentaje, vat_porcentaje, s_cargo, vat, total_usd
       } = servicio;
 
+      //const categoriaSegura = nombre_cat_concepto || 'Additional Services General Aviation';
+
       const conceptosValues = [
-        id_cotizacion, nombre_servicio, cantidad, costo_mxn, costo_usd,
+        id_cotizacion, nombre_servicio, cantidad, costo_mxn, costo_usd, nombre_cat_concepto,
         sc_porcentaje, vat_porcentaje, s_cargo, vat, total_usd
       ];
       await client.query(conceptosQuery, conceptosValues);
@@ -629,6 +631,7 @@ const joinQuotes = async (req, res) => {
         cantidad,
         costo_mxn,
         costo_usd,
+        nombre_cat_concepto,
         sc_porcentaje,
         vat_porcentaje,
         s_cargo,
@@ -637,7 +640,7 @@ const joinQuotes = async (req, res) => {
       )
       VALUES (
         $1, $2, $3, $4, $5,
-        $6, $7, $8, $9, $10, $11
+        $6, $7, $8, $9, $10, $11, $12
       )
     `;
 
@@ -648,12 +651,15 @@ const joinQuotes = async (req, res) => {
         cantidad,
         costo_mxn,
         costo_usd,
+        nombre_cat_concepto,
         sc_porcentaje,
         vat_porcentaje,
         s_cargo,
         vat,
         total_usd,
       } = concepto;
+
+      //const categoriaSegura = nombre_cat_concepto || 'General';
 
       const conceptosValues = [
         newIdCotizacion,
@@ -662,6 +668,7 @@ const joinQuotes = async (req, res) => {
         cantidad,
         costo_mxn,
         costo_usd,
+        nombre_cat_concepto,
         sc_porcentaje,
         vat_porcentaje,
         s_cargo,

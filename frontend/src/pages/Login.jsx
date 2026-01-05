@@ -23,10 +23,11 @@ const Login = ({ onLogin }) => {
 
             const { token } = response.data;
             localStorage.setItem('token', token); // Guardar el token
+            localStorage.setItem('username', username); // Guardar el username
             axios.defaults.headers.common['Authorization'] = `Bearer ${token}`; // Configurar token para futuras peticiones
 
             if (onLogin) {
-                onLogin();
+                onLogin(username);
             }
         } catch (err) {
             btn.textContent = 'Get Started';

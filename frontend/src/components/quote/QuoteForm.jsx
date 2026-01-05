@@ -5,7 +5,7 @@ import { jwtDecode } from 'jwt-decode';
 import Calculator from '../features/Calculator.jsx';
 
 
-const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange, exchangeRate, onExchangeRateChange, isReadOnly, onDataLoaded, globalNoSc, globalNoVat, onGlobalNoScChange, onGlobalNoVatChange, onCaaChange}, ref) => {
+const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange, exchangeRate, onExchangeRateChange, isReadOnly, onDataLoaded, globalNoSc, globalNoVat, onGlobalNoScChange, onGlobalNoVatChange, onCaaChange, onMtowChange}, ref) => {
     const [clientes, setClientes] = useState([]);
     const [aeropuertos, setAeropuertos] = useState([]);
     const [clientesAeronaves, setClientesAeronaves] = useState([]); 
@@ -460,6 +460,13 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
         }
     }, [isCaaMember, onCaaChange]);
 
+    // USEEFFECT PARA DETECTAR CAMBIOS EN MTOW O UNIDAD
+    useEffect(() => {
+        if (onMtowChange) {
+            // Enviamos el valor crudo y la unidad (KG/LB)
+            onMtowChange(mtowValue, unit);
+        }
+    }, [mtowValue, unit, onMtowChange]);
 
     // Cuando se desmarca el checkbox, si no hay fecha, se establece la de hoy.
     const handleNoEtaChange = (e) => {
