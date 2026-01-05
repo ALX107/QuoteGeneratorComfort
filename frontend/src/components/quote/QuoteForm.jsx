@@ -159,6 +159,11 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
             setSelectStation(station ? station.icao_aeropuerto : (quote.aeropuerto || '')); 
             setSelectedAirportId(station ? station.id_aeropuerto : null);
             
+            if (station) {
+                const fbosForAirport = allFbos.filter(f => f.id_aeropuerto === station.id_aeropuerto);
+                setFilteredFbos(fbosForAirport);
+            }
+
             setIsCaaMember(!!quote.es_miembro_caa);
 
             setNoEta(quote.fecha_llegada === null);

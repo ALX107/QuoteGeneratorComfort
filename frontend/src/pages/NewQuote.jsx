@@ -515,7 +515,8 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
             quantity: 1,
             priceMXN: 0,
             priceUSD: 0,
-            scPercentage: initialSc, // <--- CAMBIO AQUÍ            vatPercentage: globalNoVat ? 0 : 0.16, // Respect global state
+            scPercentage: initialSc,           
+            vatPercentage: globalNoVat ? 0 : 0.16, // Respect global state
             noSc: globalNoSc,
             noVat: globalNoVat,
             anchorCurrency: 'MXN', // Default anchor
@@ -851,7 +852,11 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
         .filter(item => allServices.some(s => s.nombre_concepto_default === item.description))
         .map(item => {
             const service = allServices.find(s => s.nombre_concepto_default === item.description);
-            return { ...service, id: service.id_precio_concepto || service.id_concepto_std, name: service.nombre_concepto_default };
+            return { ...service, 
+                        id: service.id_precio_concepto || service.id_concepto_std,
+                        name: service.nombre_concepto_default,
+                        description: service.nombre_cat_concepto
+                   };
 
         });
 
