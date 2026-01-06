@@ -506,12 +506,24 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
     
     const handleAddItem = () => {
 
-        // Determinar porcentaje inicial: Si hay GlobalNoSC es 0, si es CAA es 0.10, sino 0.18
+        // 1. LÓGICA DE CONTEXTO:
+        const additionalServiceItem = allServices.find(s => 
+            s.nombre_cat_concepto && s.nombre_cat_concepto.includes('Additional Services')
+        );
+
+        // 2. ASIGNACIÓN:
+        // Si lo encontramos (ej. "Additional Services Commercial Aviation"), usamos ese.
+        // Si no (ej. aún no cargan servicios), usamos el de General Aviation como respaldo seguro.
+        const correctCategory = additionalServiceItem 
+            ? additionalServiceItem.nombre_cat_concepto 
+            : '* Additional Services *';
+
+        // Determinar porcentaje inicial: Si hay GlobalNoSC es 0, si es CAA es 0.10, sino 0.18       
         const initialSc = globalNoSc ? 0 : (isCaaMember ? 0.10 : 0.18);
 
         const newItem = {
             description: '',
-            category: '',
+            category: correctCategory,
             quantity: 1,
             priceMXN: 0,
             priceUSD: 0,
@@ -534,6 +546,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
             quoteFormRef.current.clearAllFields();
         }
         setItems([]); // Also clear the items in the table
+        setAllServices([]);
         setIsClearQuoteModalOpen(false);
         setIsReadOnly(false);
     };

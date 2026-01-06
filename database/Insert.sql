@@ -104,7 +104,7 @@ INSERT INTO categorias_operaciones (id_cat_operacion, nombre_cat_operacion) VALU
 -- Categorías de Conceptos (Servicios)
 INSERT INTO categorias_conceptos (id_cat_concepto, nombre_cat_concepto) VALUES
 (1, 'FBO Services'),
-(2, 'Taxes % Imigration Services FBO'),
+(2, 'Taxes & Imigration Services FBO'),
 (3, 'Landing Permit FBO'),
 (4, 'RAF Coordination FBO'),
 (5, 'Fuel FBO'),
@@ -112,7 +112,7 @@ INSERT INTO categorias_conceptos (id_cat_concepto, nombre_cat_concepto) VALUES
 (7, 'Additional Services FBO'),
 (8, 'Airport Services General Aviation'),
 (9, 'Third-Party Services General Aviation'),
-(10, 'Taxes % Imigration Services General Aviation'),
+(10, 'Taxes & Imigration Services General Aviation'),
 (11, 'Landing Permit General Aviation'),
 (12, 'RAF Coordination General Aviation'),
 (13, 'Fuel General Aviation'),
@@ -120,7 +120,7 @@ INSERT INTO categorias_conceptos (id_cat_concepto, nombre_cat_concepto) VALUES
 (15, 'Additional Services General Aviation'),
 (16, 'Airport Services Commercial Aviation'),
 (17, 'Third-Party Services Commercial Aviation'),
-(18, 'Taxes % Imigration Services Commercial Aviation'),
+(18, 'Taxes & Imigration Services Commercial Aviation'),
 (19, 'Landing Permit Commercial Aviation'),
 (20, 'RAF Coordination Commercial Aviation'),
 (21, 'Fuel Commercial Aviation'),

@@ -1,5 +1,6 @@
 import React, { useEffect, useState, forwardRef, useImperativeHandle, useRef } from 'react';
 import axios from 'axios';
+import SearchableSelect from '../ui/SearchableSelect.jsx';
 import { jwtDecode } from 'jwt-decode';
 
 import Calculator from '../features/Calculator.jsx';
@@ -782,34 +783,33 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
         <main className="pt-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-start">
                         <div className="md:col-span-1">
-                            <label className="block text-sm font-medium text-dark-gray" htmlFor="customer">
-                                Select Customer
-                            </label>
-                            <div className="relative mt-1">
-                                <input
-                                    list="customer-list"
-                                    id="customer"
-                                    name="customer"
-                                    value = {customerValue}
-                                    onChange={(e) => {
-                                        setCustomerValue(e.target.value);
-                                        handleCustomerChange(e);
-                                    }}
-                                    className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm disabled:cursor-not-allowed"
-                                    disabled={isReadOnly} style={errors.customer ? { borderColor: 'red' } : {}}
-                               />
-                                <datalist id="customer-list">
-                                    {clientes.map((cliente) => (
-                                        <option key={cliente.id_cliente} value={cliente.nombre_cliente} />
-                                    ))}
-                                </datalist>
-                                <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                                    <span className="material-icons text-gray-400"></span>
-                                </span>
-                            </div>
-                            {errors.customer && <p className="text-red-500 text-xs mt-1">{errors.customer}</p>}
-                        </div>
-
+    <SearchableSelect
+        label="Select Customer"
+        items={clientes} // Tu array de objetos clientes
+        displayKey="nombre_cliente" // La propiedad que quieres que se vea
+        selectedItem={selectedCustomer} // El objeto cliente completo seleccionado
+        
+        onChange={(customer) => {
+            // Lógica para actualizar el estado
+            if (customer) {
+                // Si selecciona un cliente de la lista
+                setCustomerValue(customer.nombre_cliente);
+                setSelectedCustomer(customer);
+                // Llamamos a tu lógica existente simulando el evento
+                handleCustomerChange({ target: { value: customer.nombre_cliente } });
+            } else {
+                // Si limpia el campo
+                setCustomerValue('');
+                setSelectedCustomer(null);
+                handleCustomerChange({ target: { value: '' } });
+            }
+        }}
+        
+        isReadOnly={isReadOnly}
+        error={errors.customer}
+        placeholder="Search for a customer..."
+    />
+</div>
                         <div>
                             <label className="block text-sm font-medium text-dark-gray" htmlFor="flight-type">
                                 Select Category
