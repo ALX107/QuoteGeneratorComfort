@@ -26,7 +26,7 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   logo: {
-    width: 70,
+    width: 100,
     height: 'auto',
   },
   slogan: {
@@ -86,9 +86,9 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   infoBoxTitle: {
-    fontSize: 8,
+    fontSize: 10,
     fontWeight: 'bold',
-    color: '#1A237E',
+    color: 'black',
     marginBottom: 3,
     textAlign: 'center',
   },

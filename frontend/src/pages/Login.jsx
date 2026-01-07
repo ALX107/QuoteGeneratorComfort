@@ -7,6 +7,7 @@ const Login = ({ onLogin }) => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [showTerms, setShowTerms] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -370,6 +371,82 @@ const Login = ({ onLogin }) => {
                         height: 58px;
                     }
                 }
+
+                /* Modal Styles */
+                .modal-overlay {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(15, 23, 42, 0.85);
+                    backdrop-filter: blur(8px);
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    z-index: 1000;
+                    animation: fadeIn 0.3s ease;
+                }
+                
+                .modal-content {
+                    background: rgba(255, 255, 255, 0.95);
+                    padding: 30px;
+                    border-radius: 24px;
+                    max-width: 500px;
+                    width: 90%;
+                    max-height: 80vh;
+                    overflow-y: auto;
+                    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+                    animation: slideUpModal 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+                }
+
+                .modal-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 20px;
+                    border-bottom: 1px solid #e2e8f0;
+                    padding-bottom: 15px;
+                }
+
+                .modal-title {
+                    font-size: 20px;
+                    font-weight: 700;
+                    color: #0f172a;
+                }
+
+                .close-btn {
+                    background: none;
+                    border: none;
+                    font-size: 28px;
+                    cursor: pointer;
+                    color: #64748b;
+                    line-height: 1;
+                }
+
+                .modal-body {
+                    color: #334155;
+                    font-size: 14px;
+                    line-height: 1.6;
+                }
+
+                .modal-body h3 {
+                    color: #0f172a;
+                    font-size: 16px;
+                    font-weight: 600;
+                    margin: 20px 0 10px 0;
+                }
+
+                .modal-body ul {
+                    padding-left: 20px;
+                    margin-bottom: 15px;
+                }
+
+                .footer-credits {
+                    margin-top: 20px;
+                    text-align: center;
+                    animation: fadeIn 1s ease 0.5s backwards;
+                }
             `}</style>
             <div className="background-blur blur1"></div>
             <div className="background-blur blur2"></div>
@@ -448,13 +525,65 @@ const Login = ({ onLogin }) => {
                         {error && <p className="error-message">{error}</p>}
 
                         <button type="submit" className="signin-btn">Get Started</button>
+                         <p className='subtitle-2' style={{ marginTop: '20px' }}>Engineered by Alex Linares & Max Bragado</p>
                     </form>
+                </div>
 
-                    <div className="divider">
-                        <p className='subtitle-2'>Engineered by Alex Linares & Max Bragado</p>
-                    </div>
+                <div className="footer-credits">
+                    <p className='subtitle-2' style={{ fontSize: '11px', opacity: 0.7 }}>
+                        &copy; 2026 <strong>QuoteGeneratorRAF</strong>. All rights reserved. 
+                        <br/>
+                        <span 
+                            onClick={() => setShowTerms(true)}
+                            style={{ textDecoration: 'underline', cursor: 'pointer', display: 'inline-block', marginTop: '2px' }}
+                        >
+                            Terms of Use
+                        </span>
+                    </p>
                 </div>
             </div>
+
+            {showTerms && (
+                <div className="modal-overlay" onClick={() => setShowTerms(false)}>
+                    <div className="modal-content" onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2 className="modal-title">Terms of Use</h2>
+                            <button className="close-btn" onClick={() => setShowTerms(false)}>&times;</button>
+                        </div>
+                        <div className="modal-body">
+                            <p><strong>Effective Date:</strong> January 2026</p>
+                            
+                            <h3>1. Intellectual Property</h3>
+                            <p>This software, including its source code, design, algorithms, and functionality, is the exclusive property of Alejandro Linares & Maximiliano Bragado. All rights reserved.</p>
+                            
+                            <h3>2. Restrictions on Use</h3>
+                            <p>By accessing this system, you agree not to:</p>
+                            <ul>
+                                <li>Copy, modify, reproduce, or distribute any part of this software without explicit written permission.</li>
+                                <li>Reverse engineer, decompile, disassemble, or attempt to derive the source code of the software.</li>
+                                <li>Use the software for any unauthorized commercial purpose or to build a competing product.</li>
+                                <li>Share your access credentials with unauthorized third parties.</li>
+                            </ul>
+
+                            <h3>3. Confidentiality</h3>
+                            <p>All data processed, stored, or retrieved through this system is confidential. You are responsible for maintaining the security of your account and reporting any unauthorized access immediately.</p>
+                            
+                            <h3>4. Disclaimer</h3>
+                            <p>The software is provided "as is" without warranty of any kind. Alejandro Linares & Maximiliano Bragado are not liable for any damages arising from the use of this software.</p>
+
+                            <div style={{ marginTop: '25px', textAlign: 'right' }}>
+                                <button 
+                                    className="signin-btn" 
+                                    style={{ marginTop: 0, width: 'auto', padding: '12px 24px', fontSize: '14px' }}
+                                    onClick={() => setShowTerms(false)}
+                                >
+                                    I Understand & Agree
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
