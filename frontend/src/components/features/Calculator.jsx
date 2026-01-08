@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 const INTEGER_FORMATTER = new Intl.NumberFormat('en-us', {
   maximumFractionDigits: 0,
@@ -14,6 +14,7 @@ function formatOperand(operand) {
 
 const Calculator = ({ isReadOnly }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const calculatorRef = useRef(null);
   
   const [displayValue, setDisplayValue] = useState('0');
   const [firstOperand, setFirstOperand] = useState(null);
@@ -62,9 +63,10 @@ const Calculator = ({ isReadOnly }) => {
       setHistory(formatOperand(inputValue) + ' ' + nextOperator + ' ');
     } else if (operator) {
       const result = performCalculation[operator](firstOperand, inputValue);
+      const roundedResult = parseFloat(result.toFixed(2));
       const newHistory = history + formatOperand(displayValue) + ' ' + nextOperator + ' ';
-      setDisplayValue(String(result));
-      setFirstOperand(result);
+      setDisplayValue(String(roundedResult));
+      setFirstOperand(roundedResult);
       setHistory(newHistory);
     }
 
@@ -84,9 +86,10 @@ const Calculator = ({ isReadOnly }) => {
     
     const secondOperand = parseFloat(displayValue);
     const result = performCalculation[operator](firstOperand, secondOperand);
+    const roundedResult = parseFloat(result.toFixed(2));
     
     setHistory(h => h + formatOperand(displayValue) + ' =');
-    setDisplayValue(String(result));
+    setDisplayValue(String(roundedResult));
     setFirstOperand(null); // Reset for a new calculation
     setOperator(null);
     setWaitingForSecondOperand(true);
@@ -107,11 +110,25 @@ const Calculator = ({ isReadOnly }) => {
     try {
       await navigator.clipboard.writeText(displayValue);
       setCopySuccess(true);
+      setIsOpen(false);
       setTimeout(() => setCopySuccess(false), 1000); // Reset después de 1 segundo
     } catch (err) {
       console.error('Failed to copy:', err);
     }
   };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (calculatorRef.current && !calculatorRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen]);
 
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -145,7 +162,7 @@ const Calculator = ({ isReadOnly }) => {
 
 
   return (
-    <div className="relative">
+    <div className="relative" ref={calculatorRef}>
       <button 
         onClick={() => setIsOpen(!isOpen)} 
         className="btn-glass p-2 flex items-center space-x-2 disabled:opacity-60"

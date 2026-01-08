@@ -178,7 +178,7 @@ function QuoteTable({ items, onRemoveItem, onUpdateItem, isReadOnly, globalNoSc,
                                         />
                                     </td>
                                     <td className="px-4 py-2 font-medium text-gray-900">
-                                        {((item.priceUSD || 0) * (item.quantity || 0) * (item.vatPercentage || 0)).toFixed(2)}
+                                        {((item.priceUSD || 0) * (item.quantity || 0) * (item.scPercentage || 0) * (item.vatPercentage || 0)).toFixed(2)}
                                     </td>
                                     <td className="px-4 py-2 font-medium text-gray-900">
                                         {(parseFloat(item.total) || 0).toFixed(2)}

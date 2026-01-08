@@ -166,7 +166,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
 
                             const cost = quantity * priceUSD;
                             const sCharge = cost * scPercentage;
-                            const vat = cost * vatPercentage;
+                            const vat = sCharge * vatPercentage;
 
                             acc.cost += cost;
                             acc.sCharge += sCharge;
@@ -275,7 +275,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
 
             const cost = quantity * priceUSD;
             const sCharge = cost * scPercentage;
-            const vat = cost * vatPercentage;
+            const vat = sCharge * vatPercentage;
 
             acc.cost += cost;
             acc.sCharge += sCharge;
@@ -296,15 +296,15 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                     let newPriceMXN = item.priceMXN;
 
                     if (item.anchorCurrency === 'MXN') {
-                        newPriceUSD = +((item.priceMXN || 0) / exchangeRate).toFixed(4);
+                        newPriceUSD = +((item.priceMXN || 0) / exchangeRate).toFixed(2);
                     } else { // anchorCurrency is 'USD'
-                        newPriceMXN = +((item.priceUSD || 0) * exchangeRate).toFixed(4);
+                        newPriceMXN = +((item.priceUSD || 0) * exchangeRate).toFixed(2);
                     }
 
                     // Recalculate the total for the item
                     const cost = (item.quantity || 0) * newPriceUSD;
                     const serviceCharge = cost * (item.scPercentage || 0);
-                    const vat = cost * (item.vatPercentage || 0);
+                    const vat = serviceCharge * (item.vatPercentage || 0);
                     const newTotal = cost + serviceCharge + vat;
 
                     return {
@@ -327,7 +327,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                 // Recalcular costos con el nuevo porcentaje
                 const cost = (item.quantity || 0) * (item.priceUSD || 0);
                 const sCharge = cost * targetSc;
-                const vat = cost * (item.vatPercentage || 0); // Mantenemos el IVA que ya tenía
+                const vat = sCharge * (item.vatPercentage || 0); // Mantenemos el IVA que ya tenía
                 
                 return {
                     ...item,
@@ -348,7 +348,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                 // Recalcular costos
                 const cost = (item.quantity || 0) * (item.priceUSD || 0);
                 const sCharge = cost * (item.scPercentage || 0); // Mantenemos el SC que ya tenía
-                const vat = cost * targetVat;
+                const vat = sCharge * targetVat;
 
                 return {
                     ...item,
@@ -403,7 +403,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                 } else {
                     priceMXN = parseFloat(s.tarifa_servicio) || 0;
                     // Si es MXN, el USD se calcula dividiendo
-                    priceUSD = exchangeRate ? +((priceMXN) / exchangeRate).toFixed(4) : 0;
+                    priceUSD = exchangeRate ? +((priceMXN) / exchangeRate).toFixed(2) : 0;
                 }
 
                 const quantity = 1;
@@ -414,7 +414,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                 // Calcular totales usando priceUSD (que ya es correcto sea cual sea el origen)
                 const cost = quantity * priceUSD;
                 const serviceCharge = cost * scPercentage;
-                const vat = cost * vatPercentage;
+                const vat = serviceCharge * vatPercentage;
                 const total = cost + serviceCharge + vat;
 
                 return {
@@ -475,12 +475,14 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                 }
 
                 // Convertir a USD y anclar
-                const newPriceUSD = exchangeRate ? +((newPriceMXN) / exchangeRate).toFixed(4) : 0;
+                const newPriceUSD = exchangeRate ? +((newPriceMXN) / exchangeRate).toFixed(2) : 0;
                 
                 // Recalcular totales del renglón
                 const cost = (item.quantity || 0) * (item.anchorCurrency === 'MXN' ? newPriceMXN : newPriceUSD); // Nota: Aquí deberíamos respetar el anchor, pero como es tarifa DOF (pesos), forzamos MXN logic
                 const scPercentage = item.scPercentage || 0;
+                const sCharge = cost * scPercentage;
                 const vatPercentage = item.vatPercentage || 0;
+                const vat = sCharge * vatPercentage;
                 
                 return {
                     ...item,
@@ -488,7 +490,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                     baseRate: item.baseRate || rate, 
                     priceMXN: parseFloat(newPriceMXN.toFixed(2)),
                     priceUSD: newPriceUSD,
-                    total: cost + (cost * scPercentage) + (cost * vatPercentage)
+                    total: cost + sCharge + vat
                 };
             })
         );
@@ -574,17 +576,17 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
         item[field] = value;
 
         if (field === 'priceMXN') {
-            item.priceUSD = +((value || 0) / exchangeRate).toFixed(4);
+            item.priceUSD = +((value || 0) / exchangeRate).toFixed(2);
             item.anchorCurrency = 'MXN'; // Set anchor
         } else if (field === 'priceUSD') {
-            item.priceMXN = +((value || 0) * exchangeRate).toFixed(4);
+            item.priceMXN = +((value || 0) * exchangeRate).toFixed(2);
             item.anchorCurrency = 'USD'; // Set anchor
         }
 
         // Recalculate the total based on the full item data
         const cost = (item.quantity || 0) * (item.priceUSD || 0);
         const serviceCharge = cost * (item.scPercentage || 0);
-        const vat = cost * (item.vatPercentage || 0);
+        const vat = serviceCharge * (item.vatPercentage || 0);
 
         item.total = cost + serviceCharge + vat;
 
@@ -594,7 +596,22 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
     const handleSaveServices = (selectedServicesFromModal) => {
         if (!exchangeRate) return;
 
-        const newServiceItems = selectedServicesFromModal.map(service => {
+        // 1. Identificar items manuales (que no están en el catálogo de servicios del FBO actual)
+        const allServiceDescriptions = new Set(allServices.map(s => s.nombre_concepto_default));
+        const manualItems = items.filter(item => !allServiceDescriptions.has(item.description));
+
+        // 2. Procesar los servicios seleccionados en el modal
+        const processedServiceItems = selectedServicesFromModal.map(service => {
+            // Verificar si este servicio YA existe en la tabla actual (items)
+            // Usamos service.name porque así lo mapeamos al abrir el modal
+            const existingItem = items.find(item => item.description === service.name);
+
+            if (existingItem) {
+                // Si ya existe, lo devolvemos TAL CUAL para no perder cambios manuales (precio, qty, etc.)
+                return existingItem;
+            }
+
+            // Si es nuevo, calculamos sus valores iniciales
             //1. DETECCIÓN DE DIVISA
             // Verificamos si el servicio viene en USD desde la base de datos
             const isUSD = service.divisa?.trim().toUpperCase() === 'USD';
@@ -608,7 +625,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                 priceMXN = +((priceUSD) * exchangeRate).toFixed(2);
             } else {
                 priceMXN = parseFloat(service.tarifa_servicio) || 0;
-                priceUSD = +((priceMXN) / exchangeRate).toFixed(4);
+                priceUSD = +((priceMXN) / exchangeRate).toFixed(2);
             }
 
             const quantity = 1;
@@ -619,7 +636,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
             // Calculamos totales basados en priceUSD (estándar)
             const cost = quantity * priceUSD;
             const serviceCharge = cost * scPercentage;
-            const vat = cost * vatPercentage;
+            const vat = serviceCharge * vatPercentage;
             const total = cost + serviceCharge + vat;
 
             return {
@@ -638,10 +655,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
             };
         });
 
-        const allServiceDescriptions = new Set(allServices.map(s => s.nombre_concepto_default));
-        const nonServiceItems = items.filter(item => !allServiceDescriptions.has(item.description));
-
-        setItems([...nonServiceItems, ...newServiceItems]);
+        setItems([...manualItems, ...processedServiceItems]);
     };
 
 
@@ -659,7 +673,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
             const servicios = items.map(item => {
                 const cost = (item.quantity || 0) * (item.priceUSD || 0);
                 const s_cargo = cost * (item.scPercentage || 0);
-                const vat = cost * (item.vatPercentage || 0);
+                const vat = s_cargo * (item.vatPercentage || 0);
 
 
                 return {
