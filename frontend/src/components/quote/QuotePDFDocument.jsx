@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   sectionTitle: {
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: 'bold',
     backgroundColor: '#E8EAF6',
     padding: 2,
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   infoBoxTitle: {
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: 'bold',
     color: 'black',
     marginBottom: 3,
@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
     width: '48%',
   },
   flightInfoTitle: {
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: 'bold',
     color: '#1A237E',
     marginBottom: 2,
@@ -113,22 +113,22 @@ const styles = StyleSheet.create({
     marginBottom: 1,
   },
   flightInfoLabel: {
-    fontSize: 7,
+    fontSize: 9,
     color: '#4A4A4A',
     width: '30%',
   },
   flightInfoValue: {
-    fontSize: 7,
+    fontSize: 9,
     color: '#000000',
     width: '70%',
   },
   label: {
-    fontSize: 6,
+    fontSize: 8,
     color: '#4A4A4A',
     marginBottom: 1,
   },
   value: {
-    fontSize: 7,
+    fontSize: 9,
     color: '#000000',
   },
   table: {
@@ -162,13 +162,13 @@ const styles = StyleSheet.create({
     borderTopWidth: 0,
   },
   tableHeader: {
-    fontSize: 8,
+    fontSize: 10,
     fontWeight: 'bold',
     color: '#333',
     textAlign: 'center',
   },
   tableCell: {
-    fontSize: 7,
+    fontSize: 9,
     textAlign: 'right',
   },
   exchangeRate: {
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   exchangeRateText: {
-    fontSize: 10,
+    fontSize: 12,
     color: '#4A4A4A',
     fontStyle: 'italic',
   },
@@ -201,15 +201,15 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   totalLabel: {
-    fontSize: 11,
+    fontSize: 13,
     color: '#4A4A4A',
   },
   totalValue: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: 'bold',
   },
   finalTotal: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#1A237E',
   },
@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   disclaimerText: {
-    fontSize: 6,
+    fontSize: 9,
     color: '#666',
     textAlign: 'center',
     marginBottom: 3,
@@ -516,6 +516,10 @@ const QuotePDFDocument = ({ formData, items, totals, legs }) => {
               <Text style={styles.disclaimerText}>* VALUE ADDED TAX (VAT) IS NOT CHARGED.</Text>
             )}
             <Text style={styles.disclaimerText}>* EXCLUDES CATERING, OVERTIME, TRANSPORTATION AND FUEL UPLIFT.</Text>
+            {formData?.isCaaMember && (
+              <Text style={[styles.disclaimerText, { color: 'red' }]}>* IMPORTANT: A 15% DISCOUNT IS APPLIED TO ALL HANDLING SERVICES PROVIDED DIRECTLY BY REAL ALFA FLIGHT.
+              A 10% DISBURSEMENT FEE (DISCOUNTED FOR CAA MEMBERS) APPLIES ONLY TO THIRD-PARTY CHARGES-SUCH AS AIRPORT AND FBO FEES-THAT ARE PAID IN ADVANCE BY REAL ALFA FLIGHT ON BEHALF OF THE CLIENT.</Text>
+            )}
           </View>
         </View>
 

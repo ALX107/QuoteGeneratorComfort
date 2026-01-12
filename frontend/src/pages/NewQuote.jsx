@@ -93,19 +93,40 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                     const isJoinedQuote = quoteData.total_en_palabras && quoteData.total_en_palabras.startsWith('JOIN OF:');
 
                     // Mapear servicios a items
-                    const mappedItems = quoteData.servicios.map(servicio => ({
-                        description: servicio.nombre_servicio,
-                        category: servicio.nombre_cat_concepto,
-                        quantity: servicio.cantidad,
-                        priceMXN: servicio.costo_mxn,
-                        priceUSD: servicio.costo_usd,
-                        scPercentage: servicio.sc_porcentaje,
-                        vatPercentage: servicio.vat_porcentaje,
-                        anchorCurrency: 'MXN',
-                        total: servicio.total_usd,
-                        noSc: parseFloat(servicio.sc_porcentaje) === 0,
-                        noVat: parseFloat(servicio.vat_porcentaje) === 0,
-                    }));
+                    const mappedItems = quoteData.servicios.map(servicio => {
+                        // RECONSTRUCCIÓN DE TARIFA BASE:
+                        // Calculamos la tarifa unitaria original para que, si se recalcula por peso,
+                        // el precio se mantenga estable y no se dispare.
+                        const isLanding = servicio.nombre_servicio.toUpperCase().includes('LANDING FEE');
+                        const isGeneralAviation = servicio.nombre_cat_concepto === 'Airport Services General Aviation';
+                        const mtow = parseFloat(quoteData.mtow) || 0;
+                        const mtowUnit = quoteData.mtow_unit || 'KG';
+                        const tons = (mtow > 0) ? (mtowUnit === 'KG' ? mtow / 1000 : mtow / 2204.62) : 0;
+
+                        let baseRate = undefined;
+                        if (isLanding && isGeneralAviation && tons > 0) {
+                            const priceMXN = parseFloat(servicio.costo_mxn) || 0;
+                            // Fórmula inversa: Base = (Precio - 1.16) / Toneladas
+                            if (priceMXN > 0) {
+                                baseRate = (priceMXN - 1.16) / tons;
+                            }
+                        }
+
+                        return {
+                            description: servicio.nombre_servicio,
+                            category: servicio.nombre_cat_concepto,
+                            quantity: parseFloat(servicio.cantidad) || 0,
+                            priceMXN: parseFloat(servicio.costo_mxn) || 0,
+                            priceUSD: parseFloat(servicio.costo_usd) || 0,
+                            scPercentage: parseFloat(servicio.sc_porcentaje) || 0,
+                            vatPercentage: parseFloat(servicio.vat_porcentaje) || 0,
+                            anchorCurrency: 'MXN',
+                            total: parseFloat(servicio.total_usd) || 0,
+                            noSc: parseFloat(servicio.sc_porcentaje) === 0,
+                            noVat: parseFloat(servicio.vat_porcentaje) === 0,
+                            baseRate: baseRate,
+                        };
+                    });
                     setItems(mappedItems);
                     setExchangeRate(quoteData.exchange_rate);
 
@@ -123,6 +144,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                             stationName: quoteData.aeropuerto || '',
                             fboName: quoteData.fbo || '',
                             exchangeRate: quoteData.exchange_rate,
+                            isCaaMember: !!quoteData.es_miembro_caa,
                             totalEnPalabras: quoteData.total_en_palabras || null,
                             eta: quoteData.fecha_llegada ? new Date(quoteData.fecha_llegada).toISOString().split('T')[0] : null,
                             etd: quoteData.fecha_salida ? new Date(quoteData.fecha_salida).toISOString().split('T')[0] : null,
@@ -276,6 +298,21 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
         }
     }, [quoteDataForPreview, isFormReady, previewingQuote]);
 
+    // Helper: Calcular el total de un item (costo + sCharge + vat)
+    const calculateItemTotal = (item) => {
+        const quantity = parseFloat(item.quantity) || 0;
+        const priceUSD = parseFloat(item.priceUSD) || 0;
+        const scPercentage = parseFloat(item.scPercentage) || 0;
+        const vatPercentage = parseFloat(item.vatPercentage) || 0;
+
+        const cost = quantity * priceUSD;
+        const sCharge = cost * scPercentage;
+        const vat = sCharge * vatPercentage;
+        const itemTotal = parseFloat((cost + sCharge + vat).toFixed(2));
+
+        return itemTotal;
+    };
+
     useEffect(() => {
         const newTotals = items.reduce((acc, item) => {
             // Aseguramos que todos los valores sean numéricos, con 0 como fallback.
@@ -284,14 +321,22 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
             const scPercentage = parseFloat(item.scPercentage) || 0;
             const vatPercentage = parseFloat(item.vatPercentage) || 0;
 
-            const cost = quantity * priceUSD;
-            const sCharge = cost * scPercentage;
-            const vat = sCharge * vatPercentage;
+            const rawCost = quantity * priceUSD;
+            const rawSCharge = rawCost * scPercentage;
+            const rawVat = rawSCharge * vatPercentage;
 
-            acc.cost += cost;
-            acc.sCharge += sCharge;
-            acc.vat += vat;
-            acc.total += cost + sCharge + vat; // Recalculamos el total aquí para mayor seguridad
+            // Redondeamos cada componente para que coincida con lo que se muestra en las columnas de la tabla
+            const costRounded = parseFloat(rawCost.toFixed(2));
+            const sChargeRounded = parseFloat(rawSCharge.toFixed(2));
+            const vatRounded = parseFloat(rawVat.toFixed(2));
+            
+            // El total del ítem también se redondea (suma de crudos, luego redondeo)
+            const itemTotalRounded = parseFloat((rawCost + rawSCharge + rawVat).toFixed(2));
+
+            acc.cost += costRounded;
+            acc.sCharge += sChargeRounded;
+            acc.vat += vatRounded;
+            acc.total += itemTotalRounded; 
             return acc;
         }, { cost: 0, sCharge: 0, vat: 0, total: 0 });
 
@@ -303,25 +348,40 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
         if (exchangeRate) {
             setItems(prevItems =>
                 prevItems.map(item => {
-                    let newPriceUSD = item.priceUSD;
-                    let newPriceMXN = item.priceMXN;
-
-                    if (item.anchorCurrency === 'MXN') {
-                        newPriceUSD = +((item.priceMXN || 0) / exchangeRate).toFixed(2);
-                    } else { // anchorCurrency is 'USD'
-                        newPriceMXN = +((item.priceUSD || 0) * exchangeRate).toFixed(2);
+                    // If the user entered a manual price, don't overwrite their values.
+                    // Still recalculate the total using the manual price so totals stay in sync.
+                    if (item.manualPrice) {
+                        const cost = (item.quantity || 0) * (item.priceUSD || 0);
+                        const serviceCharge = cost * (item.scPercentage || 0);
+                        const vat = serviceCharge * (item.vatPercentage || 0);
+                        const newTotal = parseFloat((cost + serviceCharge + vat).toFixed(2));
+                        return {
+                            ...item,
+                            total: newTotal,
+                        };
                     }
 
-                    // Recalculate the total for the item
-                    const cost = (item.quantity || 0) * newPriceUSD;
-                    const serviceCharge = cost * (item.scPercentage || 0);
-                    const vat = serviceCharge * (item.vatPercentage || 0);
-                    const newTotal = cost + serviceCharge + vat;
+                    let newPriceUSD = item.priceUSD || 0;
+                    let newPriceMXN = item.priceMXN || 0;
 
-                    return {
+                    if (item.anchorCurrency === 'MXN') {
+                        newPriceUSD = parseFloat((Number(item.priceMXN || 0) / exchangeRate).toFixed(2));
+                        newPriceMXN = parseFloat(Number(item.priceMXN || 0).toFixed(2));
+                    } else { // anchorCurrency is 'USD'
+                        newPriceMXN = parseFloat((Number(item.priceUSD || 0) * exchangeRate).toFixed(2));
+                        newPriceUSD = parseFloat(Number(item.priceUSD || 0).toFixed(2));
+                    }
+
+                    // Recalculate the total for the item using the updated prices
+                    const updatedItem = {
                         ...item,
                         priceUSD: newPriceUSD,
                         priceMXN: newPriceMXN,
+                    };
+                    const newTotal = calculateItemTotal(updatedItem);
+
+                    return {
+                        ...updatedItem,
                         total: newTotal,
                     };
                 })
@@ -329,7 +389,8 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
         }
     }, [exchangeRate]);
 
-    // Effect for Global "No SC" Checkbox
+
+    // Effect for Global "No VAT" Checkbox - FUNCIONA BIEN, no modificar
     useEffect(() => {
         setItems(prevItems =>
             prevItems.map(item => {
@@ -342,42 +403,55 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                     targetSc = globalNoSc ? 0 : (isCaaMember ? 0.10 : 0.18);
                 }
 
+                const targetVat = globalNoVat ? 0 : 0.16;
                 
-                // Recalcular costos con el nuevo porcentaje
-                const cost = (item.quantity || 0) * (item.priceUSD || 0);
-                const sCharge = cost * targetSc;
-                const vat = sCharge * (item.vatPercentage || 0); // Mantenemos el IVA que ya tenía
-                
-                return {
+                // Actualizar vatPercentage y recalcular el total del item
+                const updatedItem = {
                     ...item,
                     scPercentage: targetSc,
                     noSc: targetSc === 0,
                     total: cost + sCharge + vat,
-                };
-            })
-        );
-    }, [globalNoSc, isCaaMember]);
-
-    // Effect for Global "No VAT" Checkbox
-    useEffect(() => {
-        setItems(prevItems =>
-            prevItems.map(item => {
-                const targetVat = globalNoVat ? 0 : 0.16;
-                
-                // Recalcular costos
-                const cost = (item.quantity || 0) * (item.priceUSD || 0);
-                const sCharge = cost * (item.scPercentage || 0); // Mantenemos el SC que ya tenía
-                const vat = sCharge * targetVat;
-
-                return {
-                    ...item,
                     vatPercentage: targetVat,
                     noVat: globalNoVat,
-                    total: cost + sCharge + vat, 
                 };
+
+                updatedItem.total = calculateItemTotal(updatedItem);
+                return updatedItem;
             })
         );
     }, [globalNoVat]);
+
+    // Effect: Cuando CAA Member cambia, actualizar SC% entre 10% y 18%
+    const prevIsCaaMemberRef = useRef(isCaaMember);
+    useEffect(() => {
+        // Si isCaaMember cambió Y "No S.C." NO está marcado
+        if (prevIsCaaMemberRef.current !== isCaaMember && !globalNoSc) {
+            setItems(prevItems =>
+                prevItems.map(item => {
+                    // Si CAA se marcó (false → true): cambiar 18% a 10%
+                    if (isCaaMember && item.scPercentage === 0.18) {
+                        const updatedItem = {
+                            ...item,
+                            scPercentage: 0.10,
+                        };
+                        updatedItem.total = calculateItemTotal(updatedItem);
+                        return updatedItem;
+                    }
+                    // Si CAA se desmarcó (true → false): cambiar 10% a 18%
+                    if (!isCaaMember && item.scPercentage === 0.10) {
+                        const updatedItem = {
+                            ...item,
+                            scPercentage: 0.18,
+                        };
+                        updatedItem.total = calculateItemTotal(updatedItem);
+                        return updatedItem;
+                    }
+                    return item;
+                })
+            );
+        }
+        prevIsCaaMemberRef.current = isCaaMember;
+    }, [isCaaMember, globalNoSc]);
 
     //Actualizar la tabla si cambia la categoría 
     useEffect(() => {
@@ -415,6 +489,23 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
 
     const handleGlobalCheckboxChange = (setter, value) => {
         setter(value);
+        
+        // SOLO para "No S.C.": aplicar la lógica inmediatamente sin sobrescribir ediciones manuales
+        if (setter === setGlobalNoSc && value) {
+            // Si marcó "No S.C.", poner SC% en 0 para TODOS
+            setItems(prevItems =>
+                prevItems.map(item => {
+                    const updatedItem = {
+                        ...item,
+                        scPercentage: 0,
+                        noSc: true,
+                    };
+                    updatedItem.total = calculateItemTotal(updatedItem);
+                    return updatedItem;
+                })
+            );
+        }
+        // Si desmarcó "No S.C.", no hacer nada (los items mantienen sus valores)
     };
 
     const fetchServices = async (id_aeropuerto, id_fbo, fboName) => {
@@ -473,6 +564,10 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                         }
                     }
 
+                // Guardamos la tarifa base original para futuros cálculos de MTOW
+                // Si es USD, la base es priceUSD, si es MXN (default), es priceMXN
+                const baseRate = isUSD ? priceUSD : priceMXN;
+
                 const quantity = 1;
                 
                 // Detectar si es exento desde la BD
@@ -484,6 +579,22 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                 
                 // Calcular totales usando priceUSD (que ya es correcto sea cual sea el origen)
                 const cost = quantity * priceUSD;
+
+                // APLICAR FÓRMULA ESPECIAL PARA LANDING FEES DE AVIACIÓN GENERAL
+                const isGeneralAviation = s.nombre_cat_concepto === 'Airport Services General Aviation';
+                const isLanding = s.nombre_concepto_default.toUpperCase().includes('LANDING FEE');
+
+                if (isGeneralAviation && isLanding && currentMtow > 0) {
+                     const calculatedBase = baseRate * currentMtow + 1.16;
+                     if (isUSD) {
+                                priceUSD = parseFloat(calculatedBase.toFixed(2));
+                                priceMXN = exchangeRate ? parseFloat((calculatedBase * exchangeRate).toFixed(2)) : 0;
+                     } else {
+                                priceMXN = parseFloat(calculatedBase.toFixed(2));
+                                priceUSD = exchangeRate ? parseFloat((calculatedBase / exchangeRate).toFixed(2)) : 0;
+                     }
+                }
+
                 const serviceCharge = cost * scPercentage;
                 const vat = serviceCharge * vatPercentage;
                 const total = cost + serviceCharge + vat;
@@ -499,7 +610,8 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                     noSc: isExempt || globalNoSc,
                     noVat: globalNoVat,
                     // 3. Aquí definimos quién manda (el ancla) para futuras ediciones manuales
-                    anchorCurrency: (isTargetService && categoryCoordFee > 0 && isGenAv) ? 'USD' : (isUSD ? 'USD' : 'MXN'),                    total,
+                    anchorCurrency: (isTargetService && categoryCoordFee > 0 && isGenAv) ? 'USD' : (isUSD ? 'USD' : 'MXN'),                    baseRate: baseRate, // Guardamos la tarifa base unitaria
+                    total,
 
                     // NUEVA BANDERA: Protege este ítem de cambios automáticos
                     isScExempt: isExempt,
@@ -527,45 +639,53 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
 
         setItems(prevItems => 
             prevItems.map(item => {
+                // Si el precio fue editado manualmente por el usuario, NO recalculamos
+                if (item.manualPrice) return item;
+
                 // Solo recalculamos si el ítem tiene guardada una 'baseRate' (Tarifa del DOF)
                 // O si detectamos keywords en la descripción (por si son ítems viejos)
-                const isLanding = item.description.toUpperCase().includes('ATERRIZAJE') || item.description.toUpperCase().includes('LANDING FEE');
-                const isParking = item.description.toUpperCase().includes('PERNOCTA') || item.description.toUpperCase().includes('OVERNIGHT') || item.description.toUpperCase().includes('ESTACIONAMIENTO');
+                const isLanding = item.description.toUpperCase().includes('LANDING FEE');
 
-                // Si no es un servicio calculado, lo dejamos igual
-                if (!item.baseRate && !isLanding && !isParking) return item;
+                // NUEVA VALIDACIÓN: Solo aplicar fórmula si es Aviación General
+                const isGeneralAviation = item.category === 'Airport Services General Aviation';
 
-                // Definimos la tarifa base (Si ya la guardamos la usamos, si no, intentamos usar el precio actual como base solo la primera vez, pero es arriesgado. Mejor confiamos en baseRate)
-                const rate = item.baseRate || item.priceMXN; 
+                // Si no es Landing Fee O no es Aviación General, lo dejamos igual (no recalculamos)
+                if (!isLanding || !isGeneralAviation) return item;
+
+                // Definimos la tarifa base (Si ya la guardamos la usamos, si no, intentamos usar el precio actual como base solo la primera vez, pero es arriesgoso. Mejor confiamos en baseRate)
+                const rate = item.baseRate || (item.anchorCurrency === 'USD' ? item.priceUSD : item.priceMXN);
                 
                 // Si tons es 0, dejamos el precio en 0 para evitar errores, o dejamos la tarifa base. 
                 // Normalmente si no hay peso, el costo es 0 o la tarifa mínima. Asumiremos cálculo directo.
                 let newPriceMXN = 0;
+                let newPriceUSD = 0;
 
                 if (tons > 0) {
-                     // FÓRMULA DOF: Tarifa * Toneladas
-                     // Para aterrizaje: Precio Final = Tarifa * Tons
-                     // Para pernocta: Precio Por Hora = Tarifa * Tons (luego la cantidad multiplica las horas)
-                     newPriceMXN = rate * tons * (1.16);
+                     // FÓRMULA: Tarifa * Toneladas + 1.16
+                     const calculatedBase = (rate * tons) + 1.16;
+                     
+                     if (item.anchorCurrency === 'USD') {
+                                newPriceUSD = parseFloat(calculatedBase.toFixed(2));
+                                newPriceMXN = exchangeRate ? parseFloat((calculatedBase * exchangeRate).toFixed(2)) : 0;
+                     } else {
+                                newPriceMXN = parseFloat(calculatedBase.toFixed(2));
+                                newPriceUSD = exchangeRate ? parseFloat((calculatedBase / exchangeRate).toFixed(2)) : 0;
+                     }
                 }
 
-                // Convertir a USD y anclar
-                const newPriceUSD = exchangeRate ? +((newPriceMXN) / exchangeRate).toFixed(2) : 0;
-                
-                // Recalcular totales del renglón
-                const cost = (item.quantity || 0) * (item.anchorCurrency === 'MXN' ? newPriceMXN : newPriceUSD); // Nota: Aquí deberíamos respetar el anchor, pero como es tarifa DOF (pesos), forzamos MXN logic
-                const scPercentage = item.scPercentage || 0;
-                const sCharge = cost * scPercentage;
-                const vatPercentage = item.vatPercentage || 0;
-                const vat = sCharge * vatPercentage;
-                
-                return {
+                // Recalcular totales del renglón usando el helper
+                const updatedItem = {
                     ...item,
-                    // IMPORTANTE: Guardamos la tarifa original si no existía, para futuros cambios de peso
                     baseRate: item.baseRate || rate, 
-                    priceMXN: parseFloat(newPriceMXN.toFixed(2)),
-                    priceUSD: newPriceUSD,
-                    total: cost + sCharge + vat
+                    priceMXN: parseFloat(Number(newPriceMXN || 0).toFixed(2)),
+                    priceUSD: parseFloat(Number(newPriceUSD || 0).toFixed(2)),
+                };
+                
+                const roundedTotal = calculateItemTotal(updatedItem);
+
+                return {
+                    ...updatedItem,
+                    total: roundedTotal,
                 };
             })
         );
@@ -647,23 +767,24 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
         if (field === 'vatPercentage' && globalNoVat) {
             setGlobalNoVat(false);
         }
+        
+        // Si el usuario edita el precio manualmente, activamos la bandera para no sobrescribirlo con la fórmula de MTOW
+        if (field === 'priceMXN' || field === 'priceUSD') {
+            item.manualPrice = true;
+        }
 
         item[field] = value;
 
         if (field === 'priceMXN') {
-            item.priceUSD = +((value || 0) / exchangeRate).toFixed(2);
+            item.priceUSD = parseFloat(Number((value || 0) / exchangeRate).toFixed(2));
             item.anchorCurrency = 'MXN'; // Set anchor
         } else if (field === 'priceUSD') {
-            item.priceMXN = +((value || 0) * exchangeRate).toFixed(2);
+            item.priceMXN = parseFloat(Number((value || 0) * exchangeRate).toFixed(2));
             item.anchorCurrency = 'USD'; // Set anchor
         }
 
-        // Recalculate the total based on the full item data
-        const cost = (item.quantity || 0) * (item.priceUSD || 0);
-        const serviceCharge = cost * (item.scPercentage || 0);
-        const vat = serviceCharge * (item.vatPercentage || 0);
-
-        item.total = cost + serviceCharge + vat;
+        // Recalculate the total based on the full item data using the helper
+        item.total = calculateItemTotal(item);
 
         setItems(newItems);
     };
@@ -710,10 +831,10 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                 // LÓGICA ESTÁNDAR (Si no cumple las condiciones anteriores)
                 if (isUSD) {
                     priceUSD = rawRate;
-                    priceMXN = +((priceUSD) * exchangeRate).toFixed(2);
+                    priceMXN = parseFloat((priceUSD * exchangeRate).toFixed(2));
                 } else {
                     priceMXN = rawRate;
-                    priceUSD = +((priceMXN) / exchangeRate).toFixed(4);
+                    priceUSD = parseFloat((priceMXN / exchangeRate).toFixed(4));
                 }
             }
 
@@ -722,11 +843,30 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
             const scPercentage = isExempt ? 0 : (globalNoSc ? 0 : (isCaaMember ? 0.10 : 0.18));
             const vatPercentage = globalNoVat ? 0 : 0.16;
         
+            // Guardamos la tarifa base original para futuros cálculos de MTOW
+            // Si es USD, la base es priceUSD, si es MXN (default), es priceMXN
+            const baseRate = isUSD ? priceUSD : priceMXN;
+
+            // APLICAR FÓRMULA ESPECIAL PARA LANDING FEES DE AVIACIÓN GENERAL
+            const isGeneralAviation = service.nombre_cat_concepto === 'Airport Services General Aviation';
+            const isLanding = service.nombre_concepto_default.toUpperCase().includes('LANDING FEE');
+
+            if (isGeneralAviation && isLanding && currentMtow > 0) {
+                const calculatedBase = baseRate * currentMtow + 1.16;
+                if (isUSD) {
+                    priceUSD = parseFloat(calculatedBase.toFixed(2));
+                    priceMXN = exchangeRate ? parseFloat((calculatedBase * exchangeRate).toFixed(2)) : 0;
+                } else {
+                    priceMXN = parseFloat(calculatedBase.toFixed(2));
+                    priceUSD = exchangeRate ? parseFloat((calculatedBase / exchangeRate).toFixed(2)) : 0;
+                }
+            }
+
             // Calculamos totales basados en priceUSD (estándar)
             const cost = quantity * priceUSD;
             const serviceCharge = cost * scPercentage;
             const vat = serviceCharge * vatPercentage;
-            const total = cost + serviceCharge + vat;
+            const total = parseFloat((cost + serviceCharge + vat).toFixed(2));
 
             return {
                 description: service.name,
@@ -739,7 +879,8 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                 noSc: globalNoSc,
                 noVat: globalNoVat,
                 // 3. FIJAMOS EL ANCLA CORRECTA
-                anchorCurrency: (isTargetService && isGeneralAviation && categoryCoordFee > 0) ? 'USD' : (isUSD ? 'USD' : 'MXN'),                total,
+                anchorCurrency: (isTargetService && isGeneralAviation && categoryCoordFee > 0) ? 'USD' : (isUSD ? 'USD' : 'MXN'),                baseRate: baseRate, // Guardamos la tarifa base unitaria
+                total,
                 isScExempt: isExempt,
                 baseRate: rawRate
             };
@@ -760,24 +901,54 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
 
             const rawData = quoteFormRef.current.getFormData();
 
-            const servicios = items.map(item => {
-                const cost = (item.quantity || 0) * (item.priceUSD || 0);
-                const s_cargo = cost * (item.scPercentage || 0);
-                const vat = s_cargo * (item.vatPercentage || 0);
+            // IMPORTANTE: Aplicar globalNoSc y globalNoVat JUSTO ANTES de guardar
+            // para asegurar que los valores se respeten (esto evita problemas de timing con useEffect)
+            const itemsToSave = items.map(item => {
+                let finalScPercentage = item.scPercentage;
+                let finalVatPercentage = item.vatPercentage;
+                
+                // Si globalNoSc está marcado, SIEMPRE usar 0 para SC
+                if (globalNoSc) {
+                    finalScPercentage = 0;
+                }
+                
+                // Si globalNoVat está marcado, SIEMPRE usar 0 para VAT
+                if (globalNoVat) {
+                    finalVatPercentage = 0;
+                }
+                
+                return {
+                    ...item,
+                    scPercentage: finalScPercentage,
+                    vatPercentage: finalVatPercentage,
+                    noSc: globalNoSc,
+                    noVat: globalNoVat,
+                };
+            });
 
+            const servicios = itemsToSave.map(item => {
+                // Usar los precios y totales guardados directamente del item
+                // Sin recalcular para respetar manualPrice, landing fee formula y valores exactos
+                const quantity = parseFloat(item.quantity) || 0;
+                const costo_mxn = parseFloat(Number(item.priceMXN || 0).toFixed(2));
+                const costo_usd = parseFloat(Number(item.priceUSD || 0).toFixed(2));
+                // Calcular s_cargo y vat IGUAL que en QuoteTable (qty * priceUSD * percentage)
+                const s_cargo = parseFloat(Number(quantity * costo_usd * (item.scPercentage || 0)).toFixed(2));
+                const vat = parseFloat(Number(s_cargo * (item.vatPercentage || 0)).toFixed(2));
+                const total_usd = parseFloat(Number(item.total || 0).toFixed(2));
 
                 return {
                     nombre_servicio: item.description,
                     cantidad: item.quantity,
-                    costo_mxn: item.priceMXN,
-                    costo_usd: item.priceUSD,
+                    costo_mxn: costo_mxn,
+                    costo_usd: costo_usd,
                     sc_porcentaje: item.scPercentage,
                     vat_porcentaje: item.vatPercentage,
                     noSc: item.noSc,
                     noVat: item.noVat,
                     s_cargo: s_cargo,
                     vat: vat,
-                    total_usd: item.total,
+                    total_usd: total_usd,
                     nombre_cat_concepto: item.category,
                 };
             });
@@ -797,6 +968,12 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                 paxTo: rawData.paxTo,
                 mtow: rawData.mtow,
                 mtow_unit: rawData.mtow_unit,
+
+                // Enviamos los totales calculados en el frontend para asegurar que se guarde lo mismo que se ve en pantalla
+                total_costo: totals.cost,
+                total_s_cargo: totals.sCharge,
+                total_vat: totals.vat,
+                total_final: totals.total,
 
                 // Cliente
                 customer: {

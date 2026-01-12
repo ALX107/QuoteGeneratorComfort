@@ -837,9 +837,14 @@ INSERT INTO servicios_cliente_especiales (id_servicio_especial, id_cliente, id_c
 
 -- Precios de Conceptos QUE APLICAN PARA UN AEROPUERTO Y/O FBO ESPECÍFICO
 INSERT INTO precios_conceptos (id_precio_concepto, tarifa_servicio, divisa, id_concepto_std, id_cat_concepto, id_aeropuerto, id_fbo) VALUES
--- ** MMTO **
--- 1. Servicios del AEROPUERTO (sin FBO se tendría q poner NULL) -> (1, '', 1.00, 'MXN', 1, 44, NULL),
--- 2. Servicios FBO 'Asertec' (id_fbo=1) en MMTO
+
+
+--TARIFAS DE AVIACIÓN GENERAL POR AEROPUERTO
+--34 Landing Fee
+--35 Embarking / Disembarking
+--36 Parking Fee
+--37 Overnight
+--38 TUA
 
 -----------TOLUCA AVIACIÓN GENERAL (id_aeropuerto:44) -----------
 (1, 0, 'MXN', 34, 8, 44, 106),

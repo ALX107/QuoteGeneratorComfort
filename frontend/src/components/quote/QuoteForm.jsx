@@ -104,6 +104,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
             setFilteredRegistrations([]);
             setFilteredAeronavesModelos([]);
             setIsCaaMember(false);
+            if (onCaaChange) onCaaChange(false);
             setSelectedAirportId(null);
             setSelectedFboId(null);
             setFilteredFbos([]);
@@ -169,7 +170,9 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                 setFilteredFbos(fbosForAirport);
             }
 
-            setIsCaaMember(!!quote.es_miembro_caa);
+            const isMember = !!quote.es_miembro_caa;
+            setIsCaaMember(isMember);
+            if (onCaaChange) onCaaChange(isMember);
 
             setNoEta(quote.fecha_llegada === null);
             setEtaDate(quote.fecha_llegada ? new Date(quote.fecha_llegada).toISOString().split('T')[0] : '');
@@ -378,6 +381,8 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
             selectedFboId,
             quoteNumber,
             loggedInUser,
+            onCaaChange,
+            onMtowChange,
             
         ]
     );
@@ -464,17 +469,19 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
         }
     }, [noEtd]);
 
-    useEffect(() => {
-        if (onCaaChange) {
-            onCaaChange(isCaaMember);
-        }
-    }, [isCaaMember, onCaaChange]);
 
     // USEEFFECT PARA DETECTAR CAMBIOS EN MTOW O UNIDAD
+    const prevMtowValue = useRef(mtowValue);
+    const prevUnit = useRef(unit);
+
     useEffect(() => {
-        if (onMtowChange) {
-            // Enviamos el valor crudo y la unidad (KG/LB)
-            onMtowChange(mtowValue, unit);
+        if (prevMtowValue.current !== mtowValue || prevUnit.current !== unit) {
+            if (onMtowChange) {
+                // Enviamos el valor crudo y la unidad (KG/LB)
+                onMtowChange(mtowValue, unit);
+            }
+            prevMtowValue.current = mtowValue;
+            prevUnit.current = unit;
         }
     }, [mtowValue, unit, onMtowChange]);
 
@@ -703,6 +710,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                 setModelValue('');
                 setMtowValue('');
                 setIsCaaMember(false);
+                if (onCaaChange) onCaaChange(false);
 
                 // Si hay un cliente seleccionado, RE-CALCULAMOS su lista original de modelos
                 if (selectedCustomer) {
@@ -768,7 +776,9 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                             }
                             // Restaurar la lógica para actualizar el estado de CAA Member
                             // basado en la matrícula seleccionada.
-                            setIsCaaMember(!!selectedRegistration.es_miembro_caa);
+                            const isMember = !!selectedRegistration.es_miembro_caa;
+                            setIsCaaMember(isMember);
+                            if (onCaaChange) onCaaChange(isMember);
                         }
                        
                     }
@@ -787,6 +797,18 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                 const decimalParts = cleanedValue.split('.');
                 if (decimalParts.length > 2) {
                     cleanedValue = decimalParts[0] + '.' + decimalParts.slice(1).join('');
+                }
+
+                // VALIDACIÓN DE MTOW MÁXIMO
+                // El avión más pesado del mundo (Antonov An-225) tenía un MTOW de 640,000 kg.
+                // Establecemos un límite seguro de 650,000 kg (aprox 1,433,000 lbs).
+                const numericValue = parseFloat(cleanedValue);
+                const maxKG = 650000;
+                const maxLB = 1433000;
+
+                if (!isNaN(numericValue)) {
+                    if (unit === 'KG' && numericValue > maxKG) return;
+                    if (unit === 'LB' && numericValue > maxLB) return;
                 }
             
                 if (cleanedValue === '' || parseFloat(cleanedValue) < 0) {
@@ -954,7 +976,10 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                     id="caa-member" 
                                     type="checkbox" 
                                     checked={isCaaMember}
-                                    onChange={(e) => setIsCaaMember(e.target.checked)}
+                                    onChange={(e) => {
+                                        setIsCaaMember(e.target.checked);
+                                        if (onCaaChange) onCaaChange(e.target.checked);
+                                    }}
                                     disabled={isReadOnly}
                                     className='disabled:bg-gray-200 disabled:cursor-not-allowed cursor-pointer'
                                 />
