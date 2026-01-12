@@ -48,12 +48,23 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
 
     const [currentMtow, setCurrentMtow] = useState(0); // Guardar el peso actual en Toneladas
 
+    const LANDING_PERMIT_COORD = 'Landing Permit Coordination';
+    
+    const [isGeneralAviation, setIsGeneralAviation] = useState(false); 
+
     const [totals, setTotals] = useState({
         cost: 0,
         sCharge: 0,
         vat: 0,
         total: 0,
     });
+
+    const [categoryCoordFee, setCategoryCoordFee] = useState(0);
+
+    //Callback para recibir la tarifa desde QuoteForm
+    const handleCategoryFeeChange = useCallback((fee) => {
+        setCategoryCoordFee(fee);
+    }, []);
 
     // Convertir a Toneladas
     const calculateTons = (val, unit) => {
@@ -322,7 +333,15 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
     useEffect(() => {
         setItems(prevItems =>
             prevItems.map(item => {
-            const targetSc = globalNoSc ? 0 : (isCaaMember ? 0.10 : 0.18);
+
+                let targetSc;
+
+                if (item.isScExempt) {
+                    targetSc = globalNoSc ? 0 : item.scPercentage; 
+                } else {
+                    targetSc = globalNoSc ? 0 : (isCaaMember ? 0.10 : 0.18);
+                }
+
                 
                 // Recalcular costos con el nuevo porcentaje
                 const cost = (item.quantity || 0) * (item.priceUSD || 0);
@@ -332,7 +351,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                 return {
                     ...item,
                     scPercentage: targetSc,
-                    noSc: globalNoSc,
+                    noSc: targetSc === 0,
                     total: cost + sCharge + vat,
                 };
             })
@@ -360,11 +379,45 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
         );
     }, [globalNoVat]);
 
+    //Actualizar la tabla si cambia la categoría 
+    useEffect(() => {
+        setItems(prevItems => 
+            prevItems.map(item => {
+                if (item.description === LANDING_PERMIT_COORD) {
+                    
+                    if (!isGeneralAviation) {
+                        return item; 
+                    }
+
+                    // Si manda 0, verificamos si el item tenía una tarifa base original, si no, 0.
+                    const newPriceUSD = categoryCoordFee > 0 ? categoryCoordFee : (item.baseRate || 0);                    
+                    // Convertir a MXN
+                    const newPriceMXN = exchangeRate ? +((newPriceUSD) * exchangeRate).toFixed(2) : 0;
+                    
+                    const cost = (item.quantity || 0) * newPriceUSD;
+                    const scPercentage = item.scPercentage || 0;
+                    const vatPercentage = item.vatPercentage || 0;
+
+                    return {
+                        ...item,
+                        priceUSD: newPriceUSD,
+                        priceMXN: newPriceMXN,
+                        anchorCurrency: 'USD', 
+                        total: cost + (cost * scPercentage) + (cost * vatPercentage),
+                        // Opcional: Marcar que este precio fue alterado por categoría
+                        isCategoryOverride: categoryCoordFee > 0 
+                    };
+                }
+                return item;
+            })
+        );
+    }, [categoryCoordFee, exchangeRate, isGeneralAviation]); // Se ejecuta cuando cambia la tarifa de la categoría
+
     const handleGlobalCheckboxChange = (setter, value) => {
         setter(value);
     };
 
-    const fetchServices = async (id_aeropuerto, id_fbo) => {
+    const fetchServices = async (id_aeropuerto, id_fbo, fboName) => {
         // GUARDIA DE SEGURIDAD:
         // Si estamos en modo lectura (visualizando una cotización guardada), 
         // NO permitimos que esta función altere o limpie los servicios.
@@ -374,6 +427,9 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
         // Mantenemos solo items manuales que el usuario haya escrito a mano (sin descripción predefinida)
 
         setItems(prevItems => prevItems.filter(item => item.description === ''));
+
+        const isGenAv = fboName === 'Aviación General';
+        setIsGeneralAviation(isGenAv); 
 
         if (id_fbo) {
             try {
@@ -388,6 +444,8 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                // 2. Filtramos solo los que deben aparecer AUTOMÁTICAMENTE (es_default = true)
                 const defaultServices = serviciosData.filter(s => s.es_default);
 
+                const TARGET_SERVICE_NAME = 'Landing Permit Coordination';
+
                 const newItemsToAdd = defaultServices.map(s => {
                 // 1. Detectamos la divisa base del servicio
                 const isUSD = s.divisa === 'USD';
@@ -395,21 +453,34 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                 let priceMXN = 0;
                 let priceUSD = 0;
 
-                // 2. Calculamos precios según la divisa base
-                if (isUSD) {
-                    priceUSD = parseFloat(s.tarifa_servicio) || 0;
-                    // Si es USD, el MXN se calcula multiplicando por el tipo de cambio
-                    priceMXN = exchangeRate ? +((priceUSD) * exchangeRate).toFixed(2) : 0;
-                } else {
-                    priceMXN = parseFloat(s.tarifa_servicio) || 0;
-                    // Si es MXN, el USD se calcula dividiendo
-                    priceUSD = exchangeRate ? +((priceMXN) / exchangeRate).toFixed(2) : 0;
-                }
+               const rawRate = parseFloat(s.tarifa_servicio) || 0;
+
+                // 1. DETECTAR SI APLICA REGLA ESPECIAL (Por Nombre)
+                const isTargetService = s.nombre_concepto_default === TARGET_SERVICE_NAME;
+
+                // 2. CORRECCIÓN: Solo aplicamos el precio especial SI es Aviación General
+                    if (isTargetService && categoryCoordFee > 0 && isGenAv) {
+                        priceUSD = categoryCoordFee;
+                        priceMXN = exchangeRate ? +((priceUSD) * exchangeRate).toFixed(2) : 0;
+                    } else {
+                        // Lógica normal (FBOs, Comercial, o sin categoría)
+                        if (isUSD) {
+                            priceUSD = rawRate;
+                            priceMXN = exchangeRate ? +((priceUSD) * exchangeRate).toFixed(2) : 0;
+                        } else {
+                            priceMXN = rawRate;
+                            priceUSD = exchangeRate ? +((priceMXN) / exchangeRate).toFixed(4) : 0;
+                        }
+                    }
 
                 const quantity = 1;
+                
+                // Detectar si es exento desde la BD
+                const isExempt = !!s.exento_sc;
 
-                const scPercentage = globalNoSc ? 0 : (isCaaMember ? 0.10 : 0.18);
+                const scPercentage = isExempt ? 0 : (globalNoSc ? 0 : (isCaaMember ? 0.10 : 0.18));
                 const vatPercentage = globalNoVat ? 0 : 0.16;
+
                 
                 // Calcular totales usando priceUSD (que ya es correcto sea cual sea el origen)
                 const cost = quantity * priceUSD;
@@ -425,11 +496,15 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                     priceUSD,
                     scPercentage,
                     vatPercentage,
-                    noSc: globalNoSc,
+                    noSc: isExempt || globalNoSc,
                     noVat: globalNoVat,
                     // 3. Aquí definimos quién manda (el ancla) para futuras ediciones manuales
-                    anchorCurrency: isUSD ? 'USD' : 'MXN', 
-                    total,
+                    anchorCurrency: (isTargetService && categoryCoordFee > 0 && isGenAv) ? 'USD' : (isUSD ? 'USD' : 'MXN'),                    total,
+
+                    // NUEVA BANDERA: Protege este ítem de cambios automáticos
+                    isScExempt: isExempt,
+                    baseRate: rawRate
+                    
                 };
             });
                     
@@ -614,23 +689,37 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
             // Si es nuevo, calculamos sus valores iniciales
             //1. DETECCIÓN DE DIVISA
             // Verificamos si el servicio viene en USD desde la base de datos
+            
+            const isExempt = !!service.exento_sc;
             const isUSD = service.divisa?.trim().toUpperCase() === 'USD';
+
+            const TARGET_SERVICE_NAME = 'Landing Permit Coordination';
+            const isTargetService = service.name === TARGET_SERVICE_NAME;
 
             let priceMXN = 0;
             let priceUSD = 0;
+            
+            const rawRate = parseFloat(service.tarifa_servicio) || 0;
 
-            // 2. CÁLCULO DE PRECIOS SEGÚN DIVISA BASE
-            if (isUSD) {
-                priceUSD = parseFloat(service.tarifa_servicio) || 0;
+            // APLICAR REGLA: Si es el servicio Target + Es Aviación General + Hay Tarifa de Categoría
+            if (isTargetService && isGeneralAviation && categoryCoordFee > 0) {
+                priceUSD = categoryCoordFee;
+                // Calculamos MXN basado en el precio especial
                 priceMXN = +((priceUSD) * exchangeRate).toFixed(2);
             } else {
-                priceMXN = parseFloat(service.tarifa_servicio) || 0;
-                priceUSD = +((priceMXN) / exchangeRate).toFixed(2);
+                // LÓGICA ESTÁNDAR (Si no cumple las condiciones anteriores)
+                if (isUSD) {
+                    priceUSD = rawRate;
+                    priceMXN = +((priceUSD) * exchangeRate).toFixed(2);
+                } else {
+                    priceMXN = rawRate;
+                    priceUSD = +((priceMXN) / exchangeRate).toFixed(4);
+                }
             }
 
             const quantity = 1;
 
-            const scPercentage = globalNoSc ? 0 : (isCaaMember ? 0.10 : 0.18);
+            const scPercentage = isExempt ? 0 : (globalNoSc ? 0 : (isCaaMember ? 0.10 : 0.18));
             const vatPercentage = globalNoVat ? 0 : 0.16;
         
             // Calculamos totales basados en priceUSD (estándar)
@@ -650,8 +739,9 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                 noSc: globalNoSc,
                 noVat: globalNoVat,
                 // 3. FIJAMOS EL ANCLA CORRECTA
-                anchorCurrency: isUSD ? 'USD' : 'MXN',
-                total,
+                anchorCurrency: (isTargetService && isGeneralAviation && categoryCoordFee > 0) ? 'USD' : (isUSD ? 'USD' : 'MXN'),                total,
+                isScExempt: isExempt,
+                baseRate: rawRate
             };
         });
 
@@ -914,6 +1004,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                         globalNoVat={globalNoVat}
                         onGlobalNoScChange={(e) => handleGlobalCheckboxChange(setGlobalNoSc, e.target.checked)}
                         onGlobalNoVatChange={(e) => handleGlobalCheckboxChange(setGlobalNoVat, e.target.checked)}
+                        onCategoryFeeChange={handleCategoryFeeChange}
                     />
                     <QuoteTable items={items}
                         onRemoveItem={handleRemoveItem}

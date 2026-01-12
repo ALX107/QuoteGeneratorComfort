@@ -46,6 +46,7 @@ const getServiciosByAeropuertoOrFbo = async (req, res) => {
                 cd.id_concepto_std,
                 cd.nombre_concepto_default,
                 cd.es_default,
+                cd.exento_sc,
                 cc.nombre_cat_concepto,
                 cc.id_cat_concepto,
                 -- Prioridad: Precio especifico > Precio default

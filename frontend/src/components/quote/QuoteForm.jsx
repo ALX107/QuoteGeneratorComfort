@@ -1,12 +1,11 @@
 import React, { useEffect, useState, forwardRef, useImperativeHandle, useRef } from 'react';
 import axios from 'axios';
-import SearchableSelect from '../ui/SearchableSelect.jsx';
 import { jwtDecode } from 'jwt-decode';
 
 import Calculator from '../features/Calculator.jsx';
 
 
-const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange, exchangeRate, onExchangeRateChange, isReadOnly, onDataLoaded, globalNoSc, globalNoVat, onGlobalNoScChange, onGlobalNoVatChange, onCaaChange, onMtowChange}, ref) => {
+const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange, exchangeRate, onExchangeRateChange, isReadOnly, onDataLoaded, globalNoSc, globalNoVat, onGlobalNoScChange, onGlobalNoVatChange, onCaaChange, onMtowChange, onCategoryFeeChange }, ref) => {
     const [clientes, setClientes] = useState([]);
     const [aeropuertos, setAeropuertos] = useState([]);
     const [clientesAeronaves, setClientesAeronaves] = useState([]); 
@@ -48,6 +47,11 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
     const [noEtd, setNoEtd] = useState(false); // 
 
     const [isDataLoaded, setIsDataLoaded] = useState(false);
+
+    const separator_label = "─── REST OF MODELS ───";
+
+
+    
     
     // Ref para decodificar el token una sola vez al montar (similar a exchangeRate)
     const userDecodedRef = useRef(false);
@@ -474,6 +478,23 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
         }
     }, [mtowValue, unit, onMtowChange]);
 
+    // UseEffect para detectar cambios en la categoría de operación (flightType)
+    useEffect(() => {
+        // Buscamos el objeto completo de la categoría seleccionada
+        const selectedCatObj = categoriasOperaciones.find(
+            c => c.nombre_cat_operacion === flightType
+        );
+
+        // Si existe, sacamos la tarifa (o 0 si no tiene)
+        const fee = selectedCatObj ? parseFloat(selectedCatObj.tarifa_land_permit_coord) || 0 : 0;
+        
+        // Avisamos al padre del nuevo costo a aplicar
+        if (onCategoryFeeChange) {
+            onCategoryFeeChange(fee);
+        }
+
+    }, [flightType, categoriasOperaciones, onCategoryFeeChange]);
+
     // Cuando se desmarca el checkbox, si no hay fecha, se establece la de hoy.
     const handleNoEtaChange = (e) => {
         setNoEta(e.target.checked);
@@ -527,7 +548,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
 
         if (selectedFbo) {
             setSelectedFboId(selectedFbo.id_fbo);
-            onSelectionChange(selectedAirportId, selectedFbo.id_fbo);
+            onSelectionChange(selectedAirportId, selectedFbo.id_fbo, selectedFbo.nombre_fbo);
         } else {
             setSelectedFboId(null);
             onSelectionChange(selectedAirportId, null);
@@ -549,6 +570,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
             }
         }
     };
+
 
     //Carga ambas listas (modelos y matrículas) filtradas por cliente
     const handleCustomerChange = (event) => {
@@ -579,16 +601,24 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                 // Setear TODAS las matrículas de ese cliente 
                 setFilteredRegistrations(customerAircraftLinks);
 
-                // --- Cargar Modelos del Cliente ---
-                const uniqueModelIds = [...new Set(customerAircraftLinks.map(registration => registration.id_modelo_aeronave))];
+                // 2. Lógica del Separador
+                const customerModelIds = new Set(customerAircraftLinks.map(r => r.id_modelo_aeronave));
 
-                // Filtrar la lista maestra de modelos
-                const models = allaeronavesModelos.filter(model => 
-                    uniqueModelIds.includes(model.id_modelo_aeronave)
-                );
+                const clientModels = allaeronavesModelos.filter(model => customerModelIds.has(model.id_modelo_aeronave));
+                const otherModels = allaeronavesModelos.filter(model => !customerModelIds.has(model.id_modelo_aeronave));
 
-                // Setear TODOS los modelos de ese cliente
-                setFilteredAeronavesModelos(models);
+                // Solo agregamos el separador si hay diferencia entre las listas
+                if (clientModels.length > 0 && otherModels.length > 0) {
+                    const separatorObj = { 
+                        id_modelo_aeronave: 'separator-id', // ID falso único
+                        icao_aeronave: separator_label // El texto que se verá
+                    };
+                    setFilteredAeronavesModelos([...clientModels, separatorObj, ...otherModels]);
+                } else {
+                    // Si el cliente no tiene nada, o tiene todo, mostramos todo normal
+                    setFilteredAeronavesModelos(allaeronavesModelos);
+                }
+             
             } else{
 
                 //El cliente no fue encontrado, es un nombre nuevo.
@@ -604,6 +634,15 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
         const handleModelChange = (event) => {
             
             const selectedIcaoModel = event.target.value;
+
+            // --- GUARDIA DE SEGURIDAD ---
+            // Si seleccionan el separador, limpiamos el campo y no hacemos nada más.
+            if (selectedIcaoModel === separator_label) {
+                setModelValue(''); 
+                return; 
+            }
+            // ----------------------------
+
             setModelValue(selectedIcaoModel);
 
             // Verificamos si la matrícula que está escrita actualmente existe en la base de datos
@@ -673,24 +712,34 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                 setFilteredRegistrations(allCustomerRegistrations);
 
                     if (allCustomerRegistrations.length > 0) {
-                const uniqueModelIds = [...new Set(allCustomerRegistrations.map(r => r.id_modelo_aeronave))];
-                const customerModels = allaeronavesModelos.filter(model => 
-                    uniqueModelIds.includes(model.id_modelo_aeronave)
-                );
-                setFilteredAeronavesModelos(customerModels);
-            } else {
-                // Si el cliente no tiene nada, mostrar todo el catálogo
-                setFilteredAeronavesModelos(allaeronavesModelos);
-            }
-        } else {
-            // Si no hay cliente, mostrar todo el universo
-            setFilteredAeronavesModelos(allaeronavesModelos);
-            setFilteredRegistrations([]);
-        }
-        return; 
-    }
-                
 
+                        const uniqueModelIds = new Set(allCustomerRegistrations.map(r => r.id_modelo_aeronave));
+            
+                        const clientModels = allaeronavesModelos.filter(model => uniqueModelIds.has(model.id_modelo_aeronave));
+                        const otherModels = allaeronavesModelos.filter(model => !uniqueModelIds.has(model.id_modelo_aeronave));
+
+
+                    if (clientModels.length > 0 && otherModels.length > 0) {
+                                    const separatorObj = { 
+                                        id_modelo_aeronave: 'separator-id-2', 
+                                        icao_aeronave: separator_label 
+                                    };
+                                    setFilteredAeronavesModelos([...clientModels, separatorObj, ...otherModels]);
+                                } else {
+                                    setFilteredAeronavesModelos(allaeronavesModelos);
+                                }
+                            } else {
+                                setFilteredAeronavesModelos(allaeronavesModelos);
+                            }
+                        } else {
+
+                        // Si no hay cliente, mostrar todo el universo
+                        setFilteredAeronavesModelos(allaeronavesModelos);
+                        setFilteredRegistrations([]);
+                    }
+                    return; 
+                }
+                            
                 //Solo intenta autocompletar el modelo si el cliente existe
                 if (selectedCustomer) {
                    
@@ -783,33 +832,34 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
         <main className="pt-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-start">
                         <div className="md:col-span-1">
-    <SearchableSelect
-        label="Select Customer"
-        items={clientes} // Tu array de objetos clientes
-        displayKey="nombre_cliente" // La propiedad que quieres que se vea
-        selectedItem={selectedCustomer} // El objeto cliente completo seleccionado
-        
-        onChange={(customer) => {
-            // Lógica para actualizar el estado
-            if (customer) {
-                // Si selecciona un cliente de la lista
-                setCustomerValue(customer.nombre_cliente);
-                setSelectedCustomer(customer);
-                // Llamamos a tu lógica existente simulando el evento
-                handleCustomerChange({ target: { value: customer.nombre_cliente } });
-            } else {
-                // Si limpia el campo
-                setCustomerValue('');
-                setSelectedCustomer(null);
-                handleCustomerChange({ target: { value: '' } });
-            }
-        }}
-        
-        isReadOnly={isReadOnly}
-        error={errors.customer}
-        placeholder="Search for a customer..."
-    />
-</div>
+                            <label className="block text-sm font-medium text-dark-gray" htmlFor="customer">
+                                Select Customer
+                            </label>
+                            <div className="relative mt-1">
+                                <input
+                                    list="customer-list"
+                                    id="customer"
+                                    name="customer"
+                                    value = {customerValue}
+                                    onChange={(e) => {
+                                        setCustomerValue(e.target.value);
+                                        handleCustomerChange(e);
+                                    }}
+                                    className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm disabled:cursor-not-allowed"
+                                    disabled={isReadOnly} style={errors.customer ? { borderColor: 'red' } : {}}
+                               />
+                                <datalist id="customer-list">
+                                    {clientes.map((cliente) => (
+                                        <option key={cliente.id_cliente} value={cliente.nombre_cliente} />
+                                    ))}
+                                </datalist>
+                                <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                    <span className="material-icons text-gray-400"></span>
+                                </span>
+                            </div>
+                            {errors.customer && <p className="text-red-500 text-xs mt-1">{errors.customer}</p>}
+                        </div>
+
                         <div>
                             <label className="block text-sm font-medium text-dark-gray" htmlFor="flight-type">
                                 Select Category

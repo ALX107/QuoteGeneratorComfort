@@ -35,7 +35,8 @@ CREATE TABLE aeropuertos (
 -- Categorías para los tipos de operación de una cotización (ej. Catering, Handling, etc.)
 CREATE TABLE categorias_operaciones (
     id_cat_operacion BIGSERIAL PRIMARY KEY,
-    nombre_cat_operacion VARCHAR(100) UNIQUE NOT NULL
+    nombre_cat_operacion VARCHAR(100) UNIQUE NOT NULL,
+    tarifa_land_permit_coord DECIMAL(10,2) DEFAULT 0.00
 );
 
 -- Categorías para los conceptos o servicios que se pueden cotizar.
@@ -96,6 +97,7 @@ CREATE TABLE conceptos_default (
     costo_concepto_default DECIMAL(12, 2) NOT NULL,
     divisa_concepto_default VARCHAR(3) NOT NULL,
     es_default boolean DEFAULT false,
+    exento_sc boolean DEFAULT false,
     id_cat_concepto BIGINT NOT NULL,
 
     CONSTRAINT fk_conceptos_categoria FOREIGN KEY (id_cat_concepto) REFERENCES categorias_conceptos(id_cat_concepto)
