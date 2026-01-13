@@ -396,7 +396,6 @@ const QuotePDFDocument = ({ formData, items, totals, legs }) => {
                       <View style={[styles.tableCol, { width: '12%' }]}><Text style={styles.tableCell}>{(parseFloat(item.priceUSD) || 0).toFixed(2)}</Text></View>
                       <View style={[styles.tableCol, { width: '12%' }]}><Text style={styles.tableCell}>{((parseFloat(item.quantity) || 0) * (parseFloat(item.priceUSD) || 0)).toFixed(2)}</Text></View>
                       <View style={[styles.tableCol, { width: '11%' }]}><Text style={styles.tableCell}>{((parseFloat(item.priceUSD) || 0) * (parseFloat(item.quantity) || 0) * (parseFloat(item.scPercentage) || 0)).toFixed(2)}</Text></View>
-                      <View style={[styles.tableCol, { width: '11%' }]}><Text style={styles.tableCell}>{((parseFloat(item.priceUSD) || 0) * (parseFloat(item.quantity) || 0) * (parseFloat(item.vatPercentage) || 0)).toFixed(2)}</Text></View>
                       <View style={[styles.tableCol, { width: '11%' }]}><Text style={styles.tableCell}>{((parseFloat(item.priceUSD) || 0) * (parseFloat(item.quantity) || 0) * (parseFloat(item.scPercentage) || 0) * (parseFloat(item.vatPercentage) || 0)).toFixed(2)}</Text></View>
                       <View style={[styles.tableCol, { width: '12%' }]}><Text style={styles.tableCell}>{(parseFloat(item.total) || 0).toFixed(2)}</Text></View>
                     </View>
@@ -470,7 +469,6 @@ const QuotePDFDocument = ({ formData, items, totals, legs }) => {
                     <View style={[styles.tableCol, { width: '12%' }]}><Text style={styles.tableCell}>{(parseFloat(item.priceUSD) || 0).toFixed(2)}</Text></View>
                     <View style={[styles.tableCol, { width: '12%' }]}><Text style={styles.tableCell}>{((parseFloat(item.quantity) || 0) * (parseFloat(item.priceUSD) || 0)).toFixed(2)}</Text></View>
                     <View style={[styles.tableCol, { width: '11%' }]}><Text style={styles.tableCell}>{((parseFloat(item.priceUSD) || 0) * (parseFloat(item.quantity) || 0) * (parseFloat(item.scPercentage) || 0)).toFixed(2)}</Text></View>
-                    <View style={[styles.tableCol, { width: '11%' }]}><Text style={styles.tableCell}>{((parseFloat(item.priceUSD) || 0) * (parseFloat(item.quantity) || 0) * (parseFloat(item.vatPercentage) || 0)).toFixed(2)}</Text></View>
                     <View style={[styles.tableCol, { width: '11%' }]}><Text style={styles.tableCell}>{((parseFloat(item.priceUSD) || 0) * (parseFloat(item.quantity) || 0) * (parseFloat(item.scPercentage) || 0) * (parseFloat(item.vatPercentage) || 0)).toFixed(2)}</Text></View>
                     <View style={[styles.tableCol, { width: '12%' }]}><Text style={styles.tableCell}>{(parseFloat(item.total) || 0).toFixed(2)}</Text></View>
                   </View>

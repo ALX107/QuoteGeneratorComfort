@@ -12,7 +12,8 @@ const createQuote = async (req, res) => {
     customer, flightType, date, aircraftModel, mtow, mtow_unit, quotedBy,
     attn, station, eta, from, crewFrom, paxFrom, fbo, isCaaMember,
     etd, to, crewTo, paxTo, exchangeRate,
-    servicios // Este es el arreglo de servicios/conceptos
+    servicios, // Este es el arreglo de servicios/conceptos
+    total_costo, total_s_cargo, total_vat, total_final // Totales calculados en frontend
   } = req.body;
 
   // 1. Obtener un cliente del pool para la transacción
@@ -134,11 +135,8 @@ const createQuote = async (req, res) => {
     const { id_historico, id_cotizacion } = result.rows[0];
     console.log(`--- COTIZACIÓN BASE INSERTADA. ID Histórico: ${id_historico}, ID Cotización: ${id_cotizacion} ---`);
 
-    // 4. Insertar cada concepto en 'cotizacion_conceptos' y calcular los totales.
-    let total_costo = 0;
-    let total_s_cargo = 0;
-    let total_vat = 0;
-    let total_final = 0;
+    // 4. Insertar cada concepto en 'cotizacion_conceptos'.
+    // Usamos los totales enviados desde el frontend para garantizar consistencia con lo que vio el usuario.
 
     const conceptosQuery = `
       INSERT INTO "cotizacion_conceptos" (
@@ -162,14 +160,8 @@ const createQuote = async (req, res) => {
         sc_porcentaje, vat_porcentaje, s_cargo, vat, total_usd
       ];
       await client.query(conceptosQuery, conceptosValues);
-
-      // Acumular totales
-      total_costo += parseFloat(costo_usd || 0) * parseInt(cantidad || 1);
-      total_s_cargo += parseFloat(s_cargo || 0);
-      total_vat += parseFloat(vat || 0);
-      total_final += parseFloat(total_usd || 0);
     }
-    console.log('--- CONCEPTOS INSERTADOS Y TOTALES CALCULADOS ---');
+    console.log('--- CONCEPTOS INSERTADOS ---');
 
     // 5. Actualizar la cotización con los totales calculados (aún con la referencia temporal).
     const updateTotalsQuery = `
@@ -490,7 +482,7 @@ const joinQuotes = async (req, res) => {
         total_usd,
       } = concepto;
 
-      total_costo += (parseFloat(costo_usd || 0) * parseInt(cantidad || 1, 10));
+      total_costo += (parseFloat(costo_usd || 0) * parseFloat(cantidad || 1));
       total_s_cargo += parseFloat(s_cargo || 0);
       total_vat += parseFloat(vat || 0);
       total_final += parseFloat(total_usd || 0);
