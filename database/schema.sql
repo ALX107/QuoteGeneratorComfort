@@ -122,6 +122,7 @@ CREATE TABLE tarifas_raf_mtow (
     min_weight DECIMAL(10, 2) NOT NULL, 
     max_weight DECIMAL(10, 2) NOT NULL, 
     costo_usd DECIMAL(10, 2) NOT NULL,  
+    costo_caa_usd DECIMAL(10, 2) ,
     id_concepto_std BIGINT NOT NULL,    -- ID del servicio 
     id_clasificacion BIGINT,          -- Clasificación de aeronave 
     anio_vigencia INT DEFAULT 2026,

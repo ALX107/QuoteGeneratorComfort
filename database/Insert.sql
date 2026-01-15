@@ -130,154 +130,291 @@ INSERT INTO categorias_conceptos (id_cat_concepto, nombre_cat_concepto) VALUES
 --Clasificación de Aeronaves
 INSERT INTO clasificaciones_aeronaves (id_clasificacion, nombre_clasificacion) VALUES
 (1,'Helicopter'),
-(2,'Mono Bimotor'),
+(2,'Mono/Bimotor'),
 (3,'Turbo Prop'),
 (4,'Light Jet'),
 (5,'Medium Jet'),
 (6,'Large Jet'),
 (7,'X Large Jet'),
---(8,'XX Large Jet'),
---(9,'Wide Body');
+(8,'XX Large Jet'),
+(9,'Wide Body');
 
 -- ========= INSERCIÓN DE DATOS EN TABLAS DEPENDIENTES (Nivel 1) =========
 
--- ========= CLASIFICACIÓN DE AERONAVES (Arupadas al criterio de mi compañero más fiel )=========
 
-----------------------------------------------------------------------------------------------------
+-- Wide Body (60,001 kg - 600,000 kg)
+INSERT INTO aeronaves_modelos (id_modelo_aeronave, icao_aeronave, nombre_aeronave, mtow_aeronave, envergadura_aeronave, id_clasificacion) VALUES
+(1, 'A380', 'Airbus A380', 560000, 79.75, 9),
+(2, 'B777', 'Boeing 777', 299370, 60.90, 9),
+(3, 'A350', 'Airbus A350', 280000, 64.75, 9),
+(4, 'A340', 'Airbus A340', 275000, 60.30, 9),
+(5, 'B767', 'Boeing 767', 186880, 47.60, 9),
+(6, 'B787', 'Boeing 787', 227930, 60.10, 9),
+(7, 'AS3B', 'Airbus A300B', 165000, 44.84, 9),
+(8, 'A321', 'Airbus A321', 93500, 35.80, 9),
+(9, 'B727', 'Boeing 727', 89400, 32.92, 9),
+(10, 'B737', 'Boeing 737', 85000, 28.35, 9),
+(11, 'B738', 'Boeing 737-800', 79015, 35.80, 9),
+(12, 'A320N', 'Airbus A320neo', 79000, 35.80, 9),
+(13, 'A319', 'Airbus A319', 75500, 35.80, 9),
+(14, 'A320', 'Airbus A320', 77000, 35.80, 9),
+(15, 'MD80', 'McDonnell Douglas MD-80', 67812, 32.82, 9),
+(16, 'MD82', 'McDonnell Douglas MD-82', 67812, 32.82, 9),
+(17, 'MD83', 'McDonnell Douglas MD-83', 72575, 32.82, 9),
+(18, 'B733', 'Boeing 737-300', 61235, 28.88, 9),
+(19, 'P3', 'Lockheed P-3 Orion', 61235, 30.40, 9),
 
--- X Large Jet (ID 7): > 20,001 kg
---(1, 'G650', 'Gulfstream G650', 45178, 30.36, 7),
-(2, 'GLF6', 'Gulfstream G650', 45178, 30.36, 7),
-(3, 'GA6C', 'Gulfstream G600', 42910, 28.7, 7),
-(4, 'GLEX', 'Global Express GLEX', 45132, 28.65, 7),
-(5, 'GL6T', 'Global 6000', 45132, 28.65, 7),
---(6, 'GL60', 'Global 6000', 45132, 28.65, 7),
-(7, 'GL5T', 'Global 5000', 41957, 28.65, 7),
-(8, 'GLF5', 'Gulfstream V', 41277, 28.50, 7),
-(9, 'GA5C', 'Gulfstream G500', 41277, 26.29, 7),
-(10, 'GLF4', 'Gulfstream IV', 33838, 23.72, 7),
-(11, 'FA8X', 'Falcon 8X', 33113, 26.29, 7),
-(12, 'FA7X', 'Falcon 7X', 31751, 26.21, 7),
-(13, 'GLF3', 'Gulfstream III', 31751, 23.72, 7),
-(14, 'GLF2', 'Gulfstream II', 29710, 20.98, 7),
-(15, 'F900', 'Falcon 900', 22225, 19.33, 7),
-(16, 'FA9X', 'Falcon 9X', 22225, 21.38, 7),
-(17, 'E145', 'Embraer E145', 22000, 20.04, 7),
-(18, 'CL60', 'Challenger 600/604', 21863, 19.61, 7),
-(19, 'E135', 'Embraer E135', 20990, 20.04, 7),
+---------------------------
+(20, 'B744', 'Boeing 747-400', 396890, 64.40, 9),
+(21, 'C17A', 'Globemaster III', 265350, 51.75, 9),
+(22, 'A400', 'Airbus A400M', 141000, 42.40, 9),
+(23, 'B757', 'Boeing 757', 115680, 38.05, 9),
+(24, 'B752', 'Boeing 757-200', 115680, 38.05, 9),
+(25, 'B722', 'Boeing 727-200', 95000, 32.92, 9),
+(26, 'C40', 'Boeing 737-700C', 77565, 34.30, 9),
+(27, 'C30J', 'C-130J Super Hercules', 74400, 40.41, 9),
+(28, 'C130', 'Hercules', 70300, 40.41, 9),
 
--- Large Jet (ID 6): 13,001 kg - 20,000 kg
-(20, 'E550', 'Legacy 500', 19550, 19.25, 6),
-(21, 'CL35', 'Challenger 350', 18416, 21.00, 6),
-(22, 'G280', 'Gulfstream G280', 17962, 19.20, 6),
-(23, 'FA50', 'Falcon 50', 17600, 18.86, 6),
-(24, 'CL30', 'Challenger 300', 17258, 19.46, 6),
-(25, 'HA4T', 'Hawker 4000', 16375, 18.80, 6),
-(26, 'C750', 'Citation X', 16375, 19.48, 6),
-(27, 'F2TH', 'Falcon 2000', 16330, 19.33, 6),
-(28, 'GALX', 'Galaxy', 16080, 17.70, 6),
-(29, 'ASTR', 'Astra', 16080, 16.05, 6),
-(30, 'G200', 'Gulfstream G200', 16080, 17.70, 6),
-(31, 'C68A', 'Citation Latitude', 13971, 22.05, 6),
-(32, 'FA20', 'Falcon 20', 13835, 16.30, 6),
-(33, 'C680', 'Citation Sovereign', 13744, 19.30, 6),
+--ESTOS NO ESTÁN EN LA TABLA DE CLASIFICACIÓN
 
--- Medium Jet (ID 5): 8,001 kg - 13,000 kg
-(34, 'H25B', 'Hawker 800/850XP', 12701, 16.60, 5),
-(35, 'H25C', 'Hawker 800', 12701, 16.60, 5),
-(36, 'G100', 'Gulfstream G100', 11839, 16.71, 5),
-(37, 'G150', 'Gulfstream G150', 11839, 16.94, 5),
-(38, 'H25A', 'Hawker 800XP', 10886, 15.66, 5),
-(39, 'LJ60', 'Learjet 60', 10660, 13.34, 5),
-(40, 'C560', 'Cessna Citation V/Ultra', 9979, 15.90, 5),
-(41, 'LJ40', 'Learjet 40', 9752, 14.56, 5),
-(42, 'LJ45', 'Learjet 45', 9752, 14.56, 5),
-(43, 'LJ75', 'Learjet 75', 9752, 15.51, 5),
-(44, 'LJ70', 'Learjet 70', 9752, 15.51, 5),
-(45, 'C650', 'Citation III/VI/VII', 9525, 16.31, 5),
-(46, 'C56X', 'Citation Excel/XLS', 9163, 17.17, 5),
-(47, 'LJ35', 'Learjet 35', 8301, 12.04, 5),
-(48, 'PC24', 'Pilatus PC-24', 8300, 17.00, 5),
-(49, 'E55P', 'Phenom 300', 8150, 15.90, 5),
+---------------------------
 
--- Light Jet (ID 4): < 8,000 kg
-(50, 'C25C', 'Cessna Citation CJ4', 7761, 15.49, 4),
-(51, 'FA10', 'Falcon 10', 7600, 13.08, 4),
-(52, 'BE40', 'Beechjet 400', 7303, 13.26, 4),
-(53, 'LJ31', 'Learjet 31', 7800, 13.36, 4),
-(54, 'LJ25', 'Learjet 25', 6577, 10.84, 4),
-(55, 'LJ24', 'Learjet 24', 6350, 10.84, 4),
-(56, 'C25B', 'Cessna C25B', 6291, 16.26, 4),
-(57, 'C550', 'Citation II', 6291, 15.75, 4),
-(58, 'PRM1', 'Beechcraft Premier I', 5670, 13.56, 4),
-(59, 'C501', 'Citation I/SP', 5670, 14.35, 4),
-(60, 'C525', 'Citation Jet', 4990, 14.26, 4),
-(61, 'C25A', 'Citation CJ2', 4990, 15.19, 4),
-(62, 'HDJT', 'HondaJet HA-420', 4854, 12.12, 4),
-(63, 'E50P', 'Phenom 100', 4800, 12.30, 4),
-(64, 'C510', 'Citation Mustang', 3920, 13.16, 4),
-(65, 'SF50', 'Cirrus Vision Jet', 2722, 11.79, 4),
+-- XX Large Jet (40,001 kg - 60,000 kg)
+(29, 'GL7T', 'Bombardier Global 7500', 52400, 31.70, 8),
+(30, 'FA10X', 'Falcon 10X', 52163, 33.60, 8),
+(31, 'DC93', 'Douglas DC-9-30', 49895, 28.45, 8),
+(32, 'DC9', 'Douglas DC-9', 49895, 28.45, 8),
+(33, 'G650', 'Gulfstream G650', 45178, 30.36, 8),
+(34, 'GLF6', 'Gulfstream G650', 45178, 30.36, 8),
+(35, 'GA6C', 'Gulfstream G600', 45178, 28.96, 8),
+(36, 'GLEX', 'Global Express GLEX', 45132, 28.65, 8),
+(37, 'GL60', 'Global 6000', 45132, 28.65, 8),
+(38, 'GLXR', 'Bombardier Global Express', 44452, 28.65, 8),
+(39, 'A190', 'Antonov An-148', 43700, 28.91, 8),
+(40, 'G600', 'Gulfstream G600', 42638, 28.96, 8),
+(41, 'GL5T', 'Global 5000', 41957, 28.65, 8),
+(42, 'GLF5', 'Gulfstream V', 41277, 28.50, 8),
+(43, 'G550', 'Gulfstream G550', 41277, 28.50, 8),
+(44, 'GA5C', 'Gulfstream G500', 41277, 26.29, 8),
+------------------------
+(45, 'GL6T', 'Global 6000', 45132, 28.65, 8),
 
--- Turbo Prop (ID 3)
-(66, 'E120', 'Embraer E120', 11500, 19.78, 3),
-(67, 'B350', 'Beechcraft King Air 350', 6804, 17.65, 3),
-(68, 'BE30', 'King Air 300', 6804, 16.61, 3),
-(69, 'B300', 'Beechcraft King Air 300', 6350, 16.61, 3),
-(70, 'BE20', 'King Air 200', 5670, 16.61, 3),
-(71, 'B200', 'Beechcraft King Air 200', 5670, 16.61, 3),
-(72, 'SW3', 'Fairchild Swearingen Merlin III', 5670, 14.10, 3),
-(73, 'P180', 'Piaggio P.180 Avanti', 5489, 14.03, 3),
-(74, 'E314', 'Embraer A-29 Super Tucano', 5400, 11.14, 3),
-(75, 'BE10', 'Beechcraft King Air 100', 5352, 14.15, 3),
-(76, 'MU2', 'Mitsubishi MU-2', 5250, 11.94, 3),
-(77, 'BE9L', 'Beechcraft King Air C90GTx', 4754, 15.32, 3),
-(78, 'BE9T', 'King Air F90', 4760, 13.99, 3),
-(79, 'PC12', 'Pilatus PC-12/47E', 4740, 16.28, 3),
-(80, 'AC90', 'Aero Commander 690', 4672, 14.22, 3),
-(81, 'BE90', 'Beechcraft King Air 90', 4581, 15.32, 3),
-(82, 'C425', 'Cessna 425 Conquest I', 3719, 13.45, 3),
-(83, 'C208', 'Cessna 208 Caravan', 3629, 15.88, 3),
-(84, 'KODI', 'Quest Kodiak 100', 3290, 13.72, 3),
-(85, 'TBM8', 'Daher-Socata TBM 850', 3354, 12.68, 3),
-(86, 'TBM9', 'Daher TBM 900/940', 3354, 12.83, 3),
-(87, 'TBMB', 'Daher TBM 960', 3354, 12.83, 3),
-(88, 'TBM7', 'Daher-Socata TBM 700', 2984, 12.68, 3),
-(89, 'P46T', 'Piper PA-46-500TP Meridian', 2310, 13.11, 3),
-(90, 'G120', 'Grob G 120TP', 1590, 10.31, 3),
+--NO ESTÁN EN LA TABLA DE CLASIFICACIÓN
+------------------------
 
--- Mono Bimotor / Piston (ID 2)
-(91, 'PA31', 'Piper PA-31 Navajo', 2948, 12.40, 2),
-(92, 'C414', 'Cessna 414 Chancellor', 3062, 13.45, 2),
-(93, 'C340', 'Cessna 340', 2717, 11.62, 2),
-(94, 'PA46', 'Piper PA-46 Malibu', 1969, 13.11, 2),
-(95, 'C210', 'Cessna 210 Centurion', 1814, 11.21, 2),
-(96, 'BE64', 'Beechcraft 64 Duchess', 1769, 11.68, 2),
-(97, 'C207', 'Cessna 207 Skywagon', 1724, 10.97, 2),
-(98, 'BE36', 'Beechcraft Bonanza 36', 1656, 10.21, 2),
-(99, 'C206', 'Cessna 206 Stationair', 1633, 10.97, 2),
-(100, 'SR22', 'Cirrus SR22', 1542, 11.68, 2),
-(101, 'C182', 'Cessna 182 Skylane', 1406, 11.00, 2),
-(102, 'PA25', 'Piper PA-25 Pawnee', 1315, 11.02, 2),
-(103, 'C172', 'Cessna 172 Skyhawk', 1157, 11.00, 2),
-(104, 'PA18', 'Piper PA-18 Super Cub', 794, 10.73, 2),
+-- X Large Jet (30,001 kg - 40,000 kg)
+(46, 'GLF4', 'Gulfstream IV', 33838, 23.72, 7),
+(47, 'G450', 'Gulfstream G450', 33838, 23.72, 7),
+(48, 'CRJ7', 'Bombardier CRJ700', 33340, 23.20, 7),
+(49, 'FA8X', 'Falcon 8X', 33113, 26.29, 7),
+(50, 'C27J', 'Alenia C-27J Spartan', 31800, 28.70, 7),
+(51, 'FA7X', 'Falcon 7X', 31751, 26.21, 7),
+(52, 'GLF3', 'Gulfstream III', 31751, 23.72, 7),
+(53, 'F7X', 'Falcon 7X', 31751, 26.21, 7),
+
+--------------------------
+(54, 'E170', 'Embraer 170', 37200, 26.00, 7),
+
+--NO ESTÁN EN LA TABLA DE CLASIFICACIÓN
+--------------------------
+
+-- Large Jet (20,001 kg - 30,000 kg)
+(55, 'GLF2', 'Gulfstream II', 29710, 20.98, 6),
+(56, 'CRJ2', 'Bombardier CRJ200', 24041, 21.20, 6),
+(57, 'C295', 'Airbus C295', 23200, 25.81, 6),
+(58, 'E35L', 'Legacy 600', 22500, 21.17, 6),
+(59, 'F900', 'Falcon 900', 22225, 19.33, 6),
+(60, 'E145', 'Embraer E145', 22000, 20.04, 6),
+(61, 'E135', 'Embraer E135', 20990, 20.04, 6),
+(62, 'E35L', 'Embraer Legacy 600', 22500, 21.17, 6),
+---------------------------
+(63, 'SB20', 'Saab 2000', 22800, 24.76, 6),
+--NO ESTÁN EN LA TABLA DE CLASIFICACIÓN
+---------------------------
+
+-- Medium Jet (10,001 kg - 20,000 kg)
+(64, 'E550', 'Legacy 500', 19550, 19.25, 5),
+(65, 'CL60', 'Challenger 600/604', 21863, 19.61, 5),
+(66, 'CL36', 'Challenger 600', 19550, 19.61, 5),
+(67, 'EMB550', 'Praetor 600', 19449, 21.50, 5),
+(68, 'F2EX', 'Falcon 2000EX', 19414, 19.33, 5),
+(69, 'S64', 'Sikorsky S-64', 19050, 21.95, 5),
+(70, 'CL35', 'Challenger 350', 18416, 21.00, 5),
+(71, 'G280', 'Gulfstream G280', 17962, 19.20, 5),
+(72, 'C700', 'Citation Longitude', 17917, 20.42, 5),
+(73, 'E545', 'Legacy 450', 17768, 19.25, 5),
+(74, 'FA50', 'Falcon 50', 17600, 18.86, 5),
+(75, 'CL30', 'Challenger 300', 17258, 19.46, 5),
+(76, 'HA4T', 'Hawker 4000', 16375, 18.80, 5),
+(77, 'C750', 'Citation X', 16375, 19.48, 5),
+(78, 'F2TH', 'Falcon 2000', 16330, 19.33, 5),
+(79, 'ASRT', 'Astra', 16080, 16.05, 5),
+(80, 'GALX', 'Galaxy', 16080, 17.70, 5),
+(81, 'GLF200', 'Gulfstream G200', 16080, 17.70, 5),
+(82, 'C68A', 'Citation Latitude', 13971, 22.05, 5),
+(83, 'FA20', 'Falcon 20', 13835, 16.30, 5),
+(84, 'C680', 'Citation Sovereign', 13744, 19.30, 5),
+(85, 'H25B', 'Hawker 800/850XP', 12701, 16.60, 5),
+(86, 'H25C', 'Hawker 1000', 14061, 15.70, 5),
+(87, 'G150', 'Gulfstream G150', 11839, 16.94, 5),
+(88, 'G100', 'Gulfstream G100', 11839, 16.71, 5),
+(89, 'E120', 'Embraer E120', 11500, 19.78, 5),
+(90, 'H25A', 'Hawker 800XP', 10886, 15.66, 5),
+(91, 'LJ60', 'Learjet 60', 10660, 13.34, 5),
+(92, 'UH60', 'Black Hawk', 10660, 16.36, 5),
+---------------------------
+(93, 'WW24', 'Westwind 24', 10660, 13.7, 5),
+
+--NO ESTÁN EN LA TABLA DE CLASIFICACIÓN
+---------------------------
+
+-- Light Jet (1,000 kg - 10,000 kg)
+(94, 'C560', 'Cessna Citation V/Ultra', 9979, 15.90, 4),
+(95, 'LJ40', 'Learjet 40', 9752, 14.56, 4),
+(96, 'LJ75', 'Learjet 75', 9752, 15.51, 4),
+(97, 'LJ70', 'Learjet 70', 9752, 15.51, 4),
+(98, 'LJ45', 'Learjet 45', 9752, 14.56, 4),
+(99, 'LJ55', 'Learjet 55', 9752, 13.34, 4),
+(100, 'C650', 'Citation III/VI/VII', 9525, 16.31, 4),
+(101, 'C56X', 'Citation Excel/XLS', 9163, 17.17, 4),
+(102, 'LJ35', 'Learjet 35', 8301, 12.04, 4),
+(103, 'E55P', 'Phenom 300', 8150, 15.90, 4),
+(104, 'PC24', 'Pilatus PC-24', 8005, 17.00, 4),
+(105, 'LJ31', 'Learjet 31', 7800, 13.36, 4),
+(106, 'C25C', 'Citation CJ4', 7761, 15.49, 4),
+(107, 'SW4', 'Metroliner', 7484, 17.37, 4),
+(108, 'BE40', 'Beechjet 400', 7303, 13.26, 4),
+(109, 'AT80', 'Air Tractor AT-802', 7257, 18.06, 4),
+(110, 'BE30', 'King Air 300', 6804, 16.61, 4),
+(111, 'LJ25', 'Learjet 25', 6577, 10.84, 4),
+(112, 'LJ24', 'Learjet 24', 6350, 10.84, 4),
+(113, 'LJ28', 'Learjet 28', 6350, 13.35, 4),
+(114, 'C550', 'Citation II', 6291, 15.75, 4),
+(115, 'C25B', 'Citation CJ3', 6291, 16.26, 4),
+(116, 'BE20', 'King Air 200', 5670, 16.61, 4),
+(117, 'PRM1', 'Premier I', 5670, 13.56, 4),
+(118, 'UC35', 'Citation V (Mil)', 7700, 15.90, 4),
+(119, 'FA10', 'Falcon 10', 7600, 13.08, 4),
+(120, 'C26', 'Metroliner', 7480, 17.37, 4),
+(121, 'C501', 'Citation I/SP', 5670, 14.35, 4),
+(122, 'C5252', 'Citation CJ2', 5670, 15.19, 4),
+(123, 'C500', 'Citation I', 5670, 14.35, 4),
+(124, 'C525', 'Citation Jet', 4990, 14.26, 4),
+(125, 'C25A', 'Citation CJ2', 4990, 15.19, 4),
+(126, '525', 'Citation Jet', 4990, 14.26, 4),
+(127, 'HDJT', 'HondaJet', 4808, 12.12, 4),
+(128, 'E50P', 'Phenom 100', 4800, 12.30, 4),
+(129, 'E50', 'Phenom 100', 4800, 12.30, 4),
+(130, 'BE9T', 'King Air F90', 4760, 13.99, 4),
+(131, 'C510', 'Citation Mustang', 3920, 13.16, 4),
+(132, 'SF50', 'Vision Jet', 2722, 11.79, 4),
+(133, 'BD10', 'Bede BD-10', 2041, 8.15, 4),
+---------------------------
+(134, 'C12', 'Huron (King Air)', 6800, 16.61, 4),
+(135, 'C25M', 'Citation M2', 4853, 14.26, 4),
+(136, 'C90I', 'King Air C90', 4750, 15.32, 4),
+(137, 'MU2', 'Mitsubishi MU-2', 4700, 11.94, 4),
+(138, 'EA50', 'Eclipse 500', 2720, 11.40, 4),
+--NO ESTÁN EN LA TABLA DE CLASIFICACIÓN
+---------------------------
+
+--VERIFICAR DE AQUI EN ADELANTE
+
+-- Turbo Prop (1,800 kg - 8,600 kg)
+(139, 'BE30', 'Beechcraft King Air 300', 6350, 16.61, 3),
+(140, 'BE50', 'Beechcraft BE50 Twin Bonanza ', 2858, 13.78, 3),------
+(141, 'B350', 'Beechcraft King Air 350', 6804, 17.65, 3),
+(142, 'B300', 'Beechcraft King Air 300', 6350, 16.61, 3),
+(143, 'SW3', 'Swearingen Metroliner III', 6577, 17.37, 3),
+(144, 'B200', 'Beechcraft King Air 200', 5670, 16.61, 3),
+(145, 'B20GT', 'Beechcraft King Air 200GT', 5670, 16.61, 3),
+(146, 'BE20', 'Beechcraft King Air 200', 5670, 16.60, 3),
+(147, 'B20T', 'Beechcraft King Air 200T', 5670, 16.61, 3),
+(148, 'P180', 'Piaggio P.180 Avanti', 5489, 14.03, 3),
+(149, 'E314', 'Embraer EMB 314 Super Tucano', 5400, 11.14, 3),
+(150, 'BE9L', 'Beechcraft King Air C90GTx', 4754, 15.32, 3),
+(151, 'PC12', 'Pilatus PC-12', 4760, 16.27, 3),
+(152, 'BE90', 'Beechcraft King Air 90', 4378, 15.32, 3),
+(153, 'C90', 'Beechcraft King Air C90', 4378, 15.32, 3),
+(154, 'C90GT', 'Beechcraft King Air C90GT', 4580, 15.32, 3),
+(155, 'E90', 'Beechcraft King Air E90', 4580, 15.32, 3),
+(156, 'C441', 'Cessna 441 Conquest II', 4668, 15.04, 3),
+(157, 'C90A', 'Beechcraft King Air C90A', 4378, 15.32, 3),
+(158, '690C', 'Twin Commander 690C', 4683, 15.88, 3),
+(159, 'AC90', 'Aero Commander 690', 4649, 14.20, 3),
+(160, 'PT52', 'Piper PA-31T2 Cheyenne IIXL', 4128, 13.01, 3),
+(161, 'PAY2', 'Piper Cheyenne II', 4300, 13.00, 3),
+(162, 'C208', 'Cessna 208 Caravan', 3629, 15.88, 3),
+(163, 'TBM9', 'Daher TBM 900', 3354, 12.83, 3),
+(164, 'C414', 'Cessna 414 Chancellor', 3062, 13.45, 3),
+(165, 'TBM7', 'Socata TBM 700', 3354, 12.83, 3),
+(166, 'TBM8', 'Daher TBM 850', 3354, 12.83, 3),
+(167, 'C421', 'Cessna 421 Golden Eagle', 3379, 12.52, 3),
+(168, 'PA46', 'Piper PA-46-500TP Meridian', 2310, 13.11, 3),----------
+(169, 'G120', 'Grob G 120TP', 1590, 10.31, 3),
+
+-- Mono Bimotor (500 kg - 3,000 kg)
+(170, 'BE55', 'Beechcraft Baron 55', 2313, 11.53, 2),
+(171, 'B55P', 'Beechcraft Baron 55P', 2313, 11.53, 2),
+(172, 'P46T', 'Piper PA-46-500TP Meridian', 2310, 13.11, 2),
+(173, 'PA45', 'Piper PA-45 Stepwawny', 1724, 10.85, 2),
+(174, 'PA46T', 'Piper PA-46-500TP Malibu Meridian', 2310, 13.11, 2),
+(175, 'PA34', 'Piper PA-34 Seneca', 2154, 11.90, 2),
+(176, 'PA36', 'Piper PA-36 Pawnee Brave', 2177, 11.80, 2),----------
+(177, 'T210', 'Cessna T210 Centurion', 1814, 11.20, 2),
+(178, 'BE36', 'Beechcraft Bonanza 36', 1656, 10.21, 2),
+(179, 'G36', 'Beechcraft Bonanza G36', 1656, 10.21, 2),
+(180, 'BE46', 'Beechcraft Model 17 Staggerwing', 1928, 9.75, 2),
+(181, 'C210', 'Cessna 210 Centurion', 1814, 11.20, 2),
+(182, 'G6', 'Cirrus SR22 G6', 1633, 11.68, 2),
+(183, 'SR22', 'Cirrus SR22', 1633, 11.68, 2),
+(184, 'C206', 'Cessna 206 Stationair', 1633, 10.97, 2),
+(185, 'C207', 'Cessna 207 Skywagon', 1724, 10.97, 2),
+(186, 'PA32', 'Piper PA-32 Saratoga', 1633, 10.02, 2),
+(187, 'P32R', 'Piper PA-32R Saratoga', 1633, 10.02, 2),
+(188, 'PCA32', 'Piper PA-32 Cherokee Six', 1542, 10.00, 2),
+(189, 'C260', 'Cessna 260 Skylane', 1406, 10.97, 2),
+(190, 'BE35', 'Beechcraft Bonanza V35', 1542, 10.21, 2),
+(191, 'M20T', 'Mooney M20T Predator', 1315, 11.00, 2),
+(192, 'C185', 'Cessna 185 Skywagon', 1520, 10.92, 2),
+(193, 'M20K', 'Mooney M20K', 1419, 11.00, 2),
+(194, 'M20M', 'Mooney M20M Bravo', 1528, 11.00, 2),
+(195, 'C182', 'Cessna 182 Skylane', 1406, 10.97, 2),
+(196, 'P28T', 'Piper PA-28RT-201T Turbo Arrow', 1315, 10.80, 2),
+(197, 'PA28T', 'Piper PA-28R-201T Turbo Arrow III', 1315, 10.80, 2),
+(198, 'M20P', 'Mooney M20P', 1315, 11.00, 2),
+(199, 'PA28', 'Piper PA-28 Cherokee', 975, 9.14, 2),
+(200, 'C172', 'Cessna 172 Skyhawk', 1157, 11.00, 2),
+(201, 'M20E', 'Mooney M20E Super 21', 1168, 10.67, 2),
+(202, 'PA25', 'Piper PA-25 Pawnee', 1315, 11.02, 2),
+(203, 'PA22', 'Piper PA-22 Tri-Pacer', 907, 8.92, 2),
+(204, 'CC19', 'XCub Carbon Cub', 845, 10.41, 2),
+(205, 'CCX2300', 'CubCrafters Carbon Cub EX-3', 907, 10.41, 2),
+(206, 'PA18', 'Piper PA-18 Super Cub', 794, 10.73, 2),
+(207, 'C150', 'Cessna 150 Commuter/Trainer', 726, 10.11, 2),
+(208, '7GCAA', 'American Champion Citabria', 748, 10.19, 2),
+(209, 'FLF150', 'Cessna 150 Aerobat', 726, 10.11, 2),
+(210, 'RV12', 'Vans Aircraft RV-12', 599, 8.21, 2), ------
+(211, 'CH75', 'Zenith CH 750', 600, 9.09, 2),
 
 -- Helicopter (500 kg - 12,000 kg aprox.)
-(105, 'R44', 'Robinson R44', 1089, 10.10, 1),
-(106, 'R66', 'Robinson R66', 1225, 10.10, 1),
-(107, 'R22', 'Robinson R22 Beta', 622, 7.60, 1),
-(108, 'AS50', 'Eurocopter AS350 Écureuil', 2250, 10.69, 1),
-(109, 'B206', 'Bell 206 JetRanger', 1451, 10.16, 1);
+(212, 'R44', 'Robinson R44', 1089, 10.10, 1),
+(213, 'R66', 'Robinson R66', 1225, 10.10, 1),
+(214, 'R22', 'Robinson R22 Beta', 622, 7.60, 1),
+(215, 'AS50', 'Eurocopter AS350 Écureuil', 2250, 10.69, 1),
+(216, 'B206', 'Bell 206 JetRanger', 1451, 10.16, 1),
+(217, 'AS32', 'Super Puma', 9000, 15.60, 1);
 
 
 -- Flota de Aeronaves de Clientes (varias por cliente)
 INSERT INTO clientes_aeronaves (id_cliente_aeronave, matricula_aeronave, es_miembro_caa, fecha_vigencia_caa, id_cliente, id_modelo_aeronave) VALUES
-(1, '3910', FALSE, NULL, 2, 8), -- Fuerza Aérea Mexicana, Gulfstream V
-(2, 'N868CW', FALSE, NULL, 12, 40),       -- Big Sky Insulation, Cessna Citation V 
---(3, 'N476JD', FALSE, NULL, 5, 176), -- ODYSSEY AIRWAYS, Citation CJ2 
---(4, 'N704LB', FALSE, NULL, 6, 99), -- Signum Aviation, Gulfstream G280
-(5, 'N204A', FALSE, NULL, 6, 8),       -- Signum Aviation, Gulfstream V
-(6, 'N65S', FALSE, NULL, 6, 15), -- Signum Aviation, Falcon 900
-(7, 'N357K', TRUE, '2010-10-10', 13, 43); --MidWest Aviation, Learjet 75
+(1, '3910', FALSE, NULL, 2, 42), -- Fuerza Aérea Mexicana, Gulfstream V
+(2, 'N868CW', FALSE, NULL, 12, 94),       -- Big Sky Insulation, Cessna Citation V 
+(3, 'N476JD', FALSE, NULL, 5, 122), -- ODYSSEY AIRWAYS, Citation CJ2 
+(4, 'N704LB', FALSE, NULL, 6, 71), -- Signum Aviation, Gulfstream G280
+(5, 'N204A', FALSE, NULL, 6, 42),       -- Signum Aviation, Gulfstream V
+(6, 'N65S', FALSE, NULL, 6, 59), -- Signum Aviation, Falcon 900
+(7, 'N357K', TRUE, '2010-10-10', 13, 96); --MidWest Aviation, Learjet 75
 
 --(6, 'N65S', TRUE, '2025-11-10', 6, 92); 
 
@@ -560,40 +697,42 @@ INSERT INTO conceptos_default (id_concepto_std, nombre_concepto_default, costo_c
 --FBO SERVICES (1)
 (94, 'International Terminal Service', 0.00, 'MXN',false,false, 1);
 
-INSERT INTO tarifas_raf_mtow (min_weight, max_weight, costo_usd, id_concepto_std, id_clasificacion) VALUES
+INSERT INTO tarifas_raf_mtow (min_weight, max_weight, costo_usd, costo_caa_usd, id_concepto_std, id_clasificacion) VALUES
 
---FBO RAF coordination
-(500, 12000, 479.00, 21, 1), 
-(500, 3000, 341.00, 21, 2),  
-(1800, 8600, 546.00, 21, 3), 
-(1000, 10000, 684.00, 21, 4), 
-(10001, 20000, 820.00, 21, 5), 
-(20001, 30000, 1367.00, 21, 6),
-(30001, 40000, 1867.00, 21, 7),
-(40001, 60000, 2050.00, 21, 8),
-(60001, 600000, 3080.00, 21, 9),
+--FBO RAF coordination (21)
+(500, 12000, 479.00, 343.00, 21, 1), --helicopteros
+(500, 3000, 341.00, 245.00,21, 2),  --monomotores y bimotores 
+(1800, 8600, 546.00, 391.00,21, 3), --turboprops 
+(1000, 10000, 684.00, 489.00,21, 4), 
+(10001, 20000, 820.00, 587.00,21, 5), 
+(20001, 30000, 1367.00, 978.00,21, 6),
+(30001, 40000, 1867.00, 1336.04,21, 7),
+(40001, 60000, 2050.00, 1467.00,21, 8),
+(60001, 600000, 3080.00, 0.00,21, 9),
 
---Aviación Gral RAF coordination
-(500, 12000, 479.00, 50, 1), 
-(500, 3000, 341.00, 50, 2),  
-(1800, 8600, 546.00, 50, 3), 
-(1000, 10000, 684.00, 50, 4), 
-(10001, 20000, 820.00, 50, 5), 
-(20001, 30000, 1367.00, 50, 6),
-(30001, 40000, 1867.00, 50, 7),
-(40001, 60000, 2050.00, 50, 8),
-(60001, 600000, 3080.00, 50, 9),
+--Aviación Gral RAF coordination (50)
+(500, 12000, 479.00, 343.00,50, 1), 
+(500, 3000, 341.00, 245.00,50, 2),  
+(1800, 8600, 546.00, 391.00,50, 3), 
+(1000, 10000, 684.00, 489.00,50, 4), 
+(10001, 20000, 820.00, 587.00,50, 5), 
+(20001, 30000, 1367.00, 978.00,50, 6),
+(30001, 40000, 1867.00, 1336.04,50, 7),
+(40001, 60000, 2050.00, 1467.00,50, 8),
+(60001, 600000, 3080.00, 0.00, 50, 9),
 
---Aviación Comercial RAF coordination
-(500, 12000, 479.00, 82, 1), 
-(500, 3000, 341.00, 82, 2),  
-(1800, 8600, 546.00, 82, 3), 
-(1000, 10000, 684.00, 82, 4), 
-(10001, 20000, 820.00, 82, 5), 
-(20001, 30000, 1367.00, 82, 6),
-(30001, 40000, 1867.00, 82, 7),
-(40001, 60000, 2050.00, 82, 8),
-(60001, 600000, 3080.00, 82, 9);
+
+--Aviación Comercial RAF coordination (82)
+(500, 12000, 479.00, 343.00,82, 1), 
+(500, 3000, 341.00, 245.00,82, 2),  
+(1800, 8600, 546.00, 391.00,82, 3), 
+(1000, 10000, 684.00, 489.00,82, 4), 
+(10001, 20000, 820.00, 587.00,82, 5), 
+(20001, 30000, 1367.00, 978.00,82, 6),
+(30001, 40000, 1867.00, 1336.04,82, 7),
+(40001, 60000, 2050.00, 1467.00,82, 8),
+(60001, 600000, 3080.00, 0.00,82, 9);
+
 
 -- Servicios Especiales con costo fijo por cliente
 INSERT INTO servicios_cliente_especiales (id_servicio_especial, id_cliente, id_concepto_std, costo_servicio) VALUES
