@@ -13,6 +13,7 @@ const aeronavesModelosRoutes = require('./routes/aeronaves_modelos.routes');
 const clientesAeronavesRoutes = require('./routes/clientes_aeronaves.routes');
 const cotizacionesHistoricoRoutes = require('./routes/cotizaciones_historico.routes');
 const usuariosRoutes = require('./routes/usuarios.routes');
+const tarifasRafMtowRoutes = require('./routes/tarifas_raf_mtow.routes');
 
 
 const corsOptions = require('./config/cors');
@@ -37,6 +38,7 @@ app.use('/api', aeronavesModelosRoutes);
 app.use('/api', clientesAeronavesRoutes);
 app.use('/api', cotizacionesHistoricoRoutes);
 app.use('/api', usuariosRoutes);
+app.use('/api', tarifasRafMtowRoutes);
 
 // ----- CACHÉ EN MEMORIA -----
 let cacheTipoCambio = {

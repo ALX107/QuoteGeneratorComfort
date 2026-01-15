@@ -547,10 +547,10 @@ const QuotePDFClientDocument = ({ formData, items, totals, legs }) => {
           <View style={styles.disclaimers}>
             <Text style={styles.disclaimerText}>* THIS QUOTE IS FOR INFORMATIONAL PURPOSES ONLY, AND MAY BE SUBJECT TO CHANGES WITHOUT PRIOR NOTICE.</Text>
             {hasNoSc && (
-              <Text style={styles.disclaimerText}>* ADMIN FEE IS NOT CHARGED.</Text>
+              <Text style={styles.disclaimerText}>* ADMIN FEE IS NOT CHARGED IN ONE OR MORE SERVICES.</Text>
             )}
             {hasNoVat && (
-              <Text style={styles.disclaimerText}>* VALUE ADDED TAX (VAT) IS NOT CHARGED.</Text>
+              <Text style={styles.disclaimerText}>* VALUE ADDED TAX (VAT) IS NOT CHARGED IN ONE OR MORE SERVICES.</Text>
             )}
             <Text style={styles.disclaimerText}>* EXCLUDES CATERING, OVERTIME, TRANSPORTATION AND FUEL UPLIFT.</Text>
              {formData?.isCaaMember && (

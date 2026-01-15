@@ -5,7 +5,7 @@ import { jwtDecode } from 'jwt-decode';
 import Calculator from '../features/Calculator.jsx';
 
 
-const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange, exchangeRate, onExchangeRateChange, isReadOnly, onDataLoaded, globalNoSc, globalNoVat, onGlobalNoScChange, onGlobalNoVatChange, onCaaChange, onMtowChange, onCategoryFeeChange }, ref) => {
+const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange, exchangeRate, onExchangeRateChange, isReadOnly, onDataLoaded, globalNoSc, globalNoVat, onGlobalNoScChange, onGlobalNoVatChange, onCaaChange, onMtowChange, onCategoryFeeChange, onClassificationChange }, ref) => {
     const [clientes, setClientes] = useState([]);
     const [aeropuertos, setAeropuertos] = useState([]);
     const [clientesAeronaves, setClientesAeronaves] = useState([]); 
@@ -104,6 +104,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
             setFilteredRegistrations([]);
             setFilteredAeronavesModelos([]);
             setIsCaaMember(false);
+            if (onClassificationChange) onClassificationChange(null);
             if (onCaaChange) onCaaChange(false);
             setSelectedAirportId(null);
             setSelectedFboId(null);
@@ -202,6 +203,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                 if (aircraft) {
                     const model = allaeronavesModelos.find(m => m.id_modelo_aeronave === aircraft.id_modelo_aeronave);
                     setModelValue(model ? model.icao_aeronave : '');
+                    if (model && onClassificationChange) onClassificationChange(model.id_clasificacion);
                     setRegistrationValue(aircraft.matricula_aeronave || (quote.matricula_aeronave || ''));
                     // FIX: Priorizar el MTOW guardado en la cotización (snapshot).
                     // Si no existe, usar el del catálogo como fallback.
@@ -214,6 +216,12 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                 setModelValue(quote.modelo_aeronave || '');         // Modelo snapshot
                 setMtowValue(quote.mtow || '');                     // MTOW snapshot
                 setUnit(quote.mtow_unit || 'KG');                   // Unit snapshot
+                
+                // Intentar recuperar clasificación si tenemos el modelo guardado
+                if (quote.id_modelo_aeronave) {
+                    const model = allaeronavesModelos.find(m => m.id_modelo_aeronave === quote.id_modelo_aeronave);
+                    if (model && onClassificationChange) onClassificationChange(model.id_clasificacion);
+                }
                 
 
             }
@@ -381,6 +389,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
             selectedFboId,
             quoteNumber,
             loggedInUser,
+            onClassificationChange,
             onCaaChange,
             onMtowChange,
             
@@ -589,6 +598,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
             // Limpiamos los campos relacionados inmediatamente.
             setSelectedCustomer(null);
             setModelValue('');
+            if (onClassificationChange) onClassificationChange(null);
             setRegistrationValue('');
             setMtowValue('');
             setFilteredRegistrations([]);
@@ -646,6 +656,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
             // Si seleccionan el separador, limpiamos el campo y no hacemos nada más.
             if (selectedIcaoModel === separator_label) {
                 setModelValue(''); 
+                if (onClassificationChange) onClassificationChange(null);
                 return; 
             }
             // ----------------------------
@@ -669,6 +680,8 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
         
             if (selectedModel) {
 
+                if (onClassificationChange) onClassificationChange(selectedModel.id_clasificacion);
+
                 if (selectedModel.mtow_aeronave) {
                     setMtowValue(selectedModel.mtow_aeronave);
                     setUnit('KG');
@@ -684,19 +697,22 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                         );
                         setFilteredRegistrations(modelRegistrations);
                     }
-    
-                } else if (!selectedIcaoModel) {
-                    // Si el usuario borra el campo modelo, reseteamos la lista de matrículas
-
+            } else {
+                // Si el modelo no se encuentra (o se borró), limpiamos la clasificación
+                // Esto corrige el error donde se quedaba el precio de la categoría anterior (ej. Light Jet)
+                if (onClassificationChange) onClassificationChange(null);
+                
+                if (!selectedIcaoModel) {
+                    // Si el campo está vacío, reseteamos la lista de matrículas
                     if (selectedCustomer) {
                         const customerAircraftLinks = clientesAeronaves.filter(
                             registration => registration.id_cliente === selectedCustomer?.id_cliente
                         );
                         setFilteredRegistrations(customerAircraftLinks || []);
                     }
-                };
-
-            };
+                }
+            }
+        };
 
             //(Flow 2: Cliente -> Matrícula -> Modelo) Se dispara al seleccionar una matrícula. Autocompleta el modelo y MTOW.
             const handleRegistrationChange = (event) => {
@@ -708,6 +724,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                if (selectedMatricula === '') {
                 // Limpiamos los campos dependientes para evitar confusiones
                 setModelValue('');
+                if (onClassificationChange) onClassificationChange(null);
                 setMtowValue('');
                 setIsCaaMember(false);
                 if (onCaaChange) onCaaChange(false);
@@ -769,6 +786,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                         if (model) {
                             // Autocompletar Modelo y MTOW
                             setModelValue(model.icao_aeronave);
+                            if (onClassificationChange) onClassificationChange(model.id_clasificacion);
                             
                             if (model.mtow_aeronave) {
                                 setMtowValue(model.mtow_aeronave);

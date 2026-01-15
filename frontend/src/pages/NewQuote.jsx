@@ -28,6 +28,8 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
     const [pdfDocumentComponent, setPdfDocumentComponent] = useState(null);
     const [allServices, setAllServices] = useState([]);
     const [defaultConceptos, setDefaultConceptos] = useState([]);
+    const [rafTariffs, setRafTariffs] = useState([]);
+    const [currentClassificationId, setCurrentClassificationId] = useState(null);
 
     const [isReadOnly, setIsReadOnly] = useState(!!previewingQuote);
     const [onNewQuoteBlocked, setOnNewQuoteBlocked] = useState(true);
@@ -59,6 +61,10 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
     // Callback para recibir la tarifa desde QuoteForm
     const handleCategoryFeeChange = useCallback((fee) => {
         setCategoryCoordFee(fee);
+    }, []);
+
+    const handleClassificationChange = useCallback((id) => {
+        setCurrentClassificationId(id);
     }, []);
 
     // Convertir a Toneladas
@@ -123,6 +129,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                             noSc: parseFloat(servicio.sc_porcentaje) === 0,
                             noVat: parseFloat(servicio.vat_porcentaje) === 0,
                             baseRate: baseRate,
+                            isSnapshot: true, // Marcamos que viene de la BD
                         };
                     });
                     setItems(mappedItems);
@@ -167,6 +174,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                                     total: servicio.total_usd,
                                     noSc: parseFloat(servicio.sc_porcentaje) === 0,
                                     noVat: parseFloat(servicio.vat_porcentaje) === 0,
+                                    isSnapshot: true,
                                 }));
 
                                 return {
@@ -267,6 +275,13 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
             fetchExchangeRate();
         }
     }, [quoteId, previewingQuote]);
+
+    // Cargar Tarifas RAF al montar
+    useEffect(() => {
+        axios.get('http://localhost:3000/api/listar/tarifas_raf_mtow')
+            .then(response => setRafTariffs(response.data))
+            .catch(error => console.error('Error fetching RAF tariffs:', error));
+    }, []);
 
     useEffect(() => {
         if (quoteDataForPreview && isFormReady && quoteFormRef.current) {
@@ -453,6 +468,66 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
         );
     }, [categoryCoordFee, exchangeRate, isGeneralAviation]);
 
+    // useEffect para actualizar RAF Coordination cuando cambia MTOW o Clasificación
+    useEffect(() => {
+        setItems(prevItems => 
+            prevItems.map(item => {
+                if (item.description.includes('RAF Coordination')) {
+                    
+                    // 1. Calcular el precio teórico según la tabla
+                    let calculatedPriceUSD = 0;
+                    if (currentClassificationId) {
+                        const tariff = rafTariffs.find(t => 
+                            parseInt(t.id_clasificacion) === parseInt(currentClassificationId)
+                        );
+
+                        if (tariff) {
+                            if (isCaaMember) {
+                                // Usamos Number() para manejar strings o números, y || 0 para nulos
+                                calculatedPriceUSD = parseFloat(tariff.costo_caa_usd) || 0;
+                            } else {
+                                calculatedPriceUSD = parseFloat(tariff.costo_usd) || 0;
+                            }
+                        }
+                    }
+
+                    // 2. Manejo de Carga Inicial (Snapshot)
+                    // Comparamos el precio guardado con el de la tabla para saber si fue manual
+                    if (item.isSnapshot) {
+                        // Si aún no tenemos clasificación o tarifas (carga asíncrona), esperamos
+                        if ((!currentClassificationId || rafTariffs.length === 0) && !item.manualPrice) return item;
+
+                        const currentPrice = parseFloat(item.priceUSD || 0);
+                        
+                        // Si el precio guardado difiere del de tabla, asumimos que fue manual
+                        if (Math.abs(currentPrice - calculatedPriceUSD) > 0.01) {
+                            return { ...item, manualPrice: true, isSnapshot: false };
+                        } else {
+                            // Si coinciden, lo dejamos vinculado a la tabla
+                            return { ...item, isSnapshot: false };
+                        }
+                    }
+
+                    // 3. Si es manual, no tocamos nada
+                    if (item.manualPrice) return item;
+
+                    // 4. Actualización automática
+                    const newPriceMXN = exchangeRate ? parseFloat((calculatedPriceUSD * exchangeRate).toFixed(2)) : 0;
+
+                    const updatedItem = {
+                        ...item,
+                        priceUSD: calculatedPriceUSD,
+                        priceMXN: newPriceMXN,
+                        anchorCurrency: 'USD',
+                    };
+                    updatedItem.total = calculateItemTotal(updatedItem);
+                    return updatedItem;
+                }
+                return item;
+            })
+        );
+    }, [currentClassificationId, rafTariffs, exchangeRate, isCaaMember]); // Se asegura que reaccione a isCaaMember
+
     const fetchServices = async (id_aeropuerto, id_fbo, fboName) => {
         if (isReadOnly) return;
 
@@ -482,6 +557,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                     // Detectar servicios especiales
                     const isLandingFee = s.nombre_concepto_default.toUpperCase().includes('LANDING FEE');
                     const isLandingPermitCoord = s.nombre_concepto_default === LANDING_PERMIT_COORD;
+                    const isRafCoordination = s.nombre_concepto_default.includes('RAF Coordination');
 
                     let priceMXN = 0;
                     let priceUSD = 0;
@@ -503,6 +579,23 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                             priceMXN = parseFloat(calculatedBase.toFixed(2));
                             priceUSD = exchangeRate ? parseFloat((calculatedBase / exchangeRate).toFixed(2)) : 0;
                         }
+                    }
+                    // LÓGICA ESPECIAL: RAF Coordination
+                    else if (isRafCoordination) {
+                        if (currentClassificationId) {
+                            const tariff = rafTariffs.find(t => 
+                                parseInt(t.id_clasificacion) === parseInt(currentClassificationId)
+                            );
+                            if (tariff) {
+                                if (isCaaMember) {
+                                    priceUSD = parseFloat(tariff.costo_caa_usd) || 0;
+                                } else {
+                                    priceUSD = parseFloat(tariff.costo_usd) || 0;
+                                }
+                            }
+                        }
+                        priceMXN = exchangeRate ? parseFloat((priceUSD * exchangeRate).toFixed(2)) : 0;
+                        anchorCurrency = 'USD';
                     }
                     // LÓGICA NORMAL
                     else {
@@ -698,6 +791,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
 
             const isLandingFee = service.nombre_concepto_default.toUpperCase().includes('LANDING FEE');
             const isLandingPermitCoord = service.name === LANDING_PERMIT_COORD;
+            const isRafCoordination = service.name.includes('RAF Coordination');
 
             let priceMXN = 0;
             let priceUSD = 0;
@@ -719,6 +813,23 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                     priceMXN = parseFloat(calculatedBase.toFixed(2));
                     priceUSD = exchangeRate ? parseFloat((calculatedBase / exchangeRate).toFixed(2)) : 0;
                 }
+            }
+            // LÓGICA ESPECIAL: RAF Coordination
+            else if (isRafCoordination) {
+                if (currentClassificationId) {
+                    const tariff = rafTariffs.find(t => 
+                        parseInt(t.id_clasificacion) === parseInt(currentClassificationId)
+                    );
+                            if (tariff) {
+                                if (isCaaMember) {
+                                    priceUSD = parseFloat(tariff.costo_caa_usd) || 0;
+                                } else {
+                                    priceUSD = parseFloat(tariff.costo_usd) || 0;
+                                }
+                            }
+                }
+                priceMXN = parseFloat((priceUSD * exchangeRate).toFixed(2));
+                anchorCurrency = 'USD';
             }
             // LÓGICA NORMAL
             else {
@@ -1023,6 +1134,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                         onGlobalNoScChange={(e) => handleGlobalCheckboxChange(setGlobalNoSc, e.target.checked)}
                         onGlobalNoVatChange={(e) => handleGlobalCheckboxChange(setGlobalNoVat, e.target.checked)}
                         onCategoryFeeChange={handleCategoryFeeChange}
+                        onClassificationChange={handleClassificationChange}
                     />
                     <QuoteTable
                         items={items}
