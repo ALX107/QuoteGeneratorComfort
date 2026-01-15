@@ -232,11 +232,18 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                     registration => registration.id_cliente === customer.id_cliente
                 );
                 setFilteredRegistrations(customerAircraftLinks);
-                const uniqueModelIds = [...new Set(customerAircraftLinks.map(registration => registration.id_modelo_aeronave))];
-                const models = allaeronavesModelos.filter(model => 
-                    uniqueModelIds.includes(model.id_modelo_aeronave)
-                );
-                setFilteredAeronavesModelos(models);
+                
+                // Lógica del Separador (Igual que en handleCustomerChange) para mostrar TODOS los modelos
+                const customerModelIds = new Set(customerAircraftLinks.map(r => r.id_modelo_aeronave));
+                const clientModels = allaeronavesModelos.filter(model => customerModelIds.has(model.id_modelo_aeronave));
+                const otherModels = allaeronavesModelos.filter(model => !customerModelIds.has(model.id_modelo_aeronave));
+
+                if (clientModels.length > 0 && otherModels.length > 0) {
+                    const separatorObj = { id_modelo_aeronave: 'separator-id-load', icao_aeronave: separator_label };
+                    setFilteredAeronavesModelos([...clientModels, separatorObj, ...otherModels]);
+                } else {
+                    setFilteredAeronavesModelos(allaeronavesModelos);
+                }
             }
 
                 else {

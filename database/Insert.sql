@@ -89,7 +89,7 @@ INSERT INTO aeropuertos (id_aeropuerto, icao_aeropuerto, nombre_aeropuerto, ciud
 -- Categorías de Operaciones
 INSERT INTO categorias_operaciones (id_cat_operacion, nombre_cat_operacion, tarifa_land_permit_coord) VALUES
 (1, 'N/A',0),
-(2, 'AMBULANCE / FAR PART 135',0),
+(2, 'AMBULANCE / FAR PART 135',700),
 (3, 'CHARTER / FAR PART 135',400),
 (4, 'DIPLOMATIC / MILITARY',0),
 (5, 'PRIVATE / FAR PART 91', 250),

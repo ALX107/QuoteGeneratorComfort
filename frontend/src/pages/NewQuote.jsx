@@ -600,11 +600,11 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                     // LÓGICA NORMAL
                     else {
                         if (isUSD) {
-                            priceUSD = rawRate;
+                            priceUSD = parseFloat(rawRate.toFixed(2));
                             priceMXN = exchangeRate ? parseFloat((priceUSD * exchangeRate).toFixed(2)) : 0;
                         } else {
-                            priceMXN = rawRate;
-                            priceUSD = exchangeRate ? parseFloat((priceMXN / exchangeRate).toFixed(4)) : 0;
+                            priceMXN = parseFloat(rawRate.toFixed(2));
+                            priceUSD = exchangeRate ? parseFloat((priceMXN / exchangeRate).toFixed(2)) : 0;
                         }
                     }
 
@@ -834,11 +834,11 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
             // LÓGICA NORMAL
             else {
                 if (isUSD) {
-                    priceUSD = rawRate;
+                    priceUSD = parseFloat(rawRate.toFixed(2));
                     priceMXN = parseFloat((priceUSD * exchangeRate).toFixed(2));
                 } else {
-                    priceMXN = rawRate;
-                    priceUSD = parseFloat((priceMXN / exchangeRate).toFixed(4));
+                    priceMXN = parseFloat(rawRate.toFixed(2));
+                    priceUSD = parseFloat((priceMXN / exchangeRate).toFixed(2));
                 }
             }
 
