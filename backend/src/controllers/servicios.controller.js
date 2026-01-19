@@ -71,6 +71,56 @@ const getServiciosByAeropuertoOrFbo = async (req, res) => {
     }
 };
 
+const getServiciosByAviationType = async (req, res) => {
+    const { aviationType } = req.query;
+
+    if (!aviationType || (aviationType !== 'Aviación General' && aviationType !== 'Aviación Comercial')) {
+        return res.json([]);
+    }
+
+    try {
+        let catMin, catMax;
+
+        // Determinar rango de categorías según el tipo de aviación
+        if (aviationType === 'Aviación General') {
+            catMin = 8;
+            catMax = 15;
+        } else if (aviationType === 'Aviación Comercial') {
+            catMin = 16;
+            catMax = 23;
+        } else {
+            return res.json([]);
+        }
+
+        // Traer conceptos por defecto sin precios específicos (sin id_fbo)
+        const query = `
+            SELECT 
+                cd.id_concepto_std,
+                cd.nombre_concepto_default,
+                cd.es_default,
+                cd.exento_sc,
+                cc.nombre_cat_concepto,
+                cc.id_cat_concepto,
+                cd.costo_concepto_default as tarifa_servicio,
+                cd.divisa_concepto_default as divisa,
+                NULL as id_precio_concepto
+            FROM conceptos_default cd
+            JOIN categorias_conceptos cc ON cd.id_cat_concepto = cc.id_cat_concepto
+            WHERE cd.id_cat_concepto BETWEEN $1 AND $2
+            AND cd.es_default = true
+            ORDER BY cd.id_concepto_std ASC
+        `;            
+
+        const result = await pool.query(query, [catMin, catMax]);
+        res.json(result.rows);
+
+    } catch (error) {
+        console.error('Error fetching services by aviation type:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
 module.exports = {
     getServiciosByAeropuertoOrFbo,
+    getServiciosByAviationType
 };

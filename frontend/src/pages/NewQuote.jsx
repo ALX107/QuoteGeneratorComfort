@@ -100,6 +100,10 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                     setTotalEnPalabras(quoteData.total_en_palabras || null);
 
                     const isJoinedQuote = quoteData.total_en_palabras && quoteData.total_en_palabras.startsWith('JOIN OF:');
+                    
+                    // LÓGICA CORREGIDA: Determinar si es Aviación General al cargar
+                    const isGenAv = quoteData.fbo === 'Aviación General' || (quoteData.servicios && quoteData.servicios.some(s => s.nombre_cat_concepto && s.nombre_cat_concepto.includes('General Aviation')));
+                    setIsGeneralAviation(isGenAv);
 
                     const mappedItems = quoteData.servicios.map(servicio => {
                         const isLanding = servicio.nombre_servicio.toUpperCase().includes('LANDING FEE');
@@ -224,6 +228,19 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                         setQuoteDataForPreview(quoteData);
                         setOnNewQuoteBlocked(false);
                     }
+
+                    // LÓGICA CORREGIDA: Cargar el catálogo de servicios (allServices) para el modal
+                    // sin sobrescribir los items actuales de la cotización.
+                    if (quoteData.id_fbo) {
+                        axios.get('http://localhost:3000/api/servicios', { params: { id_fbo: quoteData.id_fbo } })
+                            .then(res => setAllServices(res.data))
+                            .catch(err => console.error('Error loading services catalog:', err));
+                    } else if (quoteData.fbo === 'Aviación General' || quoteData.fbo === 'Aviación Comercial') {
+                        axios.get('http://localhost:3000/api/servicios-by-aviation-type', { params: { aviationType: quoteData.fbo } })
+                            .then(res => setAllServices(res.data))
+                            .catch(err => console.error('Error loading services catalog:', err));
+                    }
+
                 })
                 .catch(error => console.error('Error fetching quote details:', error));
         } else if (previewingQuote?.isClone) {
@@ -238,6 +255,10 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
             const allNoVat = previewingQuote.items?.every(item => item.vatPercentage === 0);
             setGlobalNoSc(allNoSc);
             setGlobalNoVat(allNoVat);
+            
+            // LÓGICA CORREGIDA: Restaurar estado de Aviación General al clonar
+            const isGenAv = previewingQuote.fboName === 'Aviación General' || previewingQuote.items.some(i => i.category && i.category.includes('General Aviation'));
+            setIsGeneralAviation(isGenAv);
 
             if (previewingQuote.selectedFboId) {
                 axios.get('http://localhost:3000/api/servicios', {
@@ -245,6 +266,10 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                 })
                 .then(response => setAllServices(response.data))
                 .catch(error => console.error('Error fetching services for clone:', error));
+            } else if (previewingQuote.fboName === 'Aviación General' || previewingQuote.fboName === 'Aviación Comercial') {
+                 axios.get('http://localhost:3000/api/servicios-by-aviation-type', { params: { aviationType: previewingQuote.fboName } })
+                    .then(res => setAllServices(res.data))
+                    .catch(err => console.error('Error loading services catalog for clone:', err));
             }
         } else {
             setIsReadOnly(false);
@@ -528,14 +553,16 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
         );
     }, [currentClassificationId, rafTariffs, exchangeRate, isCaaMember]); // Se asegura que reaccione a isCaaMember
 
-    const fetchServices = async (id_aeropuerto, id_fbo, fboName) => {
+    const fetchServices = async (id_aeropuerto, id_fbo, fboNameOrAviationType) => {
         if (isReadOnly) return;
 
         setItems(prevItems => prevItems.filter(item => item.description === ''));
 
-        const isGenAv = fboName === 'Aviación General';
+        // Determinar si es aviación general (puede venir de un FBO real o de selección manual)
+        const isGenAv = fboNameOrAviationType === 'Aviación General';
         setIsGeneralAviation(isGenAv);
 
+        // Caso 1: Hay un FBO real seleccionado (aeropuerto existe en BD)
         if (id_fbo) {
             try {
                 const response = await axios.get('http://localhost:3000/api/servicios', {
@@ -639,7 +666,63 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
             } catch (error) {
                 console.error('Error fetching FBO services:', error);
             }
-        } else {
+        } 
+        // Caso 2: Aviación seleccionada manualmente (aeropuerto no existe en BD)
+        else if (fboNameOrAviationType === 'Aviación General' || fboNameOrAviationType === 'Aviación Comercial') {
+            try {
+                // Traer los servicios por defecto según el tipo de aviación
+                const response = await axios.get('http://localhost:3000/api/servicios-by-aviation-type', {
+                    params: { aviationType: fboNameOrAviationType },
+                });
+
+                const serviciosData = response.data;
+                console.log("Servicios por tipo de aviación recibidos:", serviciosData);
+
+                setAllServices(serviciosData);
+
+                // Cargar servicios con precios en 0 para que el usuario los edite
+                const newItemsToAdd = serviciosData.map(s => {
+                    const isExempt = !!s.exento_sc;
+
+                    // Todos los servicios de aviación manual comienzan con precio 0
+                    const priceMXN = 0;
+                    const priceUSD = 0;
+                    const quantity = 1;
+                    const scPercentage = isExempt ? 0 : (globalNoSc ? 0 : (isCaaMember ? 0.10 : 0.18));
+                    const vatPercentage = globalNoVat ? 0 : 0.16;
+
+                    const cost = quantity * priceUSD;
+                    const serviceCharge = cost * scPercentage;
+                    const vat = serviceCharge * vatPercentage;
+                    const total = cost + serviceCharge + vat;
+
+                    return {
+                        description: s.nombre_concepto_default,
+                        category: s.nombre_cat_concepto,
+                        quantity,
+                        priceMXN,
+                        priceUSD,
+                        scPercentage,
+                        vatPercentage,
+                        noSc: isExempt || globalNoSc,
+                        noVat: globalNoVat,
+                        anchorCurrency: 'USD',
+                        baseRate: 0,
+                        total,
+                        isScExempt: isExempt,
+                    };
+                });
+
+                setItems(prev => [...prev, ...newItemsToAdd]);
+                console.log(`Servicios cargados para ${fboNameOrAviationType} con valores iniciales en 0`);
+
+            } catch (error) {
+                console.error('Error fetching services by aviation type:', error);
+                setAllServices([]);
+            }
+        }
+        // Caso 3: Sin aviación ni FBO seleccionados
+        else {
             setAllServices([]);
         }
     };
@@ -694,13 +777,10 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
     }, []);
 
     const handleAddItem = () => {
-        const additionalServiceItem = allServices.find(s => 
-            s.nombre_cat_concepto && s.nombre_cat_concepto.includes('Additional Services')
-        );
-
-        const correctCategory = additionalServiceItem 
-            ? additionalServiceItem.nombre_cat_concepto 
-            : '* Additional Services *';
+        // Determinar la categoría de "Additional Services" según el tipo de aviación
+        let correctCategory = isGeneralAviation 
+            ? 'Additional Services General Aviation' 
+            : 'Additional Services Commercial Aviation';
 
         const initialSc = globalNoSc ? 0 : (isCaaMember ? 0.10 : 0.18);
 
@@ -879,7 +959,23 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                 return;
             }
 
+            // Validar que haya al menos un servicio
+            if (items.length === 0) {
+                console.error('Cannot save quote without services');
+                alert('Por favor, agregue al menos un servicio antes de guardar la cotización.');
+                setIsSaveQuoteModalOpen(false);
+                return;
+            }
+
             const rawData = quoteFormRef.current.getFormData();
+
+            // Validar que haya nombre de aeropuerto válido
+            if (!rawData.stationName) {
+                console.error('Station name is required');
+                alert('Por favor, ingrese el nombre del aeropuerto.');
+                setIsSaveQuoteModalOpen(false);
+                return;
+            }
 
             const itemsToSave = items.map(item => {
                 let finalScPercentage = item.scPercentage;
@@ -963,14 +1059,17 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                     label: rawData.flightTypeName
                 },
 
-                station: {
+                station: rawData.station ? {
                     id: rawData.station,
                     label: rawData.stationName
+                } : {
+                    id: null,
+                    label: rawData.stationName  // Enviar el nombre manual del aeropuerto
                 },
 
                 fbo: rawData.fbo || rawData.fboName
                     ? { id: rawData.fbo, label: rawData.fboName }
-                    : null,
+                    : undefined,  // Cambiar de null a undefined para ignorarlo mejor
 
                 from: rawData.from || rawData.fromName
                     ? { id: rawData.from, label: rawData.fromName }

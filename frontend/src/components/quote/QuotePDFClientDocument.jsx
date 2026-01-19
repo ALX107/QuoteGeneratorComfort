@@ -326,9 +326,10 @@ const groupItems = (items) => {
     // Esto asegura que los items manuales se sumen en una sola línea en lugar de separarse.
   const key = (item.category && item.category.trim() !== "") ? item.category.trim() : 'Additional Services';
   if (!groups[key]) {
-      groups[key] = { description: key, quantity: 1, total: 0 };
+      groups[key] = { description: key, quantity: 0, total: 0 };
     }
     groups[key].total += (parseFloat(item.total) || 0);
+    groups[key].quantity += (parseFloat(item.quantity) || 0);
   });
   
   return Object.values(groups).sort((a, b) => {
@@ -440,8 +441,8 @@ const QuotePDFClientDocument = ({ formData, items, totals, legs }) => {
                   {groupItems(leg.items).map((item, index) => (
                     <View key={index} style={styles.tableRow}>
                       <View style={[styles.tableCol, { width: '55%', textAlign: 'left' }]}><Text style={[styles.tableCell, { textAlign: 'left' }]}>{item.description}</Text></View>
-                      <View style={[styles.tableCol, { width: '10%', textAlign: 'center' }]}><Text style={[styles.tableCell, { textAlign: 'center' }]}>1</Text></View>
-                      <View style={[styles.tableCol, { width: '15%' }]}><Text style={styles.tableCell}>{(item.total).toFixed(2)}</Text></View>
+                      <View style={[styles.tableCol, { width: '10%', textAlign: 'center' }]}><Text style={[styles.tableCell, { textAlign: 'center' }]}>{item.quantity}</Text></View>
+                      <View style={[styles.tableCol, { width: '15%' }]}><Text style={styles.tableCell}>{(item.total / (item.quantity || 1)).toFixed(2)}</Text></View>
                       <View style={[styles.tableCol, { width: '20%' }]}><Text style={styles.tableCell}>{(parseFloat(item.total) || 0).toFixed(2)}</Text></View>
                     </View>
                   ))}
@@ -507,8 +508,8 @@ const QuotePDFClientDocument = ({ formData, items, totals, legs }) => {
                 {groupItems(items).map((item, index) => (
                   <View key={index} style={styles.tableRow}>
                     <View style={[styles.tableCol, { width: '55%', textAlign: 'left' }]}><Text style={[styles.tableCell, { textAlign: 'left' }]}>{item.description}</Text></View>
-                    <View style={[styles.tableCol, { width: '10%', textAlign: 'center' }]}><Text style={[styles.tableCell, { textAlign: 'center' }]}>1</Text></View>
-                    <View style={[styles.tableCol, { width: '15%' }]}><Text style={styles.tableCell}>{(item.total).toFixed(2)}</Text></View>
+                    <View style={[styles.tableCol, { width: '10%', textAlign: 'center' }]}><Text style={[styles.tableCell, { textAlign: 'center' }]}>{item.quantity}</Text></View>
+                    <View style={[styles.tableCol, { width: '15%' }]}><Text style={styles.tableCell}>{(item.total / (item.quantity || 1)).toFixed(2)}</Text></View>
                     <View style={[styles.tableCol, { width: '20%' }]}><Text style={styles.tableCell}>{(parseFloat(item.total) || 0).toFixed(2)}</Text></View>
                   </View>
                 ))}

@@ -210,10 +210,13 @@ const createQuote = async (req, res) => {
     // Si ocurre cualquier error, revertir la transacción
     await client.query('ROLLBACK');
     console.error('--- ERROR EN LA TRANSACCIÓN, SE HIZO ROLLBACK ---');
-    console.error('Error al procesar la solicitud:', err);
+    console.error('Error completo:', err);
+    console.error('Error al procesar la solicitud:', err.message);
+    console.error('Stack:', err.stack);
     res.status(500).json({
       error: 'Ocurrió un error al procesar la solicitud.',
-      detalle: err.message
+      detalle: err.message,
+      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
     });
   } finally {
     // En cualquier caso (éxito o error), liberar el cliente para devolverlo al pool

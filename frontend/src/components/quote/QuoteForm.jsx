@@ -42,6 +42,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
     const [categoriasOperaciones, setCategoriasOperaciones] = useState([]);
     const [selectedAirportId, setSelectedAirportId] = useState(null);
     const [selectedFboId, setSelectedFboId] = useState(null);
+    const [manualAviationType, setManualAviationType] = useState(''); // Para cuando el aeropuerto no existe en BD
 
     const [noEta, setNoEta] = useState(false);
     const [noEtd, setNoEtd] = useState(false); // 
@@ -109,6 +110,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
             setSelectedAirportId(null);
             setSelectedFboId(null);
             setFilteredFbos([]);
+            setManualAviationType(''); // Limpiar aviación manual
             setNoEta(false); 
             setNoEtd(false); 
             setErrors({});
@@ -169,6 +171,15 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
             if (station) {
                 const fbosForAirport = allFbos.filter(f => f.id_aeropuerto === station.id_aeropuerto);
                 setFilteredFbos(fbosForAirport);
+                setManualAviationType(''); // Limpiar aviación manual si hay estación
+            } else if (quote.aeropuerto) { // El aeropuerto es manual (no está en la BD)
+                setFilteredFbos([]); // No hay FBOs para un aeropuerto manual
+                // Si el FBO guardado es un tipo de aviación, lo seleccionamos en el dropdown
+                if (quote.fbo === 'Aviación General' || quote.fbo === 'Aviación Comercial') {
+                    setManualAviationType(quote.fbo);
+                } else {
+                    setManualAviationType('');
+                }
             }
 
             const isMember = !!quote.es_miembro_caa;
@@ -551,16 +562,28 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
             setSelectedAirportId(selectedAirport.id_aeropuerto);
             setFboValue(''); // Clear FBO input text
             setSelectedFboId(null); // Reset FBO ID
+            setManualAviationType(''); // Reset aviación manual
             const fbosForAirport = allFbos.filter(fbo => fbo.id_aeropuerto === selectedAirport.id_aeropuerto);
             setFilteredFbos(fbosForAirport);
             onSelectionChange(selectedAirport.id_aeropuerto, null);
         } else {
+            // Aeropuerto no encontrado en BD - permitir que el usuario seleccione aviación manualmente
             setSelectedAirportId(null);
             setFboValue(''); // Also clear FBO input when airport is cleared
             setSelectedFboId(null);
-            setFilteredFbos([]);
+            setFilteredFbos([]); // Vacío porque no hay FBOs para este aeropuerto
+            setManualAviationType(''); // Reset para que seleccione de nuevo
             onSelectionChange(null, null);
         }
+    };
+
+    // Manejo de aviación seleccionada manualmente (cuando aeropuerto no existe en BD)
+    const handleManualAviationChange = (event) => {
+        const aviationType = event.target.value;
+        setManualAviationType(aviationType);
+        setFboValue(aviationType); // Sincronizar con fboValue para que se guarde
+        // Pasar la aviación manual al padre para categorizar servicios
+        onSelectionChange(selectedAirportId, null, aviationType);
     };
 
     const handleFboChange = (event) => {
@@ -571,6 +594,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
 
         if (selectedFbo) {
             setSelectedFboId(selectedFbo.id_fbo);
+            setManualAviationType(''); // Limpiar aviación manual si se selecciona FBO real
             onSelectionChange(selectedAirportId, selectedFbo.id_fbo, selectedFbo.nombre_fbo);
         } else {
             setSelectedFboId(null);
@@ -1259,32 +1283,50 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                                 Select Aviation Type
                             </label>
 
-                            <div className="relative mt-1">
-                            <input
-                                list="fbo-list"
-                                id="fbo"
-                                name="fbo"
-                                className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm disabled:cursor-not-allowed"
-                                value={fboValue}
-                                onChange={(e) => {
-                                    setFboValue(e.target.value);
-                                    handleFboChange(e);
-                                }}
-                                disabled={isReadOnly}
-                            />
+                            {/* Mostrar select si no hay FBOs (aeropuerto no existe en BD) */}
+                            {filteredFbos.length === 0 && selectedAirportId === null ? (
+                                <div className="relative mt-1">
+                                    <select
+                                        id="fbo-select"
+                                        className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm disabled:cursor-not-allowed"
+                                        value={manualAviationType}
+                                        onChange={handleManualAviationChange}
+                                        disabled={isReadOnly}
+                                    >
+                                        <option value="">-- Select Type --</option>
+                                        <option value="Aviación General">Aviación General</option>
+                                        <option value="Aviación Comercial">Aviación Comercial</option>
+                                    </select>
+                                </div>
+                            ) : (
+                                /* Mostrar datalist si hay FBOs disponibles (aeropuerto existe en BD) */
+                                <div className="relative mt-1">
+                                    <input
+                                        list="fbo-list"
+                                        id="fbo"
+                                        name="fbo"
+                                        className="w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 sm:text-sm disabled:cursor-not-allowed"
+                                        value={fboValue}
+                                        onChange={(e) => {
+                                            setFboValue(e.target.value);
+                                            handleFboChange(e);
+                                        }}
+                                        disabled={isReadOnly}
+                                    />
 
-                                 
-                                <datalist id="fbo-list">
-                                     {/* Se mapean los FBOs filtrados para mostrarlos como opciones */}
-                                     {filteredFbos.map((fbo) => (
-                                        <option key={fbo.id_fbo} value={fbo.nombre_fbo} />
-                                     ))}
-                                </datalist>
+                                     
+                                    <datalist id="fbo-list">
+                                         {/* Se mapean los FBOs filtrados para mostrarlos como opciones */}
+                                         {filteredFbos.map((fbo) => (
+                                            <option key={fbo.id_fbo} value={fbo.nombre_fbo} />
+                                         ))}
+                                    </datalist>
 
-                                <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                                    <span className="material-icons text-gray-400"></span>
-                                </span>
-                            </div>
+                                    <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                        <span className="material-icons text-gray-400"></span>
+                                    </span>
+                                </div>
+                            )}
                         </div>
                         <div>
                                 <label className="block text-sm font-medium text-dark-gray" htmlFor="etd">
