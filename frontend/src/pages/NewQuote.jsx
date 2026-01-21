@@ -433,6 +433,8 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
     }, [items]);
 
     useEffect(() => {
+        if (isReadOnly) return;
+
         if (exchangeRate) {
             setItems(prevItems =>
                 prevItems.map(item => {
@@ -695,6 +697,10 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                     const isLandingFee = s.nombre_concepto_default.toUpperCase().includes('LANDING FEE');
                     const isLandingPermitCoord = s.nombre_concepto_default === LANDING_PERMIT_COORD;
                     const isRafCoordination = s.nombre_concepto_default.includes('RAF Coordination');
+                    const isOvernight = s.nombre_concepto_default.toUpperCase().includes('OVERNIGHT (PER NIGHT)');
+                    const isParking = s.nombre_concepto_default.toUpperCase().includes('PARKING FEE');
+                    const isEmbarking = s.nombre_concepto_default.toUpperCase().includes('EMBARKING / DISEMBARKING');
+                    const isTua = s.nombre_concepto_default.toUpperCase() === 'TUA';
 
                     const serviceID = s.id_concepto_std;
                     const currentFlightTypeData = quoteFormRef.current?.getFormData(); 
@@ -749,7 +755,8 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                     }
                     // NIVEL 3: LANDING FEE (Lógica MTOW)
                     else if (isLandingFee && isGenAv && currentMtow > 0) {
-                        const calculatedBase = rawRate * currentMtow * 1.16; // Fórmula base
+                        const tons = parseFloat(currentMtow.toFixed(2));
+                        const calculatedBase = rawRate * tons * 1.16; // Fórmula base con redondeo
                         if (isUSDDefault) {
                             priceUSD = parseFloat(calculatedBase.toFixed(2));
                             priceMXN = exchangeRate ? parseFloat((calculatedBase * exchangeRate).toFixed(2)) : 0;
@@ -758,6 +765,44 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                             priceUSD = exchangeRate ? parseFloat((calculatedBase / exchangeRate).toFixed(2)) : 0;
                         }
                         pricingMethod = 'MTOW_CALC';
+                    }
+                    // NIVEL 3.5: OVERNIGHT (Lógica MTOW con fórmula especial)
+                    else if (isOvernight && currentMtow > 0) {
+                        const tons = parseFloat(currentMtow.toFixed(2));
+                        const calculatedBase = rawRate * 2 * 24 * tons * 1.16;
+                        if (isUSDDefault) {
+                            priceUSD = parseFloat(calculatedBase.toFixed(2));
+                            priceMXN = exchangeRate ? parseFloat((calculatedBase * exchangeRate).toFixed(2)) : 0;
+                        } else {
+                            priceMXN = parseFloat(calculatedBase.toFixed(2));
+                            priceUSD = exchangeRate ? parseFloat((calculatedBase / exchangeRate).toFixed(2)) : 0;
+                        }
+                        pricingMethod = 'OVERNIGHT_CALC';
+                    }
+                    // NIVEL 3.6: PARKING & EMBARKING (Lógica MTOW con fórmula especial)
+                    else if ((isParking || isEmbarking) && currentMtow > 0) {
+                        const tons = parseFloat(currentMtow.toFixed(2));
+                        const calculatedBase = rawRate * 2 * tons * 1.16;
+                        if (isUSDDefault) {
+                            priceUSD = parseFloat(calculatedBase.toFixed(2));
+                            priceMXN = exchangeRate ? parseFloat((calculatedBase * exchangeRate).toFixed(2)) : 0;
+                        } else {
+                            priceMXN = parseFloat(calculatedBase.toFixed(2));
+                            priceUSD = exchangeRate ? parseFloat((calculatedBase / exchangeRate).toFixed(2)) : 0;
+                        }
+                        pricingMethod = isParking ? 'PARKING_CALC' : 'EMBARKING_CALC';
+                    }
+                    // NIVEL 3.7: TUA (Fórmula especial: Base MXN * 1.16)
+                    else if (isTua) {
+                        if (isUSDDefault) {
+                            const baseMXN = parseFloat((rawRate * exchangeRate).toFixed(2));
+                            priceMXN = parseFloat((baseMXN * 1.16).toFixed(2));
+                            priceUSD = exchangeRate ? parseFloat((priceMXN / exchangeRate).toFixed(2)) : 0;
+                        } else {
+                            priceMXN = parseFloat((rawRate * 1.16).toFixed(2));
+                            priceUSD = exchangeRate ? parseFloat((priceMXN / exchangeRate).toFixed(2)) : 0;
+                        }
+                        pricingMethod = 'TUA_CALC';
                     }
                     // NIVEL 4: RAF COORDINATION (Lógica MTOW / Clasificación)
                     else if (isRafCoordination) {
@@ -896,6 +941,8 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
         const tons = calculateTons(val, unit);
         setCurrentMtow(tons);
 
+        if (isReadOnly) return;
+
         setItems(prevItems => 
             prevItems.map(item => {
                 // Si el precio fue editado manualmente, no recalcular
@@ -903,9 +950,12 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
 
                 const isLanding = item.description.toUpperCase().includes('LANDING FEE');
                 const isGeneralAviation = item.category === 'Airport Services General Aviation';
+                const isOvernight = item.description.toUpperCase().includes('OVERNIGHT (PER NIGHT)');
+                const isParking = item.description.toUpperCase().includes('PARKING FEE');
+                const isEmbarking = item.description.toUpperCase().includes('EMBARKING / DISEMBARKING');
 
-                // Solo recalcular Landing Fees de General Aviation
-                if (!isLanding || !isGeneralAviation) return item;
+                // Solo recalcular Landing Fees de General Aviation, Overnight, Parking o Embarking
+                if ((!isLanding || !isGeneralAviation) && !isOvernight && !isParking && !isEmbarking) return item;
 
                 const rate = item.baseRate || (item.anchorCurrency === 'USD' ? item.priceUSD : item.priceMXN);
                 
@@ -913,7 +963,17 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                 let newPriceUSD = 0;
 
                 if (tons > 0) {
-                    const calculatedBase = (rate * tons) * 1.16;
+                    let calculatedBase = 0;
+                    if (isOvernight) {
+                        const tonsRounded = parseFloat(tons.toFixed(2));
+                        calculatedBase = rate * 2 * 24 * tonsRounded * 1.16;
+                    } else if (isParking || isEmbarking) {
+                        const tonsRounded = parseFloat(tons.toFixed(2));
+                        calculatedBase = rate * 2 * tonsRounded * 1.16;
+                    } else {
+                        const tonsRounded = parseFloat(tons.toFixed(2));
+                        calculatedBase = (rate * tonsRounded) * 1.16;
+                    }
                     
                     if (item.anchorCurrency === 'USD') {
                         newPriceUSD = parseFloat(calculatedBase.toFixed(2));
@@ -935,7 +995,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                 return updatedItem;
             })
         );
-    }, [exchangeRate]);
+    }, [exchangeRate, isReadOnly]);
 
     // EFECTO MAESTRO: Recalcular precios en tiempo real
     useEffect(() => {
@@ -961,6 +1021,10 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
             const isLandingFee = item.description.toUpperCase().includes('LANDING FEE');
             const isLandingPermitCoord = item.description === LANDING_PERMIT_COORD;
             const isRafCoordination = item.description.includes('RAF Coordination');
+            const isOvernight = item.description.toUpperCase().includes('OVERNIGHT (PER NIGHT)');
+            const isParking = item.description.toUpperCase().includes('PARKING FEE');
+            const isEmbarking = item.description.toUpperCase().includes('EMBARKING / DISEMBARKING');
+            const isTua = item.description.toUpperCase() === 'TUA';
 
             // 3. BUSCAR PRECIO ESPECIAL DE CLIENTE
             // Paso A: Filtramos reglas de este servicio
@@ -1034,10 +1098,57 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                 newAnchor = 'USD';
                 pricingMethod = 'UPDATE_RAF';
             }
+            else if (isOvernight && currentMtow > 0) {
+                // CASO C.5: OVERNIGHT (Fórmula especial)
+                const tons = parseFloat(currentMtow.toFixed(2));
+                let base = item.baseRate || 0;
+                const totalCost = base * 2 * 24 * tons * 1.16;
+
+                if (item.anchorCurrency === 'USD') {
+                    newPriceUSD = totalCost;
+                    newPriceMXN = exchangeRate ? parseFloat((totalCost * exchangeRate).toFixed(2)) : 0;
+                } else {
+                    newPriceMXN = totalCost;
+                    newPriceUSD = exchangeRate ? parseFloat((totalCost / exchangeRate).toFixed(2)) : 0;
+                }
+                newAnchor = item.anchorCurrency;
+                pricingMethod = 'UPDATE_OVERNIGHT';
+            }
+            else if ((isParking || isEmbarking) && currentMtow > 0) {
+                // CASO C.6: PARKING & EMBARKING (Fórmula especial)
+                const tons = parseFloat(currentMtow.toFixed(2));
+                let base = item.baseRate || 0;
+                const totalCost = base * 2 * tons * 1.16;
+
+                if (item.anchorCurrency === 'USD') {
+                    newPriceUSD = totalCost;
+                    newPriceMXN = exchangeRate ? parseFloat((totalCost * exchangeRate).toFixed(2)) : 0;
+                } else {
+                    newPriceMXN = totalCost;
+                    newPriceUSD = exchangeRate ? parseFloat((totalCost / exchangeRate).toFixed(2)) : 0;
+                }
+                newAnchor = item.anchorCurrency;
+                pricingMethod = isParking ? 'UPDATE_PARKING' : 'UPDATE_EMBARKING';
+            }
+            else if (isTua) {
+                // CASO C.7: TUA (Fórmula especial: Base MXN * 1.16)
+                let base = item.baseRate || 0;
+                if (item.anchorCurrency === 'USD') {
+                    const baseMXN = parseFloat((base * exchangeRate).toFixed(2));
+                    newPriceMXN = parseFloat((baseMXN * 1.16).toFixed(2));
+                    newPriceUSD = exchangeRate ? parseFloat((newPriceMXN / exchangeRate).toFixed(2)) : 0;
+                } else {
+                    newPriceMXN = parseFloat((base * 1.16).toFixed(2));
+                    newPriceUSD = exchangeRate ? parseFloat((newPriceMXN / exchangeRate).toFixed(2)) : 0;
+                }
+                newAnchor = item.anchorCurrency;
+                pricingMethod = 'UPDATE_TUA';
+            }
             else if (isLandingFee && isGeneralAviation && currentMtow > 0) {
                 // CASO D: LANDING FEE (Recalcular con MTOW actual)
                 let base = item.baseRate || 0;
-                const totalCost = base * currentMtow * 1.16;
+                const tons = parseFloat(currentMtow.toFixed(2));
+                const totalCost = base * tons * 1.16;
 
                 if (item.anchorCurrency === 'USD') {
                     newPriceUSD = totalCost;
@@ -1138,9 +1249,6 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
     const handleUpdateItem = (index, field, value) => {
         if (!exchangeRate) return;
 
-        const newItems = [...items];
-        const item = newItems[index];
-
         if (field === 'scPercentage' && globalNoSc) {
             setGlobalNoSc(false);
         }
@@ -1148,23 +1256,30 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
             setGlobalNoVat(false);
         }
 
-        // Marcar que el precio fue editado manualmente
-        if (field === 'priceMXN' || field === 'priceUSD') {
-            item.manualPrice = true;
-        }
+        setItems(prevItems => {
+            const newItems = [...prevItems];
+            // IMPORTANTE: Crear copia del objeto para no mutar estado directamente
+            const item = { ...newItems[index] };
 
-        item[field] = value;
+            // Marcar que el precio fue editado manualmente (Protege Landing Fee y Overnight)
+            if (field === 'priceMXN' || field === 'priceUSD') {
+                item.manualPrice = true;
+            }
 
-        if (field === 'priceMXN') {
-            item.priceUSD = parseFloat(Number((value || 0) / exchangeRate).toFixed(2));
-            item.anchorCurrency = 'MXN';
-        } else if (field === 'priceUSD') {
-            item.priceMXN = parseFloat(Number((value || 0) * exchangeRate).toFixed(2));
-            item.anchorCurrency = 'USD';
-        }
+            item[field] = value;
 
-        item.total = calculateItemTotal(item);
-        setItems(newItems);
+            if (field === 'priceMXN') {
+                item.priceUSD = parseFloat(Number((value || 0) / exchangeRate).toFixed(2));
+                item.anchorCurrency = 'MXN';
+            } else if (field === 'priceUSD') {
+                item.priceMXN = parseFloat(Number((value || 0) * exchangeRate).toFixed(2));
+                item.anchorCurrency = 'USD';
+            }
+
+            item.total = calculateItemTotal(item);
+            newItems[index] = item;
+            return newItems;
+        });
     };
 
     const handleSaveServices = (selectedServicesFromModal) => {
@@ -1187,6 +1302,10 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
             const isLandingFee = service.nombre_concepto_default.toUpperCase().includes('LANDING FEE');
             const isLandingPermitCoord = service.name === LANDING_PERMIT_COORD;
             const isRafCoordination = service.name.includes('RAF Coordination');
+            const isOvernight = service.name.toUpperCase().includes('OVERNIGHT (PER NIGHT)');
+            const isParking = service.name.toUpperCase().includes('PARKING FEE');
+            const isEmbarking = service.name.toUpperCase().includes('EMBARKING / DISEMBARKING');
+            const isTua = service.name.toUpperCase() === 'TUA';
 
             // --- NUEVO: LÓGICA DE PRECIO ESPECIAL 
             const serviceID = service.id || service.id_concepto_std; // Aseguramos el ID
@@ -1235,7 +1354,8 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
             }
             // 3. Landing Fee con MTOW (Estándar)
             else if (isLandingFee && isGeneralAviation && currentMtow > 0) {
-                const calculatedBase = rawRate * currentMtow * 1.16;
+                const tons = parseFloat(currentMtow.toFixed(2));
+                const calculatedBase = rawRate * tons * 1.16;
                 if (isUSD) {
                     priceUSD = parseFloat(calculatedBase.toFixed(2));
                     priceMXN = exchangeRate ? parseFloat((calculatedBase * exchangeRate).toFixed(2)) : 0;
@@ -1260,6 +1380,41 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                 }
                 priceMXN = parseFloat((priceUSD * exchangeRate).toFixed(2));
                 anchorCurrency = 'USD';
+            }
+            // 4.5 Overnight (Fórmula especial)
+            else if (isOvernight && currentMtow > 0) {
+                const tons = parseFloat(currentMtow.toFixed(2));
+                const calculatedBase = rawRate * 2 * 24 * tons * 1.16;
+                if (isUSD) {
+                    priceUSD = parseFloat(calculatedBase.toFixed(2));
+                    priceMXN = exchangeRate ? parseFloat((calculatedBase * exchangeRate).toFixed(2)) : 0;
+                } else {
+                    priceMXN = parseFloat(calculatedBase.toFixed(2));
+                    priceUSD = exchangeRate ? parseFloat((calculatedBase / exchangeRate).toFixed(2)) : 0;
+                }
+            }
+            // 4.6 Parking & Embarking (Fórmula especial)
+            else if ((isParking || isEmbarking) && currentMtow > 0) {
+                const tons = parseFloat(currentMtow.toFixed(2));
+                const calculatedBase = rawRate * 2 * tons * 1.16;
+                if (isUSD) {
+                    priceUSD = parseFloat(calculatedBase.toFixed(2));
+                    priceMXN = exchangeRate ? parseFloat((calculatedBase * exchangeRate).toFixed(2)) : 0;
+                } else {
+                    priceMXN = parseFloat(calculatedBase.toFixed(2));
+                    priceUSD = exchangeRate ? parseFloat((calculatedBase / exchangeRate).toFixed(2)) : 0;
+                }
+            }
+            // 4.7 TUA (Fórmula especial)
+            else if (isTua) {
+                if (isUSD) {
+                    const baseMXN = parseFloat((rawRate * exchangeRate).toFixed(2));
+                    priceMXN = parseFloat((baseMXN * 1.16).toFixed(2));
+                    priceUSD = exchangeRate ? parseFloat((priceMXN / exchangeRate).toFixed(2)) : 0;
+                } else {
+                    priceMXN = parseFloat((rawRate * 1.16).toFixed(2));
+                    priceUSD = exchangeRate ? parseFloat((priceMXN / exchangeRate).toFixed(2)) : 0;
+                }
             }
             // 5. LÓGICA NORMAL (Default BD)
             else {
