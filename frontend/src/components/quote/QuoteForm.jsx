@@ -5,7 +5,7 @@ import { jwtDecode } from 'jwt-decode';
 import Calculator from '../features/Calculator.jsx';
 
 
-const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange, exchangeRate, onExchangeRateChange, isReadOnly, onDataLoaded, globalNoSc, globalNoVat, onGlobalNoScChange, onGlobalNoVatChange, onCaaChange, onMtowChange, onCategoryFeeChange, onClassificationChange }, ref) => {
+const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange, exchangeRate, onExchangeRateChange, isReadOnly, onDataLoaded, globalNoSc, globalNoVat, onGlobalNoScChange, onGlobalNoVatChange, onCaaChange, onMtowChange, onCategoryFeeChange, onClassificationChange, onFlightTypeChange, onCustomerChange }, ref) => {
     const [clientes, setClientes] = useState([]);
     const [aeropuertos, setAeropuertos] = useState([]);
     const [clientesAeronaves, setClientesAeronaves] = useState([]); 
@@ -512,6 +512,7 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
         }
     }, [mtowValue, unit, onMtowChange]);
 
+  
     // UseEffect para detectar cambios en la categoría de operación (flightType)
     useEffect(() => {
         // Buscamos el objeto completo de la categoría seleccionada
@@ -519,15 +520,19 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
             c => c.nombre_cat_operacion === flightType
         );
 
-        // Si existe, sacamos la tarifa (o 0 si no tiene)
+        // 1. Avisamos de la tarifa (Lógica existente)
         const fee = selectedCatObj ? parseFloat(selectedCatObj.tarifa_land_permit_coord) || 0 : 0;
-        
-        // Avisamos al padre del nuevo costo a aplicar
         if (onCategoryFeeChange) {
             onCategoryFeeChange(fee);
         }
 
-    }, [flightType, categoriasOperaciones, onCategoryFeeChange]);
+        // 2. NUEVO: Avisamos del ID de la categoría para los precios especiales
+        if (onFlightTypeChange) {
+            const catId = selectedCatObj ? selectedCatObj.id_cat_operacion : null;
+            onFlightTypeChange(catId);
+        }
+
+    }, [flightType, categoriasOperaciones, onCategoryFeeChange, onFlightTypeChange]);
 
     // Cuando se desmarca el checkbox, si no hay fecha, se establece la de hoy.
     const handleNoEtaChange = (e) => {
@@ -641,6 +646,9 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
             if (customer) {  
                 setSelectedCustomer(customer);
                 
+                if (onCustomerChange) {
+                onCustomerChange(customer);
+                 }
                 // --- Cargar Matrículas del Cliente ---
                 const customerAircraftLinks = clientesAeronaves.filter(
                     registration => registration.id_cliente === customer.id_cliente
@@ -668,6 +676,10 @@ const QuoteForm = forwardRef(({ onAddItem, onOpenServiceModal, onSelectionChange
                 }
              
             } else{
+
+                if (onCustomerChange) {
+                onCustomerChange(null);
+                }
 
                 //El cliente no fue encontrado, es un nombre nuevo.
                 // 'selectedCustomer' se queda como null.

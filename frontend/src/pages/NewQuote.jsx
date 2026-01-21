@@ -46,6 +46,22 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
     const [isCaaMember, setIsCaaMember] = useState(false);
     const [currentMtow, setCurrentMtow] = useState(0);
 
+    const [clientSpecialPrices, setClientSpecialPrices] = useState([]); 
+
+    const [currentOpCatID, setCurrentOpCatID] = useState(null);
+
+    const [customScRate, setCustomScRate] = useState(null); 
+
+    // CONFIGURACIÓN: Lista de clientes con SC especial 
+    const CLIENTS_WITH_SPECIAL_SC = {
+        '15': 0.15,  // ID de REVA
+        '16': 0.06,  // ID AEG ICE
+        '18': 0.12,  // ID ALE
+        '19': 0.08,  // ID UAS
+        '20': 0.06,  // ID GLOBAL X
+        '21': 0.12   // ID PRIME JET
+    };
+
     // Nuevos estados para Landing Permit Coordination
     const LANDING_PERMIT_COORD = 'Landing Permit Coordination';
     const [isGeneralAviation, setIsGeneralAviation] = useState(false);
@@ -57,6 +73,13 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
         vat: 0,
         total: 0,
     });
+
+ // Callback para recibir el ID desde QuoteForm
+    const handleFlightTypeChange = useCallback((id) => {
+        console.log("Categoría cambiada, Nuevo ID:", id); // Para depuración
+        setCurrentOpCatID(id);
+    }, []);
+
 
     // Callback para recibir la tarifa desde QuoteForm
     const handleCategoryFeeChange = useCallback((fee) => {
@@ -83,11 +106,22 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
 
         const cost = quantity * priceUSD;
         const sCharge = cost * scPercentage;
-        const vat = sCharge * vatPercentage;
+
+        // --- CAMBIO: Si SC es 0, el VAT se calcula sobre el Costo ---
+        const baseForVat = (scPercentage === 0) ? cost : sCharge;
+        const vat = baseForVat * vatPercentage;
+     
         const itemTotal = parseFloat((cost + sCharge + vat).toFixed(2));
 
         return itemTotal;
     };
+
+    // Helper: Determina el porcentaje SC que debería aplicar en este momento
+    const getApplicableScPercentage = useCallback(() => {
+        if (globalNoSc) return 0;                 // Prioridad 1: Casilla Global 0%
+        if (customScRate !== null) return customScRate; // Prioridad 2: Tarifa Especial Cliente (15%)
+        return isCaaMember ? 0.10 : 0.18;         // Prioridad 3: CAA (10%) o Standard (18%)
+    }, [globalNoSc, customScRate, isCaaMember]);
 
     useEffect(() => {
         if (quoteId) {
@@ -121,6 +155,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                         }
 
                         return {
+                            id: servicio.id_concepto_std || null,
                             description: servicio.nombre_servicio,
                             category: servicio.nombre_cat_concepto,
                             quantity: parseFloat(servicio.cantidad) || 0,
@@ -246,7 +281,59 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
         } else if (previewingQuote?.isClone) {
             setIsReadOnly(false);
             setOnNewQuoteBlocked(true);
-            setItems(previewingQuote.items || []);
+
+            // 1. Obtener ID y Configurar el Estado Global (Para servicios NUEVOS)
+            const cloneCustomerId = previewingQuote.selectedCustomer?.id_cliente || previewingQuote.customer;
+            
+            if (cloneCustomerId) {
+                const specialRate = CLIENTS_WITH_SPECIAL_SC[String(cloneCustomerId)];
+                if (specialRate !== undefined) {
+                    // Esto asegura que si agregas un item NUEVO, nazca con el 12%, 15%, etc.
+                    setCustomScRate(specialRate); 
+                }
+            }
+
+            // 2. Hidratar items (RESPETANDO LO GUARDADO)
+            const hydratedItems = (previewingQuote.items || []).map(item => {
+                
+                const isExempt = item.scPercentage === 0;
+
+                // CORRECCIÓN: 
+                // Ya no forzamos "targetSc = initialCloneScRate".
+                // Confiamos ciegamente en lo que viene guardado en el item.
+                const targetSc = parseFloat(item.scPercentage); 
+
+                return {
+                    ...item,
+                    isSnapshot: false,   
+                    
+                    // IMPORTANTE: manualPrice: true protege estos valores de los Efectos Maestros
+                    // hasta que cambies de cliente.
+                    manualPrice: true, 
+                    
+                    id: item.id || null ,
+                    isScExempt: isExempt,
+                    noSc: isExempt,
+                    
+                    // Usamos el porcentaje original guardado, sin tocarlo.
+                    scPercentage: targetSc 
+                };
+            });
+
+            setItems(hydratedItems);
+
+           
+            // Recuperamos el ID del cliente del objeto clonado
+            if (cloneCustomerId) {
+                console.log("Cargando precios especiales para clonación, Cliente ID:", cloneCustomerId);
+                axios.get(`http://localhost:3000/api/clientes/${cloneCustomerId}/servicios-especiales`)
+                    .then(res => {
+                        console.log("Precios especiales cargados (Clone):", res.data);
+                        setClientSpecialPrices(res.data);
+                    })
+                    .catch(err => console.error("Error cargando precios especiales en clon:", err));
+            }         
+
             setExchangeRate(previewingQuote.exchangeRate);
             setQuoteDataForPreview(previewingQuote);
             setIsFormReady(false);
@@ -325,7 +412,10 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
 
             const rawCost = quantity * priceUSD;
             const rawSCharge = rawCost * scPercentage;
-            const rawVat = rawSCharge * vatPercentage;
+
+            // --- CAMBIO: Lógica condicional para el VAT ---
+            const baseForVat = (scPercentage === 0) ? rawCost : rawSCharge;
+            const rawVat = baseForVat * vatPercentage;
 
             const costRounded = parseFloat(rawCost.toFixed(2));
             const sChargeRounded = parseFloat(rawSCharge.toFixed(2));
@@ -399,70 +489,80 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
         );
     }, [globalNoVat]);
 
-    const prevIsCaaMemberRef = useRef(isCaaMember);
+    // Efecto: Cuando cambia el cliente seleccionado, cargamos sus precios especiales
     useEffect(() => {
-        if (prevIsCaaMemberRef.current !== isCaaMember && !globalNoSc) {
-            setItems(prevItems =>
-                prevItems.map(item => {
-                    // Respetar servicios exentos
-                    if (item.isScExempt) return item;
+        // quoteFormRef nos da acceso al cliente seleccionado (id)
+        const currentFormData = quoteFormRef.current?.getAllFormData();
+        const customerId = currentFormData?.selectedCustomer?.id_cliente;
 
-                    if (isCaaMember && item.scPercentage === 0.18) {
-                        const updatedItem = { ...item, scPercentage: 0.10 };
-                        updatedItem.total = calculateItemTotal(updatedItem);
-                        return updatedItem;
-                    }
-                    if (!isCaaMember && item.scPercentage === 0.10) {
-                        const updatedItem = { ...item, scPercentage: 0.18 };
-                        updatedItem.total = calculateItemTotal(updatedItem);
-                        return updatedItem;
+        if (customerId) {
+            axios.get(`http://localhost:3000/api/clientes/${customerId}/servicios-especiales`)
+                .then(res => {
+                    setClientSpecialPrices(res.data);
+                })
+                .catch(err => console.error(err));
+        } else {
+            setClientSpecialPrices([]);
+        }
+    },
+     
+    [quoteFormRef]);
+
+    const prevIsCaaMemberRef = useRef(isCaaMember);
+
+    // Efecto unificado para actualizar SC cuando cambie CUALQUIER factor (CAA, Cliente Especial, Checkbox Global)
+    useEffect(() => {
+        const targetSc = getApplicableScPercentage(); 
+
+        setItems(prevItems =>
+            prevItems.map(item => {
+                // 1. Si el item es exento por naturaleza (BD), se queda en 0 siempre.
+                if (item.isScExempt) {
+                    // Solo actualizamos si por error tiene algo diferente a 0
+                    if (item.scPercentage !== 0 || !item.noSc) {
+                         const fixedItem = { ...item, scPercentage: 0, noSc: true };
+                         fixedItem.total = calculateItemTotal(fixedItem);
+                         return fixedItem;
                     }
                     return item;
-                })
-            );
-        }
-        prevIsCaaMemberRef.current = isCaaMember;
-    }, [isCaaMember, globalNoSc]);
+                }
+
+                if (item.manualPrice && !globalNoSc) {
+                    return item;
+                }
+
+                // 3. ACTUALIZACIÓN AUTOMÁTICA (15%, 18%, 10%)
+                // Si el porcentaje ya es el correcto, no hacemos nada (optimización)
+                if (item.scPercentage === targetSc && item.noSc === (targetSc === 0)) {
+                    return item;
+                }
+
+                const updatedItem = {
+                    ...item,
+                    scPercentage: targetSc,
+                    noSc: targetSc === 0,
+                };
+                
+                updatedItem.total = calculateItemTotal(updatedItem);
+                return updatedItem;
+            })
+        );
+    }, [isCaaMember, globalNoSc, customScRate, getApplicableScPercentage]);
 
     const handleGlobalCheckboxChange = (setter, value) => {
-        setter(value);
-        
-        if (setter === setGlobalNoSc) {
-            if (value) {
-                setItems(prevItems =>
-                    prevItems.map(item => {
-                        // Respetar servicios exentos (ya tienen 0)
-                        if (item.isScExempt) return item;
-
-                        const updatedItem = {
-                            ...item,
-                            scPercentage: 0,
-                            noSc: true,
-                        };
-                        updatedItem.total = calculateItemTotal(updatedItem);
-                        return updatedItem;
-                    })
-                );
-            } else {
-                setItems(prevItems =>
-                    prevItems.map(item => {
-                        // Respetar servicios exentos (mantener en 0)
-                        if (item.isScExempt) return item;
-
-                        const targetSc = isCaaMember ? 0.10 : 0.18;
-                        const updatedItem = {
-                            ...item,
-                            scPercentage: targetSc,
-                            noSc: false,
-                        };
-                        updatedItem.total = calculateItemTotal(updatedItem);
-                        return updatedItem;
-                    })
-                );
-            }
+        setter(value); 
+        // Al hacer setter(value), cambia el estado (ej. globalNoSc), 
+        if (value === true) { // Solo si estamos ACTIVANDO la casilla
+             setItems(prevItems => prevItems.map(item => ({
+                ...item,
+                // Si quieres que al marcar "No SC" se respete el precio base pero se quite el SC:
+                noSc: true,
+                scPercentage: 0
+            })));
         }
     };
 
+    /*
     // useEffect para actualizar Landing Permit Coordination cuando cambia categoryCoordFee
     useEffect(() => {
         setItems(prevItems => 
@@ -491,8 +591,9 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                 return item;
             })
         );
-    }, [categoryCoordFee, exchangeRate, isGeneralAviation]);
+    }, [categoryCoordFee, exchangeRate, isGeneralAviation]);  */
 
+    /*
     // useEffect para actualizar RAF Coordination cuando cambia MTOW o Clasificación
     useEffect(() => {
         setItems(prevItems => 
@@ -553,6 +654,8 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
         );
     }, [currentClassificationId, rafTariffs, exchangeRate, isCaaMember]); // Se asegura que reaccione a isCaaMember
 
+   */
+
     const fetchServices = async (id_aeropuerto, id_fbo, fboNameOrAviationType) => {
         if (isReadOnly) return;
 
@@ -577,56 +680,110 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                 const defaultServices = serviciosData.filter(s => s.es_default);
 
                 const newItemsToAdd = defaultServices.map(s => {
-                    const isUSD = s.divisa === 'USD';
-                    const rawRate = parseFloat(s.tarifa_servicio) || 0;
-                    const isExempt = !!s.exento_sc;
+                    // 1. DECLARACIÓN DE VARIABLES AL INICIO (Para evitar ReferenceError)
+                    const isUSDDefault = s.divisa === 'USD';
+                    let rawRate = parseFloat(s.tarifa_servicio) || 0;
+                    
+                    // Inicializamos las variables de precio y moneda
+                    let priceMXN = 0;
+                    let priceUSD = 0;
+                    let anchorCurrency = isUSDDefault ? 'USD' : 'MXN';
+                    let pricingMethod = 'DEFAULT'; // Para controlar la lógica final
 
-                    // Detectar servicios especiales
+                    // 2. IDENTIFICACIÓN DE SERVICIOS
+                    const isExempt = !!s.exento_sc;
                     const isLandingFee = s.nombre_concepto_default.toUpperCase().includes('LANDING FEE');
                     const isLandingPermitCoord = s.nombre_concepto_default === LANDING_PERMIT_COORD;
                     const isRafCoordination = s.nombre_concepto_default.includes('RAF Coordination');
 
-                    let priceMXN = 0;
-                    let priceUSD = 0;
-                    let anchorCurrency = isUSD ? 'USD' : 'MXN';
+                    const serviceID = s.id_concepto_std;
+                    const currentFlightTypeData = quoteFormRef.current?.getFormData(); 
+                    const currentOpCatID = currentFlightTypeData?.flightType; 
 
-                    // LÓGICA ESPECIAL: Landing Permit Coordination
-                    if (isLandingPermitCoord && isGenAv && categoryCoordFee > 0) {
+                    // --- 3. BUSCAR PRECIO ESPECIAL (LÓGICA MEJORADA) ---
+                    // Paso A: Filtramos todas las reglas para ESTE servicio específico
+                    const serviceRules = clientSpecialPrices.filter(sp => sp.id_concepto_std == serviceID);
+
+                    // Paso B: Intentamos encontrar una coincidencia EXACTA de categoría (Prioridad 1)
+                    let specialPriceObj = serviceRules.find(sp => sp.id_cat_operacion == currentOpCatID);
+
+                    // Paso C: Si no hay exacta, buscamos la regla GLOBAL/COMODÍN (Prioridad 2)
+                    if (!specialPriceObj) {
+                        specialPriceObj = serviceRules.find(sp => sp.id_cat_operacion == null);
+                    }
+
+                    // --- NUEVA LÓGICA DE DECISIÓN ---
+                    let useSpecialPrice = false;
+                    if (specialPriceObj) {
+                        const spCost = parseFloat(specialPriceObj.costo_servicio);
+                        // Si cuesta dinero O es gratis pero NO es RAF (ej. Landing Permit) -> Usar especial
+                        // Si es RAF y cuesta 0 -> Ignorar especial (Ir a MTOW)
+                        if (spCost > 0 || !isRafCoordination) {
+                            useSpecialPrice = true;
+                        }
+                    }
+
+                    // ============================================================
+                    // 4. LÓGICA DE CASCADA DE PRECIOS
+                    // ============================================================
+
+                    // NIVEL 1: CLIENTE ESPECIAL (Tiene prioridad sobre todo)
+                    if (useSpecialPrice) {
+                        const specialCost = parseFloat(specialPriceObj.costo_servicio);
+                        
+                        // Si es cliente especial, generalmente la tarifa es en USD fija
+                        priceUSD = specialCost;
+                        priceMXN = exchangeRate ? parseFloat((priceUSD * exchangeRate).toFixed(2)) : 0;
+                        anchorCurrency = 'USD';
+                        pricingMethod = 'SPECIAL_CLIENT';
+                        
+                        // Actualizamos el rawRate para referencia
+                        rawRate = specialCost;
+                    }
+                    // NIVEL 2: LANDING PERMIT COORDINATION (Lógica de Categoría)
+                    else if (isLandingPermitCoord && isGenAv && categoryCoordFee > 0) {
                         priceUSD = categoryCoordFee;
                         priceMXN = exchangeRate ? parseFloat((priceUSD * exchangeRate).toFixed(2)) : 0;
                         anchorCurrency = 'USD';
+                        pricingMethod = 'CATEGORY_FEE';
                     }
-                    // LÓGICA ESPECIAL: Landing Fee con MTOW
+                    // NIVEL 3: LANDING FEE (Lógica MTOW)
                     else if (isLandingFee && isGenAv && currentMtow > 0) {
-                        const calculatedBase = rawRate * currentMtow * 1.16;
-                        if (isUSD) {
+                        const calculatedBase = rawRate * currentMtow * 1.16; // Fórmula base
+                        if (isUSDDefault) {
                             priceUSD = parseFloat(calculatedBase.toFixed(2));
                             priceMXN = exchangeRate ? parseFloat((calculatedBase * exchangeRate).toFixed(2)) : 0;
                         } else {
                             priceMXN = parseFloat(calculatedBase.toFixed(2));
                             priceUSD = exchangeRate ? parseFloat((calculatedBase / exchangeRate).toFixed(2)) : 0;
                         }
+                        pricingMethod = 'MTOW_CALC';
                     }
-                    // LÓGICA ESPECIAL: RAF Coordination
+                    // NIVEL 4: RAF COORDINATION (Lógica MTOW / Clasificación)
                     else if (isRafCoordination) {
+                        let calculatedRafUSD = 0;
+                        
                         if (currentClassificationId) {
                             const tariff = rafTariffs.find(t => 
                                 parseInt(t.id_clasificacion) === parseInt(currentClassificationId)
                             );
                             if (tariff) {
                                 if (isCaaMember) {
-                                    priceUSD = parseFloat(tariff.costo_caa_usd) || 0;
+                                    calculatedRafUSD = parseFloat(tariff.costo_caa_usd) || 0;
                                 } else {
-                                    priceUSD = parseFloat(tariff.costo_usd) || 0;
+                                    calculatedRafUSD = parseFloat(tariff.costo_usd) || 0;
                                 }
                             }
                         }
+                        
+                        priceUSD = calculatedRafUSD;
                         priceMXN = exchangeRate ? parseFloat((priceUSD * exchangeRate).toFixed(2)) : 0;
                         anchorCurrency = 'USD';
+                        pricingMethod = 'RAF_MTOW';
                     }
-                    // LÓGICA NORMAL
+                    // NIVEL 5: PRECIO DEFAULT (Base de datos)
                     else {
-                        if (isUSD) {
+                        if (isUSDDefault) {
                             priceUSD = parseFloat(rawRate.toFixed(2));
                             priceMXN = exchangeRate ? parseFloat((priceUSD * exchangeRate).toFixed(2)) : 0;
                         } else {
@@ -635,16 +792,21 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                         }
                     }
 
+                    // 5. CÁLCULO DE TOTALES E IMPUESTOS
                     const quantity = 1;
-                    const scPercentage = isExempt ? 0 : (globalNoSc ? 0 : (isCaaMember ? 0.10 : 0.18));
+                    const scPercentage = isExempt ? 0 : getApplicableScPercentage();
                     const vatPercentage = globalNoVat ? 0 : 0.16;
 
                     const cost = quantity * priceUSD;
                     const serviceCharge = cost * scPercentage;
-                    const vat = serviceCharge * vatPercentage;
+
+                    const baseForVat = (scPercentage === 0) ? cost : serviceCharge;
+                    const vat = baseForVat * vatPercentage;
+
                     const total = cost + serviceCharge + vat;
 
                     return {
+                        id: s.id_concepto_std,
                         description: s.nombre_concepto_default,
                         category: s.nombre_cat_concepto,
                         quantity,
@@ -655,9 +817,10 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                         noSc: isExempt || globalNoSc,
                         noVat: globalNoVat,
                         anchorCurrency,
-                        baseRate: rawRate,
+                        baseRate: rawRate, // Guardamos la tarifa base original o calculada
                         total,
                         isScExempt: isExempt,
+                        pricingMethod // Útil para debugging, saber de dónde salió el precio
                     };
                 });
 
@@ -667,6 +830,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                 console.error('Error fetching FBO services:', error);
             }
         } 
+
         // Caso 2: Aviación seleccionada manualmente (aeropuerto no existe en BD)
         else if (fboNameOrAviationType === 'Aviación General' || fboNameOrAviationType === 'Aviación Comercial') {
             try {
@@ -688,7 +852,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                     const priceMXN = 0;
                     const priceUSD = 0;
                     const quantity = 1;
-                    const scPercentage = isExempt ? 0 : (globalNoSc ? 0 : (isCaaMember ? 0.10 : 0.18));
+                    const scPercentage = isExempt ? 0 : getApplicableScPercentage();
                     const vatPercentage = globalNoVat ? 0 : 0.16;
 
                     const cost = quantity * priceUSD;
@@ -697,6 +861,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                     const total = cost + serviceCharge + vat;
 
                     return {
+                        id: s.id_concepto_std, // IMPORTANTE: Agregar el ID para que funcionen los precios especiales
                         description: s.nombre_concepto_default,
                         category: s.nombre_cat_concepto,
                         quantity,
@@ -772,6 +937,156 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
         );
     }, [exchangeRate]);
 
+    // EFECTO MAESTRO: Recalcular precios en tiempo real
+    useEffect(() => {
+
+        if (isReadOnly) return;
+
+        setItems(prevItems => prevItems.map(item => {
+            // 1. Si es manual, ignorar
+            if (item.manualPrice) return item;
+
+            // 2. Identificar servicio
+            let serviceId = item.id;
+
+            // AUTO-REPARACIÓN DE ID:
+            // Si el item viene de un clon/load y perdió su ID, lo buscamos por nombre
+            if (!serviceId && allServices.length > 0) {
+                const found = allServices.find(s => s.nombre_concepto_default === item.description);
+                if (found) {
+                    serviceId = found.id_concepto_std;
+                }
+            }
+
+            const isLandingFee = item.description.toUpperCase().includes('LANDING FEE');
+            const isLandingPermitCoord = item.description === LANDING_PERMIT_COORD;
+            const isRafCoordination = item.description.includes('RAF Coordination');
+
+            // 3. BUSCAR PRECIO ESPECIAL DE CLIENTE
+            // Paso A: Filtramos reglas de este servicio
+            const serviceRules = clientSpecialPrices.filter(sp => sp.id_concepto_std == serviceId);
+
+            // Paso B: Buscamos coincidencia EXACTA primero (Ej. Ambulancia)
+            let specialPriceObj = serviceRules.find(sp => sp.id_cat_operacion == currentOpCatID);
+
+            // Paso C: Si no hay, buscamos la GLOBAL (null)
+            if (!specialPriceObj) {
+                specialPriceObj = serviceRules.find(sp => sp.id_cat_operacion == null);
+            }
+
+            // --- NUEVA LÓGICA DE DECISIÓN ---
+            let useSpecialPrice = false;
+            if (specialPriceObj) {
+                const spCost = parseFloat(specialPriceObj.costo_servicio);
+                
+                // REGLA DE ORO:
+                // Usamos el precio especial si:
+                // A) El costo es mayor a 0 (ej. $350, $550)
+                // B) O el costo es 0 PERO NO ES RAF (ej. Landing Permit que es gratis)
+                if (spCost > 0 || !isRafCoordination) {
+                    useSpecialPrice = true;
+                }
+                // Si es RAF y el costo es 0, 'useSpecialPrice' se queda en false
+                // y el código caerá automáticamente al "else if (isRafCoordination)" de abajo.
+            }
+
+            // Variables para el nuevo precio
+            let newPriceUSD = 0;
+            let newPriceMXN = 0;
+            let newAnchor = item.anchorCurrency;
+            let pricingMethod = 'UPDATE_DEFAULT';
+
+            // 4. LÓGICA DE RE-CÁLCULO
+            
+            if (useSpecialPrice) {
+                // CASO A: TIENE PRECIO ESPECIAL (Prioridad Máxima)
+                newPriceUSD = parseFloat(specialPriceObj.costo_servicio);
+                newPriceMXN = exchangeRate ? parseFloat((newPriceUSD * exchangeRate).toFixed(2)) : 0;
+                newAnchor = 'USD';
+                pricingMethod = 'UPDATE_SPECIAL';
+            } 
+            else if (isLandingPermitCoord) {
+                // CASO B: LANDING PERMIT (Por Categoría)
+                if (isGeneralAviation) {
+                    // Si es General: Usamos el precio de la categoría (así sea 700, 400 o 0)
+                    newPriceUSD = categoryCoordFee;
+                } else {
+                    // Si es Comercial/FBO: La regla es que NO aplica tarifa de categoría.
+                    // Forzamos 0 para limpiar cualquier precio "pegado" anterior.
+                    newPriceUSD = 0;
+                }
+                newPriceMXN = exchangeRate ? parseFloat((newPriceUSD * exchangeRate).toFixed(2)) : 0;
+                newAnchor = 'USD';
+                pricingMethod = 'UPDATE_CAT_FEE';
+            }
+            else if (isRafCoordination) {
+                // CASO C: RAF (Por Tabla MTOW / Clasificación)
+                let calculatedRaf = 0;
+                // Solo calculamos si hay una clasificación válida seleccionada
+                if (currentClassificationId && rafTariffs.length > 0) {
+                    const tariff = rafTariffs.find(t => parseInt(t.id_clasificacion) === parseInt(currentClassificationId));
+                    if (tariff) {
+                        calculatedRaf = isCaaMember ? parseFloat(tariff.costo_caa_usd) : parseFloat(tariff.costo_usd);
+                    }
+                }
+                newPriceUSD = calculatedRaf;
+                newPriceMXN = exchangeRate ? parseFloat((newPriceUSD * exchangeRate).toFixed(2)) : 0;
+                newAnchor = 'USD';
+                pricingMethod = 'UPDATE_RAF';
+            }
+            else if (isLandingFee && isGeneralAviation && currentMtow > 0) {
+                // CASO D: LANDING FEE (Recalcular con MTOW actual)
+                let base = item.baseRate || 0;
+                const totalCost = base * currentMtow * 1.16;
+
+                if (item.anchorCurrency === 'USD') {
+                    newPriceUSD = totalCost;
+                    newPriceMXN = exchangeRate ? parseFloat((totalCost * exchangeRate).toFixed(2)) : 0;
+                } else {
+                    newPriceMXN = totalCost;
+                    newPriceUSD = exchangeRate ? parseFloat((totalCost / exchangeRate).toFixed(2)) : 0;
+                }
+                newAnchor = item.anchorCurrency;
+                pricingMethod = 'UPDATE_LANDING';
+            }
+            else {
+                // Si no aplica ninguna regla dinámica, dejamos el item como estaba
+                return item; 
+            }
+
+            // 5. RECALCULAR TOTALES
+            const quantity = parseFloat(item.quantity) || 0;
+            let finalPriceForCalc = newAnchor === 'USD' ? newPriceUSD : (newPriceMXN && exchangeRate ? newPriceMXN/exchangeRate : 0);
+            
+            const scPercentage = item.noSc ? 0 : (item.isScExempt ? 0 : (isCaaMember ? 0.10 : 0.18));
+            const vatPercentage = item.noVat ? 0 : item.vatPercentage;
+
+            const cost = quantity * finalPriceForCalc;
+            const serviceCharge = cost * scPercentage;
+            const vat = serviceCharge * vatPercentage;
+            const total = cost + serviceCharge + vat;
+
+            return {
+                ...item,
+                priceUSD: parseFloat(Number(newPriceUSD).toFixed(2)),
+                priceMXN: parseFloat(Number(newPriceMXN).toFixed(2)),
+                anchorCurrency: newAnchor,
+                scPercentage,
+                total: parseFloat(total.toFixed(2)),
+                pricingMethod
+            };
+        }));
+    }, [
+        clientSpecialPrices,      // Se dispara al cambiar Cliente
+        currentClassificationId,  // Se dispara al cambiar Avión
+        currentOpCatID,           // <--- AHORA SÍ: Se dispara al cambiar Categoría
+        categoryCoordFee,         
+        isCaaMember,              
+        currentMtow,              
+        exchangeRate,             
+        isGeneralAviation         
+    ]);
+
     const handleCaaChange = useCallback((isMember) => {
         setIsCaaMember(isMember);
     }, []);
@@ -782,7 +1097,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
             ? 'Additional Services General Aviation' 
             : 'Additional Services Commercial Aviation';
 
-        const initialSc = globalNoSc ? 0 : (isCaaMember ? 0.10 : 0.18);
+        const initialSc = getApplicableScPercentage();
 
         const newItem = {
             description: '',
@@ -873,17 +1188,52 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
             const isLandingPermitCoord = service.name === LANDING_PERMIT_COORD;
             const isRafCoordination = service.name.includes('RAF Coordination');
 
+            // --- NUEVO: LÓGICA DE PRECIO ESPECIAL 
+            const serviceID = service.id || service.id_concepto_std; // Aseguramos el ID
+            const currentFlightTypeData = quoteFormRef.current?.getFormData(); 
+            const currentOpCatID_Local = currentFlightTypeData?.flightType; 
+
+            // 1. Buscar reglas para este servicio
+            const serviceRules = clientSpecialPrices.filter(sp => sp.id_concepto_std == serviceID);
+            
+            // 2. Buscar coincidencia exacta o global
+            let specialPriceObj = serviceRules.find(sp => sp.id_cat_operacion == currentOpCatID_Local);
+            if (!specialPriceObj) {
+                specialPriceObj = serviceRules.find(sp => sp.id_cat_operacion == null);
+            }
+
+            // 3. Decidir si usamos precio especial
+            let useSpecialPrice = false;
+            if (specialPriceObj) {
+                const spCost = parseFloat(specialPriceObj.costo_servicio);
+                if (spCost > 0 || !isRafCoordination) {
+                    useSpecialPrice = true;
+                }
+            }
+
             let priceMXN = 0;
             let priceUSD = 0;
             let anchorCurrency = isUSD ? 'USD' : 'MXN';
 
-            // LÓGICA ESPECIAL: Landing Permit Coordination
-            if (isLandingPermitCoord && isGeneralAviation && categoryCoordFee > 0) {
-                priceUSD = categoryCoordFee;
+            // 1. PRECIO ESPECIAL (REVA, PCJ, ETC.)
+            if (useSpecialPrice) {
+                const specialCost = parseFloat(specialPriceObj.costo_servicio);
+                priceUSD = specialCost;
                 priceMXN = parseFloat((priceUSD * exchangeRate).toFixed(2));
                 anchorCurrency = 'USD';
             }
-            // LÓGICA ESPECIAL: Landing Fee con MTOW
+            // 2. Landing Permit Coordination (Estándar)
+            else if (isLandingPermitCoord) {
+                if (isGeneralAviation) {
+                    priceUSD = categoryCoordFee;
+                } else {
+                    priceUSD = 0; // Limpieza automática en Comercial
+                }
+                
+                priceMXN = parseFloat((priceUSD * exchangeRate).toFixed(2));
+                anchorCurrency = 'USD';
+            }
+            // 3. Landing Fee con MTOW (Estándar)
             else if (isLandingFee && isGeneralAviation && currentMtow > 0) {
                 const calculatedBase = rawRate * currentMtow * 1.16;
                 if (isUSD) {
@@ -894,24 +1244,24 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                     priceUSD = exchangeRate ? parseFloat((calculatedBase / exchangeRate).toFixed(2)) : 0;
                 }
             }
-            // LÓGICA ESPECIAL: RAF Coordination
+            // 4. RAF Coordination (Estándar MTOW)
             else if (isRafCoordination) {
                 if (currentClassificationId) {
                     const tariff = rafTariffs.find(t => 
                         parseInt(t.id_clasificacion) === parseInt(currentClassificationId)
                     );
-                            if (tariff) {
-                                if (isCaaMember) {
-                                    priceUSD = parseFloat(tariff.costo_caa_usd) || 0;
-                                } else {
-                                    priceUSD = parseFloat(tariff.costo_usd) || 0;
-                                }
-                            }
+                    if (tariff) {
+                        if (isCaaMember) {
+                            priceUSD = parseFloat(tariff.costo_caa_usd) || 0;
+                        } else {
+                            priceUSD = parseFloat(tariff.costo_usd) || 0;
+                        }
+                    }
                 }
                 priceMXN = parseFloat((priceUSD * exchangeRate).toFixed(2));
                 anchorCurrency = 'USD';
             }
-            // LÓGICA NORMAL
+            // 5. LÓGICA NORMAL (Default BD)
             else {
                 if (isUSD) {
                     priceUSD = parseFloat(rawRate.toFixed(2));
@@ -923,15 +1273,18 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
             }
 
             const quantity = 1;
-            const scPercentage = isExempt ? 0 : (globalNoSc ? 0 : (isCaaMember ? 0.10 : 0.18));
+            const scPercentage = isExempt ? 0 : getApplicableScPercentage();
             const vatPercentage = globalNoVat ? 0 : 0.16;
 
             const cost = quantity * priceUSD;
             const serviceCharge = cost * scPercentage;
-            const vat = serviceCharge * vatPercentage;
+
+            const baseForVat = (scPercentage === 0) ? cost : serviceCharge;
+            const vat = baseForVat * vatPercentage;
             const total = cost + serviceCharge + vat;
 
             return {
+                id: service.id || service.id_concepto_std, 
                 description: service.name,
                 category: service.description,
                 quantity,
@@ -1003,8 +1356,17 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                 const costo_mxn = parseFloat(Number(item.priceMXN || 0).toFixed(2));
                 const costo_usd = parseFloat(Number(item.priceUSD || 0).toFixed(2));
                 const s_cargo = parseFloat(Number(quantity * costo_usd * (item.scPercentage || 0)).toFixed(2));
-                const vat = parseFloat(Number(s_cargo * (item.vatPercentage || 0)).toFixed(2));
-                const total_usd = parseFloat(Number(item.total || 0).toFixed(2));
+
+                // --- CAMBIO AQUÍ ---
+                // Calculamos la base cruda antes de redondear para mayor precisión, o usamos los valores ya calculados
+                const rawCost = quantity * costo_usd;
+                const rawSc = rawCost * (item.scPercentage || 0);
+                const baseForVat = (item.scPercentage === 0) ? rawCost : rawSc;
+                const vat = parseFloat(Number(baseForVat * (item.vatPercentage || 0)).toFixed(2));
+
+                // Recalculamos el total final para asegurar consistencia
+                const total_usd = parseFloat((rawCost + rawSc + (baseForVat * (item.vatPercentage || 0))).toFixed(2));
+
 
                 return {
                     nombre_servicio: item.description,
@@ -1204,6 +1566,60 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
             };
         });
 
+    // Función que ejecutará QuoteForm cuando el usuario seleccione un cliente
+    // Función que ejecutará QuoteForm cuando el usuario seleccione un cliente
+    const handleCustomerSelect = (customer) => {
+        if (customer && customer.id_cliente) {
+            console.log("Cliente:", customer.nombre_cliente, "ID:", customer.id_cliente);
+            
+            // 1. Detectar si el cliente tiene una Tasa Especial (Ej. REVA = 0.15)
+            const customerIdStr = String(customer.id_cliente);
+            const specialRate = CLIENTS_WITH_SPECIAL_SC[customerIdStr];
+
+            // Definimos cuál será el porcentaje objetivo para los items NO exentos
+            // Si hay specialRate usalo, si no, usa la lógica estándar (10% CAA o 18% Normal)
+            const targetRate = specialRate !== undefined ? specialRate : (isCaaMember ? 0.10 : 0.18);
+
+            if (specialRate !== undefined) {
+                setCustomScRate(specialRate);
+            } else {
+                setCustomScRate(null);
+            }
+
+            // 2. Cargar servicios especiales (Base de datos)
+            axios.get(`http://localhost:3000/api/clientes/${customer.id_cliente}/servicios-especiales`)
+                .then(res => setClientSpecialPrices(res.data))
+                .catch(err => console.error(err));
+
+            // 3. ACTUALIZAR ITEMS (ROMPIENDO CANDADO MANUAL)
+            setItems(prevItems => prevItems.map(item => {
+                
+                // PROTECCIÓN CRÍTICA: 
+                // Si el item es exento por BD (isScExempt) O ya estaba en 0% (y no fue un error manual),
+                // debe mantenerse en 0% sin importar qué cliente sea.
+                const shouldBeExempt = item.isScExempt || (item.scPercentage === 0 && !item.manualPrice);
+
+                return {
+                    ...item,
+                    // A) Rompemos el candado manual para que se recalculen los PRECIOS BASE (USD/MXN)
+                    manualPrice: false, 
+                    
+                    // B) Recalculamos el SC:
+                    // Si es exento (Agent, APIS) -> Se queda en 0.
+                    // Si NO es exento -> Toma la tasa del cliente (15% o 18%).
+                    scPercentage: shouldBeExempt ? 0 : targetRate,
+                    noSc: shouldBeExempt
+                };
+            }));
+
+        } else {
+            // Si borran el cliente, limpiamos todo
+            setClientSpecialPrices([]);
+            setCustomScRate(null);
+        }
+    };
+
+   
     return (
         <div className="bg-blue-dark p-8">
             <div className="bg-gray-50 min-h-screen rounded-lg shadow-lg p-6">
@@ -1234,6 +1650,8 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                         onGlobalNoVatChange={(e) => handleGlobalCheckboxChange(setGlobalNoVat, e.target.checked)}
                         onCategoryFeeChange={handleCategoryFeeChange}
                         onClassificationChange={handleClassificationChange}
+                        onCustomerChange={handleCustomerSelect}
+                        onFlightTypeChange={handleFlightTypeChange}
                     />
                     <QuoteTable
                         items={items}

@@ -94,7 +94,7 @@ INSERT INTO categorias_operaciones (id_cat_operacion, nombre_cat_operacion, tari
 (4, 'DIPLOMATIC / MILITARY',0),
 (5, 'PRIVATE / FAR PART 91', 250),
 (6, 'CAA / PRIVATE / FAR PART 91',0),
-(7, 'FLETAMENTO / FAR PART 121', 1000),
+(7, 'FLETAMENTO / FAR PART 121', 700),
 (8, 'APIS',0),
 (9, 'TRANSPORTATION',0),
 (10, 'CATERING',0),
@@ -609,8 +609,8 @@ INSERT INTO conceptos_default (id_concepto_std, nombre_concepto_default, costo_c
 (24, 'Dugaem', 0.00,'MXN', false, false, 5),
 (25, 'Fuel Supervision', 0.00,'MXN', false,false, 5),
 --APIS (6) --FBO
-(26, 'APIS National', 50.00,'USD', false, false,6),
-(27, 'APIS International', 50.00,'USD', false, false,6),
+(26, 'APIS National', 50.00,'USD', false, true,6),
+(27, 'APIS International', 50.00,'USD', false, true,6),
 --ADDTIONAL SERVICES (7) --FBO
 (28, 'Vehicle Access To Ramp', 0.00,'MXN', false, false,7),
 (29, 'Extension Time', 0.00,'MXN', false,false, 7),
@@ -646,8 +646,8 @@ INSERT INTO conceptos_default (id_concepto_std, nombre_concepto_default, costo_c
 (53, 'Dugaem', 0.00,'MXN', false, false,13),
 (54, 'Fuel Supervision', 0.00,'MXN', false, false,13),
 --APIS (14) --AV.GRAL
-(55, 'APIS National', 50.00,'USD', false, false,14),
-(56, 'APIS International', 50.00,'USD', false, false,14),
+(55, 'APIS National', 50.00,'USD', false, true,14),
+(56, 'APIS International', 50.00,'USD', false, true,14),
 --ADDITIONAL SERVICES (15) --AV.GRAL
 (57, 'Vehicle Access To Ramp', 0.00, 'MXN',false,false, 15),
 (58, 'Extension Time', 0.00, 'MXN',false,false, 15),
@@ -686,8 +686,8 @@ INSERT INTO conceptos_default (id_concepto_std, nombre_concepto_default, costo_c
 (85, 'Dugaem', 0.00,'MXN', false, false,21),
 (86, 'Fuel Supervision', 0.00,'MXN', false, false,21),
 --APIS (22) --AV.COM
-(87, 'APIS National', 50.00,'USD', false,false, 22),
-(88, 'APIS International', 50.00,'USD', false, false,22),
+(87, 'APIS National', 50.00,'USD', false, true, 22),
+(88, 'APIS International', 50.00,'USD', false, true, 22),
 --ADDITIONAL SERVICES (23) --AV.COM
 (89, 'Vehicle Access To Ramp', 0.00, 'MXN',false,false, 23),
 (90, 'Extension Time', 0.00, 'MXN',false, false,23),
@@ -735,7 +735,7 @@ INSERT INTO tarifas_raf_mtow (min_weight, max_weight, costo_usd, costo_caa_usd, 
 
 
 -- Servicios Especiales con costo fijo por cliente
-INSERT INTO servicios_cliente_especiales (id_servicio_especial, id_cliente, id_concepto_std, id_cat_operacion, costo_servicio) VALUES
+INSERT INTO servicios_cliente_especiales (id_cliente, id_concepto_std, id_cat_operacion, costo_servicio) VALUES
 
 -- CLIENTE: PCJ (ID 14)
 
@@ -743,9 +743,9 @@ INSERT INTO servicios_cliente_especiales (id_servicio_especial, id_cliente, id_c
 (14, 50, 5, 350.00), -- RAF COORDINATION AV GRAL (PART 91)
 (14, 82, 5, 350.00), -- RAF COORDINATION AV COM (PART 91)
 
-(14, 21, 5, 700.00), -- RAF COORDINATION FBO (PART 135)
-(14, 50, 5, 700.00), -- RAF COORDINATION AV GRAL (PART 135)
-(14, 82, 5, 700.00), -- RAF COORDINATION AV COM (PART 135)
+(14, 21, 3, 700.00), -- RAF COORDINATION FBO (PART 135)
+(14, 50, 3, 700.00), -- RAF COORDINATION AV GRAL (PART 135)
+(14, 82, 3, 700.00), -- RAF COORDINATION AV COM (PART 135)
 
 (14, 20, null, 0.00), -- LANDING PERMIT COORIDINATION FBO (PART 135)
 (14, 49, null, 0.00), -- LANDING PERMIT COORIDINATION AV GRAL (PART 135)
@@ -915,7 +915,7 @@ INSERT INTO servicios_cliente_especiales (id_servicio_especial, id_cliente, id_c
 
 (21, 20, 2, 700.00), -- LANDING PERMIT COORIDINATION FBO (AMBULANCE)
 (21, 49, 2, 700.00), -- LANDING PERMIT COORIDINATION AV GRAL (AMBULANCE)
-(21, 81, 2, 700.00), -- LANDING PERMIT COORIDINATION AV COM (AMBULANCE)
+(21, 81, 2, 700.00); -- LANDING PERMIT COORIDINATION AV COM (AMBULANCE)
 
 
 

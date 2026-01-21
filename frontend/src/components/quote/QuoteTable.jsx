@@ -177,8 +177,22 @@ function QuoteTable({ items, onRemoveItem, onUpdateItem, isReadOnly, globalNoSc,
                                             className="w-20 bg-gray-50 border border-gray-300 rounded-md p-1 text-center focus:ring-sky-500 focus:border-sky-500 disabled:cursor-not-allowed disabled:bg-gray-200"
                                         />
                                     </td>
+                                  
                                     <td className="px-4 py-2 font-medium text-gray-900">
-                                        {((item.priceUSD || 0) * (item.quantity || 0) * (item.scPercentage || 0) * (item.vatPercentage || 0)).toFixed(2)}
+                                        {(() => {
+                                            const quantity = parseFloat(item.quantity) || 0;
+                                            const priceUSD = parseFloat(item.priceUSD) || 0;
+                                            const scPercentage = parseFloat(item.scPercentage) || 0;
+                                            const vatPercentage = parseFloat(item.vatPercentage) || 0;
+                                            
+                                            const cost = quantity * priceUSD;
+                                            const sCharge = cost * scPercentage;
+                                            
+                                            // AQUÍ ESTÁ LA MAGIA: Si SC es 0, la base del IVA es el Costo. Si no, es el SC.
+                                            const baseForVat = (scPercentage === 0) ? cost : sCharge;
+                                            
+                                            return (baseForVat * vatPercentage).toFixed(2);
+                                        })()}
                                     </td>
                                     <td className="px-4 py-2 font-medium text-gray-900">
                                         {(parseFloat(item.total) || 0).toFixed(2)}

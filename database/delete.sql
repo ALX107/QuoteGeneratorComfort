@@ -18,8 +18,8 @@ TRUNCATE TABLE
     categorias_conceptos,
     categorias_operaciones,
     aeropuertos,
-    clientes,
-    usuarios
+    clientes
+    --usuarios
 RESTART IDENTITY CASCADE;
 
 -- ========= REINICIO DE SECUENCIAS INDEPENDIENTES =========
