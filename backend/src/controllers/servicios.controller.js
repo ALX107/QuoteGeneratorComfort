@@ -71,6 +71,29 @@ const getServiciosByAeropuertoOrFbo = async (req, res) => {
     }
 };
 
+const getServiciosEspecialesByCliente = async (req, res) => {
+    const { id_cliente } = req.params;
+
+    if (!id_cliente) return res.json([]);
+
+    try {
+        // Traemos el precio especial y, si existe, la categoría específica a la que aplica
+        const query = `
+            SELECT 
+                id_concepto_std,
+                id_cat_operacion,
+                costo_servicio
+            FROM servicios_cliente_especiales
+            WHERE id_cliente = $1
+        `;
+        const result = await pool.query(query, [id_cliente]);
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Error fetching special services:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+};
+
 const getServiciosByAviationType = async (req, res) => {
     const { aviationType } = req.query;
 
@@ -122,5 +145,6 @@ const getServiciosByAviationType = async (req, res) => {
 
 module.exports = {
     getServiciosByAeropuertoOrFbo,
+    getServiciosEspecialesByCliente,
     getServiciosByAviationType
 };
