@@ -299,7 +299,7 @@ const QuotePDFDocument = ({ formData, items, totals, legs }) => {
   const hasNoVat = allItems.some(item => item.noVat);
 
   return (
-    <Document>
+    <Document title={`Quote ${formData?.quoteNumber || 'Draft'}`}>
       <Page size="LETTER" style={styles.page}>
         <View style={styles.mainContent}>
           <View style={styles.header}>

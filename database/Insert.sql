@@ -83,8 +83,9 @@ INSERT INTO aeropuertos (id_aeropuerto, icao_aeropuerto, nombre_aeropuerto, ciud
 (55, 'MMCL', 'Aeropuerto Internacional de Culiacán', 'Culiacan', 'Sinaloa', 'México', 'Internacional', 'OMA'),
 (56, 'MMRX', 'Aeropuerto Internacional de Reynosa', 'Reynosa', 'Tamaulipas', 'México', 'Internacional', 'OMA'),
 (57, 'MMML', 'Aeropuerto Internacional General Rodolfo Sánchez Taboada', 'Mexicali', 'Baja California', 'México', 'Internacional', 'GAP'),
-(58, 'MMIO', 'Aeropuerto Internacional Plan de Guadalupe', 'Saltillo', 'Coahuila', 'México', 'Internacional', 'ASA');
-
+(58, 'MMIO', 'Aeropuerto Internacional Plan de Guadalupe', 'Saltillo', 'Coahuila', 'México', 'Internacional', 'ASA'),
+(59, 'MMTG', 'Aeropuerto Internacional de Tuxtla Gutiérrez', 'Tuxtla Gutiérrez', 'Chiapas', 'México', 'Comercial', 'ASUR'),
+(60, 'MMEP', 'Aeropuerto Internacional de Tepic', 'Tepic', 'Nayarit', 'México', 'Comercial', 'GACM');
 
 -- Categorías de Operaciones
 INSERT INTO categorias_operaciones (id_cat_operacion, nombre_cat_operacion, tarifa_land_permit_coord) VALUES
@@ -574,7 +575,12 @@ INSERT INTO fbos (id_fbo, nombre_fbo, grupo_fbo, id_aeropuerto) VALUES
 (134, 'Aviación General', 'Aviación General', 58),
 (135, 'Aviación Comercial', 'Aviación Comercial', 58),
 -- FBO para MMPR (MMPR, id_aeropuerto=33)
-(136, 'Aerotron FBO', 'GAP', 33);
+(136, 'Aerotron FBO', 'GAP', 33),
+---------------------
+(137, 'Aviación General', 'Aviación General', 59),
+(138, 'Aviación Comercial', 'Aviación Comercial', 59),
+(139, 'Aviación General', 'Aviación General', 60),
+(140, 'Aviación Comercial', 'Aviación Comercial', 60);
 
 -- Conceptos Default (Servicios base)
 INSERT INTO conceptos_default (id_concepto_std, nombre_concepto_default, costo_concepto_default, divisa_concepto_default, es_default, exento_sc, id_cat_concepto) VALUES
@@ -582,7 +588,7 @@ INSERT INTO conceptos_default (id_concepto_std, nombre_concepto_default, costo_c
 (1, 'Landing Fee', 0.00,'MXN', true, false, 1),
 (2, 'Embarking / Disembarking', 0.00,'MXN', true, false, 1),
 (3, 'Parking Fee', 0.00, 'MXN',true, false, 1),
-(4, 'Overnight', 0.00,'MXN', true, false, 1),
+(4, 'Overnight (Per night)', 0.00,'MXN', true, false, 1),
 (5, 'TUA', 0.00,'MXN',true, false, 1),
 (6, 'TUI', 0.00, 'MXN',false, false, 1),
 (7, 'Handling', 0.00,'MXN', false, false, 1),
@@ -622,7 +628,7 @@ INSERT INTO conceptos_default (id_concepto_std, nombre_concepto_default, costo_c
 (34, 'Landing Fee', 0.00,'MXN', true, false,8),
 (35, 'Embarking / Disembarking', 0.00,'MXN', true,false, 8),
 (36, 'Parking Fee', 0.00, 'MXN',true, false,8),
-(37, 'Overnight', 0.00,'MXN', true,false, 8),
+(37, 'Overnight (Per night)', 0.00,'MXN', true,false, 8),
 (38, 'TUA', 0.00,'MXN',true, false,8),
 (39, 'GAT', 0.00,'MXN', false, false,8),
 --THIRD PARTY SERVICES (9) --AV.GRAL
@@ -658,7 +664,7 @@ INSERT INTO conceptos_default (id_concepto_std, nombre_concepto_default, costo_c
 (62, 'Landing Fee', 0.00, 'MXN',true, false,16),
 (63, 'Embarking / Disembarking', 0.00, 'MXN',true, false,16),
 (64, 'Parking Fee', 0.00, 'MXN',true, false,16),
-(65, 'Overnight', 0.00, 'MXN',true,false, 16),
+(65, 'Overnight (Per night)', 0.00, 'MXN',true,false, 16),
 (66, 'TUA', 0.00, 'MXN',true, false,16),
 (67, 'Passenger Security', 0.00, 'MXN',false,false, 16),
 (68, 'Counters', 0.00, 'MXN',false,false, 16),
@@ -937,7 +943,7 @@ INSERT INTO precios_conceptos (id_precio_concepto, tarifa_servicio, divisa, id_c
 --34 Landing Fee
 --35 Embarking / Disembarking
 --36 Parking Fee
---37 Overnight
+--37 Overnight (Per night)
 --38 TUA
 
 -----------TOLUCA AVIACIÓN GENERAL (id_aeropuerto:44) -----------
@@ -994,4 +1000,271 @@ INSERT INTO precios_conceptos (id_precio_concepto, tarifa_servicio, divisa, id_c
 (37, 0, 'MXN', 35, 8, 37, 92),
 (38, 0, 'MXN', 36, 8, 37, 92),
 (39, 0, 'MXN', 37, 8, 37, 92),
-(40, 0, 'MXN', 38, 8, 37, 92);
+(40, 0, 'USD', 38, 8, 37, 92),
+
+-----CHECAR ESTOS VALORES DE TARIFAS DE AVIACIÓN GENERAL POR AEROPUERTO -----
+----------- MMMD (Mérida) AVIACIÓN GENERAL (id_aeropuerto:22) -----------
+(41, 67.41, 'MXN', 34, 8, 22, 62), -- Landing Fee (Max)
+(42, 36.54, 'MXN', 35, 8, 22, 62), -- Embarking
+(43, 36.54, 'MXN', 36, 8, 22, 62), -- Parking Fee
+(44, 4.49, 'MXN', 37, 8, 22, 62),  -- Overnight (1-24h)
+(45, 41.81, 'USD', 38, 8, 22, 62), -- TUA (USD)
+
+----------- MMMT (Minatitlán) AVIACIÓN GENERAL (id_aeropuerto:52) -----------
+(46, 84.21, 'MXN', 34, 8, 52, 122),
+(47, 45.94, 'MXN', 35, 8, 52, 122),
+(48, 45.94, 'MXN', 36, 8, 52, 122),
+(49, 4.73, 'MXN', 37, 8, 52, 122),
+(50, 30.52, 'USD', 38, 8, 52, 122),
+
+----------- MMCZ (Cozumel) AVIACIÓN GENERAL (id_aeropuerto:10) -----------
+(51, 73.30, 'MXN', 34, 8, 10, 38),
+(52, 39.75, 'MXN', 35, 8, 10, 38),
+(53, 39.75, 'MXN', 36, 8, 10, 38),
+(54, 4.17, 'MXN', 37, 8, 10, 38),
+(55, 50.77, 'USD', 38, 8, 10, 38),
+
+----------- MMVR (Veracruz) AVIACIÓN GENERAL (id_aeropuerto:48) -----------
+(56, 68.44, 'MXN', 34, 8, 48, 114),
+(57, 37.18, 'MXN', 35, 8, 48, 114),
+(58, 37.18, 'MXN', 36, 8, 48, 114),
+(59, 3.85, 'MXN', 37, 8, 48, 114),
+(60, 37.46, 'USD', 38, 8, 48, 114),
+
+----------- MMLT (Loreto) AVIACIÓN GENERAL (id_aeropuerto:20) -----------
+(61, 83.53, 'MXN', 34, 8, 20, 58),
+(62, 0.00, 'MXN', 35, 8, 20, 58),
+(63, 0.00, 'MXN', 36, 8, 20, 58),
+(64, 3.81, 'MXN', 37, 8, 20, 58),
+(65, 31.03, 'USD', 38, 8, 20, 58),
+
+----------- MMCE (Ciudad del Carmen) AVIACIÓN GENERAL (id_aeropuerto:53) -----------
+(66, 83.53, 'MXN', 34, 8, 53, 124),
+(67, 0.00, 'MXN', 35, 8, 53, 124),
+(68, 0.00, 'MXN', 36, 8, 53, 124),
+(69, 3.81, 'MXN', 37, 8, 53, 124),
+(70, 28.08, 'USD', 38, 8, 53, 124),
+
+----------- MMAA (Acapulco) AVIACIÓN GENERAL (id_aeropuerto:2) -----------
+(71, 163.81, 'MXN', 34, 8, 2, 22),
+(72, 0.00, 'MXN', 35, 8, 2, 22),
+(73, 34.98, 'MXN', 36, 8, 2, 22),
+(74, 6.37, 'MXN', 37, 8, 2, 22),
+(75, 57.48, 'USD', 38, 8, 2, 22),
+
+----------- MMMY (Monterrey Escobedo) AVIACIÓN GENERAL (id_aeropuerto:25) -----------
+(76, 161.34, 'MXN', 34, 8, 25, 68),
+(77, 0.00, 'MXN', 35, 8, 25, 68),
+(78, 34.45, 'MXN', 36, 8, 25, 68),
+(79, 6.28, 'MXN', 37, 8, 25, 68),
+(80, 57.74, 'USD', 38, 8, 25, 68),
+
+----------- MMCS (Ciudad Juárez) AVIACIÓN GENERAL (id_aeropuerto:7) -----------
+(81, 119.49, 'MXN', 34, 8, 7, 32),
+(82, 0.00, 'MXN', 35, 8, 7, 32),
+(83, 25.54, 'MXN', 36, 8, 7, 32),
+(84, 5.46, 'MXN', 37, 8, 7, 32),
+(85, 43.08, 'USD', 38, 8, 7, 32),
+
+----------- MMTJ (Tijuana) AVIACIÓN GENERAL (id_aeropuerto:41) -----------
+(86, 125.15, 'MXN', 34, 8, 41, 100),
+(87, 41.76, 'MXN', 35, 8, 41, 100),
+(88, 41.76, 'MXN', 36, 8, 41, 100),
+(89, 5.01, 'MXN', 37, 8, 41, 100),
+(90, 30.00, 'USD', 38, 8, 41, 100),
+
+----------- MMAS (Aguascalientes) AVIACIÓN GENERAL (id_aeropuerto:4) -----------
+(91, 99.80, 'MXN', 34, 8, 4, 26),
+(92, 33.25, 'MXN', 35, 8, 4, 26),
+(93, 33.25, 'MXN', 36, 8, 4, 26),
+(94, 3.97, 'MXN', 37, 8, 4, 26),
+(95, 44.74, 'USD', 38, 8, 4, 26),
+
+----------- MMZO (Manzanillo) AVIACIÓN GENERAL (id_aeropuerto:51) -----------
+(96, 104.39, 'MXN', 34, 8, 51, 120),
+(97, 34.78, 'MXN', 35, 8, 51, 120),
+(98, 34.78, 'MXN', 36, 8, 51, 120),
+(99, 4.14, 'MXN', 37, 8, 51, 120),
+(100, 49.06, 'USD', 38, 8, 51, 120),
+
+----------- MMBT (Huatulco) AVIACIÓN GENERAL (id_aeropuerto:5) -----------
+(101, 81.39, 'MXN', 34, 8, 5, 28), 
+(102, 44.19, 'MXN', 35, 8, 5, 28), 
+(103, 44.19, 'MXN', 36, 8, 5, 28), 
+(104, 4.67,  'MXN', 37, 8, 5, 28), 
+(105, 0.00,  'USD', 38, 8, 5, 28), -- TUA no disponible en el recorte
+
+----------- MMTP (Tapachula) AVIACIÓN GENERAL (id_aeropuerto:45) -----------
+(106, 83.33, 'MXN', 34, 8, 45, 108), 
+(107, 45.46, 'MXN', 35, 8, 45, 108), 
+(108, 45.46, 'MXN', 36, 8, 45, 108), 
+(109, 4.64,  'MXN', 37, 8, 45, 108), 
+(110, 0.00,  'USD', 38, 8, 45, 108),
+
+----------- MMVA (Villahermosa) AVIACIÓN GENERAL (id_aeropuerto:47) -----------
+(111, 71.89, 'MXN', 34, 8, 47, 112), 
+(112, 38.98, 'MXN', 35, 8, 47, 112), 
+(113, 38.98, 'MXN', 36, 8, 47, 112), 
+(114, 4.25,  'MXN', 37, 8, 47, 112), 
+(115, 0.00,  'USD', 38, 8, 47, 112),
+
+----------- MMOX (Oaxaca) AVIACIÓN GENERAL (id_aeropuerto:28) -----------
+(116, 68.77, 'MXN', 34, 8, 28, 74), 
+(117, 37.29, 'MXN', 35, 8, 28, 74), 
+(118, 37.29, 'MXN', 36, 8, 28, 74), 
+(119, 3.81,  'MXN', 37, 8, 28, 74), 
+(120, 0.00,  'USD', 38, 8, 28, 74),
+
+----------- MMIA (Colima) AVIACIÓN GENERAL (id_aeropuerto:17) -----------
+(121, 83.53, 'MXN', 34, 8, 17, 52), 
+(122, 0.00,  'MXN', 35, 8, 17, 52), 
+(123, 0.00,  'MXN', 36, 8, 17, 52), 
+(124, 3.81,  'MXN', 37, 8, 17, 52), 
+(125, 39.63, 'USD', 38, 8, 17, 52),
+
+----------- MMCN (Cd. Obregón) AVIACIÓN GENERAL (id_aeropuerto:54) -----------
+(126, 83.53, 'MXN', 34, 8, 54, 126), 
+(127, 0.00,  'MXN', 35, 8, 54, 126), 
+(128, 0.00,  'MXN', 36, 8, 54, 126), 
+(129, 3.81,  'MXN', 37, 8, 54, 126), 
+(130, 31.03, 'USD', 38, 8, 54, 126),
+
+----------- MMGM (Guaymas) AVIACIÓN GENERAL (id_aeropuerto:14) -----------
+(131, 83.53, 'MXN', 34, 8, 14, 46), 
+(132, 0.00,  'MXN', 35, 8, 14, 46), 
+(133, 0.00,  'MXN', 36, 8, 14, 46), 
+(134, 3.81,  'MXN', 37, 8, 14, 46), 
+(135, 31.03, 'USD', 38, 8, 14, 46),
+
+----------- MMMA (Matamoros) AVIACIÓN GENERAL (id_aeropuerto:21) -----------
+(136, 83.53, 'MXN', 34, 8, 21, 60), 
+(137, 0.00,  'MXN', 35, 8, 21, 60), 
+(138, 0.00,  'MXN', 36, 8, 21, 60), 
+(139, 3.81,  'MXN', 37, 8, 21, 60), 
+(140, 2901.00, 'USD', 38, 8, 21, 60), -- Valor según fuente proporcionada
+
+----------- MMCL (Culiacán) AVIACIÓN GENERAL (id_aeropuerto:55) -----------
+(141, 123.49, 'MXN', 34, 8, 55, 128), 
+(142, 0.00,   'MXN', 35, 8, 55, 128), 
+(143, 26.42,  'MXN', 36, 8, 55, 128), 
+(144, 5.67,   'MXN', 37, 8, 55, 128), 
+(145, 56.68,  'USD', 38, 8, 55, 128),
+
+----------- MMCU (Chihuahua) AVIACIÓN GENERAL (id_aeropuerto:9) -----------
+(146, 118.76, 'MXN', 34, 8, 9, 36), 
+(147, 0.00,   'MXN', 35, 8, 9, 36), 
+(148, 25.37,  'MXN', 36, 8, 9, 36), 
+(149, 5.43,   'MXN', 37, 8, 9, 36), 
+(150, 56.43,  'USD', 38, 8, 9, 36),
+
+----------- MMDO (Durango) AVIACIÓN GENERAL (id_aeropuerto:11) -----------
+(151, 126.58, 'MXN', 34, 8, 11, 40), 
+(152, 0.00,   'MXN', 35, 8, 11, 40), 
+(153, 27.07,  'MXN', 36, 8, 11, 40), 
+(154, 5.75,   'MXN', 37, 8, 11, 40), 
+(155, 53.84,  'USD', 38, 8, 11, 40),
+
+----------- MMMZ (Mazatlán) AVIACIÓN GENERAL (id_aeropuerto:26) -----------
+(156, 118.80, 'MXN', 34, 8, 26, 70), 
+(157, 0.00,   'MXN', 35, 8, 26, 70), 
+(158, 23.37,  'MXN', 36, 8, 26, 70), 
+(159, 5.44,   'MXN', 37, 8, 26, 70), 
+(160, 62.22,  'USD', 38, 8, 26, 70),
+
+----------- MMRX (Reynosa) AVIACIÓN GENERAL (id_aeropuerto:56) -----------
+(161, 126.58, 'MXN', 34, 8, 56, 130), 
+(162, 0.00,   'MXN', 35, 8, 56, 130), 
+(163, 27.07,  'MXN', 36, 8, 56, 130), 
+(164, 5.75,   'MXN', 37, 8, 56, 130), 
+(165, 42.52,  'USD', 38, 8, 56, 130),
+
+----------- MMSP (San Luis Potosí) AVIACIÓN GENERAL (id_aeropuerto:39) -----------
+(166, 118.76, 'MXN', 34, 8, 39, 96), 
+(167, 0.00,   'MXN', 35, 8, 39, 96), 
+(168, 25.37,  'MXN', 36, 8, 39, 96), 
+(169, 5.43,   'MXN', 37, 8, 39, 96), 
+(170, 50.45,  'USD', 38, 8, 39, 96),
+
+----------- MMTM (Tampico) AVIACIÓN GENERAL (id_aeropuerto:43) -----------
+(171, 126.88, 'MXN', 34, 8, 43, 104), 
+(172, 0.00,   'MXN', 35, 8, 43, 104), 
+(173, 27.13,  'MXN', 36, 8, 43, 104), 
+(174, 5.77,   'MXN', 37, 8, 43, 104), 
+(175, 53.28,  'USD', 38, 8, 43, 104),
+
+----------- MMTC (Torreón) AVIACIÓN GENERAL (id_aeropuerto:40) -----------
+(176, 120.82, 'MXN', 34, 8, 40, 98), 
+(177, 0.00,   'MXN', 35, 8, 40, 98), 
+(178, 25.82,  'MXN', 36, 8, 40, 98), 
+(179, 5.50,   'MXN', 37, 8, 40, 98), 
+(180, 54.41,  'USD', 38, 8, 40, 98),
+
+----------- MMZC (Zacatecas) AVIACIÓN GENERAL (id_aeropuerto:49) -----------
+(181, 116.74, 'MXN', 34, 8, 49, 116), 
+(182, 0.00,   'MXN', 35, 8, 49, 116), 
+(183, 24.95,  'MXN', 36, 8, 49, 116), 
+(184, 5.32,   'MXN', 37, 8, 49, 116), 
+(185, 57.94,  'USD', 38, 8, 49, 116),
+
+----------- MMZH (Ixtapa-Zihuatanejo) AVIACIÓN GENERAL (id_aeropuerto:50) -----------
+(186, 112.71, 'MXN', 34, 8, 50, 118), 
+(187, 0.00,   'MXN', 35, 8, 50, 118), 
+(188, 24.10,  'MXN', 36, 8, 50, 118), 
+(189, 5.16,   'MXN', 37, 8, 50, 118), 
+(190, 64.25,  'USD', 38, 8, 50, 118),
+
+----------- MMHO (Hermosillo) AVIACIÓN GENERAL (id_aeropuerto:16) -----------
+(191, 104.05, 'MXN', 34, 8, 16, 50), 
+(192, 34.67,  'MXN', 35, 8, 16, 50), 
+(193, 34.67,  'MXN', 36, 8, 16, 50), 
+(194, 4.13,   'MXN', 37, 8, 16, 50), 
+(195, 25.00,  'USD', 38, 8, 16, 50),
+
+----------- MMLO (Bajío) AVIACIÓN GENERAL (id_aeropuerto:18) -----------
+(196, 104.39, 'MXN', 34, 8, 18, 54), 
+(197, 34.78,  'MXN', 35, 8, 18, 54), 
+(198, 34.78,  'MXN', 36, 8, 18, 54), 
+(199, 4.14,   'MXN', 37, 8, 18, 54), 
+(200, 52.92,  'USD', 38, 8, 18, 54),
+
+----------- MMLP (La Paz) AVIACIÓN GENERAL (id_aeropuerto:19) -----------
+(201, 104.39, 'MXN', 34, 8, 19, 56), 
+(202, 34.78,  'MXN', 35, 8, 19, 56), 
+(203, 34.78,  'MXN', 36, 8, 19, 56), 
+(204, 4.14,   'MXN', 37, 8, 19, 56), 
+(205, 25.00,  'USD', 38, 8, 19, 56),
+
+----------- MMML (Mexicali) AVIACIÓN GENERAL (id_aeropuerto:57) -----------
+(206, 104.39, 'MXN', 34, 8, 57, 132), 
+(207, 34.78,  'MXN', 35, 8, 57, 132), 
+(208, 34.78,  'MXN', 36, 8, 57, 132), 
+(209, 4.14,   'MXN', 37, 8, 57, 132), 
+(210, 25.00,  'USD', 38, 8, 57, 132),
+
+----------- MMMM (Morelia) AVIACIÓN GENERAL (id_aeropuerto:23) -----------
+(211, 104.39, 'MXN', 34, 8, 23, 64), 
+(212, 34.78,  'MXN', 35, 8, 23, 64), 
+(213, 34.78,  'MXN', 36, 8, 23, 64), 
+(214, 4.14,   'MXN', 37, 8, 23, 64), 
+(215, 55.53,  'USD', 38, 8, 23, 64),
+
+----------- MMTG (Tuxtla) AVIACIÓN GENERAL (id_aeropuerto:59) -----------
+(216, 84.45, 'MXN', 34, 8, 59, 137), 
+(217, 36.11,  'MXN', 35, 8, 59, 137), 
+(218, 36.11,  'MXN', 36, 8, 59, 137), 
+(219, 3.82,   'MXN', 37, 8, 59, 137), 
+(220, 30.21,  'USD', 38, 8, 59, 137),
+
+----------- MMEP (Tepic) AVIACIÓN GENERAL (id_aeropuerto:60) -----------
+(221, 85.19, 'MXN', 34, 8, 60, 139), 
+(222, 28.38,  'MXN', 35, 8, 60, 139), 
+(223, 28.38,  'MXN', 36, 8, 60, 139), 
+(224, 3.39,   'MXN', 37, 8, 60, 139), 
+(225, 50.60,  'USD', 38, 8, 60, 139);
+
+--TARIFAS DE AVIACIÓN GENERAL POR AEROPUERTO
+--34 Landing Fee
+--35 Embarking / Disembarking
+--36 Parking Fee
+--37 Overnight (Per night)
+--38 TUA

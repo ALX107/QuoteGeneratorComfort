@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
-import { PDFViewer } from '@react-pdf/renderer';
+import { PDFViewer, PDFDownloadLink } from '@react-pdf/renderer';
 import QuotePDFDocument from '../quote/QuotePDFDocument';
 
-const PDFPreviewModal = ({ isOpen, onClose, pdfData, DocumentComponent }) => {
+const PDFPreviewModal = ({ isOpen, onClose, pdfData, DocumentComponent, fileName }) => {
   const Doc = DocumentComponent || QuotePDFDocument;
 
   useEffect(() => {
@@ -54,24 +54,33 @@ const PDFPreviewModal = ({ isOpen, onClose, pdfData, DocumentComponent }) => {
           position: 'relative',
         }}
       >
-        <button
-          onClick={onClose}
+        <div
           style={{
             position: 'absolute',
-            bottom: 10,
-            right: 10,
-            padding: '8px 12px',
-            cursor: 'pointer',
-            backgroundColor: '#E53E3E',
-            color: 'white',
-            border: 'none',
-            borderRadius: '5px',
-            fontSize: '16px',
+            bottom: 15,
+            right: 20,
             zIndex: 10,
+            display: 'flex',
+            gap: '12px',
           }}
         >
-          Close
-        </button>
+          {pdfData && (
+            <PDFDownloadLink
+              document={<Doc {...pdfData} />}
+              fileName={fileName || 'document.pdf'}
+              className="px-5 py-2.5 bg-blue-600 text-white rounded-lg shadow-lg hover:bg-blue-700 hover:shadow-xl transition-all duration-200 font-medium text-sm flex items-center gap-2"
+              style={{ textDecoration: 'none' }}
+            >
+              {({ loading }) => (loading ? 'Generating...' : 'Download PDF')}
+            </PDFDownloadLink>
+          )}
+          <button
+            onClick={onClose}
+            className="px-5 py-2.5 bg-red-600 text-white rounded-lg shadow-lg hover:bg-red-700 hover:shadow-xl transition-all duration-200 font-medium text-sm cursor-pointer"
+          >
+            Close
+          </button>
+        </div>
         {pdfData ? (
           <PDFViewer style={{ width: '100%', height: '100%' }}>
             <Doc {...pdfData} />

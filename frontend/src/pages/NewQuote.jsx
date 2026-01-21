@@ -1711,6 +1711,7 @@ function NewQuote({ onNavigateToHistorico, previewingQuote, onCloneQuote }) {
                     }}
                     pdfData={pdfData}
                     DocumentComponent={pdfDocumentComponent}
+                    fileName={`Quote ${pdfData?.formData?.quoteNumber || 'Draft'}.pdf`}
                 />
                 <PDFSelectionModal
                     isOpen={isPdfSelectionModalOpen}
